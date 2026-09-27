@@ -50,3 +50,10 @@
 - 2026-09-27 fetch_pubmed.py は抄録を取る上位 n 件とは別に、esearch の全ヒットの PMID（relevance 順）を search.json の `all_pmids` に保存する。評価で「全ヒットでの Recall」と「上位200件での Recall」を分けて出すため（人の指示）
 - 2026-09-27（人が決定）：上位200件は、この取得時点（2026-09-27 20:07）の relevance 順で固定する。Best Match は呼び出しで揺れ、取り直すと別の200件になるため。固定した search.json（`pmids`＝上位200件と並び、`all_pmids`、`retrieved_at`）は `reviews/<PMID>/search.json` に commit する。candidates.jsonl は抄録の著作権があるので commit しない（`results/` は .gitignore）
 - 2026-09-27（人が決定）：fetch_pubmed.py は NCBI Bookshelf のレコード（PubmedBookArticle）も読む。`--from-search <search.json>` で、検索をせずに固定した PMID から candidates.jsonl を作り直す（手元の candidates.jsonl に無い PMID だけ efetch）。31190844 の欠けた4件はこれで足した
+
+## 2026-09-27 指示6（subagent なしの試走）から（人が決定）
+
+- tag の番号をそろえ直した：付いている tag（01〜05）は動かさず、まだ付けていないものを1つずつ後ろにずらす（`snap/06-no-subagent`、`snap/07-agents-v1`、`snap/08-first-parallel`、`snap/09-hook`、`snap/10-eval-1`）。`snap/05-query-approved` と `snap/05-no-subagent` の番号が重なっていたため
+- 指示7で反映する：試走では E を「1＝除外に当たる」で判定した。docs/schema.md（指示7で入れる）では E は「1＝除外に当たらない」。criteria.json と screening-rules は schema に合わせる
+- 指示7で反映する：引用の照合は Unicode の正規化（ハイフンの異体字・空白）をしてから行う。引用元はタイトルと抄録。言い換え・縮約は不可（試走では 16/101件が逐語でなく、うち4件が言い換え・縮約だった）
+- 指示7で反映する：E1 は「その文書自身の患者データを含まず、他の研究を紹介・論評するもの（review・editorial・comment・news・学会報告の紹介）」。原著データを含む学会抄録や letter は当たらない（試走では、総説と明記されない解説を E1=0 とし、news（S041）と commentary（S059）で線引きが揺れた）

@@ -1,0 +1,101 @@
+{"order": "S001", "pmid": "30880819", "rank": 1, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説（現状の解説）"}
+{"order": "S002", "pmid": "30778134", "rank": 2, "decision": "include", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": 0, "E3": 0}, "reason": "抄録なし。全基準 0 で組み入れる側"}
+{"order": "S003", "pmid": "30185400", "rank": 3, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S004", "pmid": "26333935", "rank": 4, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "CLL 患者14人の自家 CD19 CAR-T 試験、奏効率を報告"}
+{"order": "S005", "pmid": "27518241", "rank": 5, "decision": "exclude", "criteria": {"I1": 0, "I2": -1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（in vitro・in vivo）。標的も CD33/CD123"}
+{"order": "S006", "pmid": "27605551", "rank": 6, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "NHL 32人の CD19 CAR-T 臨床試験、ORR・CR を報告。自家かは記載なし（0）"}
+{"order": "S007", "pmid": "30810217", "rank": 7, "decision": "include", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": 0, "E3": 0}, "reason": "抄録なし。全基準 0 で組み入れる側"}
+{"order": "S008", "pmid": "28935694", "rank": 8, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": 0, "E1": -1, "E2": -1, "E3": -1}, "reason": "103人の CTL019 の細胞動態。有効性の結果そのものかは不明（I4=0）"}
+{"order": "S009", "pmid": "28413717", "rank": 9, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S010", "pmid": "25582824", "rank": 10, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（マウス）"}
+{"order": "S011", "pmid": "31034188", "rank": 11, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": -1, "E1": 1, "E2": -1, "E3": 0}, "reason": "E1: HTA の倫理面のレビュー（プロトコル）。患者データなし"}
+{"order": "S012", "pmid": "26425336", "rank": 12, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": 1, "E1": 0, "E2": -1, "E3": -1}, "reason": "複数施設の試験の結果をまとめた文章。総説と明記されていないので E1=0"}
+{"order": "S013", "pmid": "27548616", "rank": 13, "decision": "exclude", "criteria": {"I1": 0, "I2": -1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床。標的は CD123"}
+{"order": "S014", "pmid": "31244581", "rank": 14, "decision": "exclude", "criteria": {"I1": -1, "I2": -1, "I3": 0, "I4": -1, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 健常人ドナーでの製造試験。標的は CD20"}
+{"order": "S015", "pmid": "26484338", "rank": 15, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S016", "pmid": "30504286", "rank": 16, "decision": "exclude", "criteria": {"I1": 1, "I2": -1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "I2=-1: 抗体療法の話で CAR-T は付言のみ"}
+{"order": "S017", "pmid": "30631098", "rank": 17, "decision": "include", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": 0, "E3": 0}, "reason": "抄録なし。全基準 0 で組み入れる側"}
+{"order": "S018", "pmid": "30830874", "rank": 18, "decision": "include", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": 0, "E3": 0}, "reason": "抄録なし。全基準 0 で組み入れる側"}
+{"order": "S019", "pmid": "30504287", "rank": 19, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": 1, "E1": 0, "E2": -1, "E3": -1}, "reason": "既存の試験の結果を論じる文章。総説と明記されていないので E1=0"}
+{"order": "S020", "pmid": "24411699", "rank": 20, "decision": "exclude", "criteria": {"I1": 1, "I2": -1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説。標的も CD19 以外"}
+{"order": "S021", "pmid": "33520342", "rank": 21, "decision": "exclude", "criteria": {"I1": 1, "I2": 0, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 解説（総説）"}
+{"order": "S022", "pmid": "27111235", "rank": 22, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "成人 B-ALL 29人の CD19 CAR-T 臨床試験、寛解率と無病生存を報告"}
+{"order": "S023", "pmid": "28716155", "rank": 23, "decision": "exclude", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": -1, "E1": 0, "E2": -1, "E3": -1}, "reason": "I4=-1: 施設の体制の紹介で結果なし"}
+{"order": "S024", "pmid": "27546707", "rank": 24, "decision": "exclude", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 専門家の論評"}
+{"order": "S025", "pmid": "28821272", "rank": 25, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S026", "pmid": "30489654", "rank": 26, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": -1, "E1": -1, "E2": -1, "E3": -1}, "reason": "I4=-1: アフェレーシスの抗凝固の症例報告で有効性・生存の結果なし"}
+{"order": "S027", "pmid": "30185706", "rank": 27, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 1, "E1": 0, "E2": -1, "E3": -1}, "reason": "他施設の試験の結果を紹介する文章。総説と明記されていないので E1=0"}
+{"order": "S028", "pmid": "30819038", "rank": 28, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "axi-cel 治療患者の長期生存のモデル推定。生存を報告"}
+{"order": "S029", "pmid": "31893495", "rank": 29, "decision": "include", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "導入上の論点の概要。種類も結果も抄録からは不明（0）"}
+{"order": "S030", "pmid": "28298232", "rank": 30, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 1, "I4": -1, "E1": -1, "E2": 0, "E3": -1}, "reason": "I4=-1: 製造の収量の研究で患者の有効性・生存なし"}
+{"order": "S031", "pmid": "30603741", "rank": 31, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S032", "pmid": "30815024", "rank": 32, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S033", "pmid": "29156206", "rank": 33, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "CRS の解説的な文章。総説と明記されず、結果の報告かも不明（0）"}
+{"order": "S034", "pmid": "29568387", "rank": 34, "decision": "exclude", "criteria": {"I1": -1, "I2": -1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（マウス）。膵がん・mesothelin"}
+{"order": "S035", "pmid": "24959420", "rank": 35, "decision": "exclude", "criteria": {"I1": 1, "I2": -1, "I3": 0, "I4": -1, "E1": -1, "E2": 0, "E3": -1}, "reason": "I2=-1: 標的探索のバイオインフォマティクス研究で CAR-T の投与なし"}
+{"order": "S036", "pmid": "30518815", "rank": 36, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S037", "pmid": "28025979", "rank": 37, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S038", "pmid": "29043880", "rank": 38, "decision": "include", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": 0, "E3": 0}, "reason": "抄録なし。全基準 0 で組み入れる側"}
+{"order": "S039", "pmid": "30518502", "rank": 39, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "ZUMA-1 の2年追跡。自家 CD19 CAR-T、奏効・OS・PFS を報告"}
+{"order": "S040", "pmid": "29539277", "rank": 40, "decision": "include", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": 0, "E3": 0}, "reason": "抄録なし。全基準 0 で組み入れる側"}
+{"order": "S041", "pmid": "26719386", "rank": 41, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 1, "E1": 0, "E2": -1, "E3": -1}, "reason": "学会発表を紹介する短報。出版の種類は抄録から確定できず E1=0"}
+{"order": "S042", "pmid": "30906625", "rank": 42, "decision": "exclude", "criteria": {"I1": -1, "I2": 0, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説（固形がん）"}
+{"order": "S043", "pmid": "27460500", "rank": 43, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": -1, "E3": -1}, "reason": "患者での系統転換とマウスモデル。患者データあり。有効性の結果かは不明（I4=0）"}
+{"order": "S044", "pmid": "30686354", "rank": 44, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S045", "pmid": "27207800", "rank": 45, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S046", "pmid": "27076371", "rank": 46, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": -1, "E3": -1}, "reason": "CTL019 治療51人の CRS 予測。有効性・生存の報告かは不明（I4=0）"}
+{"order": "S047", "pmid": "30309819", "rank": 47, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "NHL 16人の自家 CD19 CAR-T（2G/3G）試験、奏効を報告"}
+{"order": "S048", "pmid": "29032264", "rank": 48, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "解説的な文章。総説と明記されていないので E1=0"}
+{"order": "S049", "pmid": "30097433", "rank": 49, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "15人の第3世代 CD19 CAR-T 第I/IIa相、CR を報告"}
+{"order": "S050", "pmid": "30032561", "rank": 50, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（in vitro・マウス）"}
+{"order": "S051", "pmid": "30031849", "rank": 51, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S052", "pmid": "30024272", "rank": 52, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（細胞・マウス）"}
+{"order": "S053", "pmid": "29920129", "rank": 53, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（細胞株）"}
+{"order": "S054", "pmid": "29641322", "rank": 54, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": -1, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床。同種（allogeneic）でもある"}
+{"order": "S055", "pmid": "29166735", "rank": 55, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（細胞・ヌードマウス）"}
+{"order": "S056", "pmid": "29425516", "rank": 56, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "S048 の再掲（抄録同一）。S048 と同じく E1=0"}
+{"order": "S057", "pmid": "24981395", "rank": 57, "decision": "exclude", "criteria": {"I1": 1, "I2": -1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "I2=-1: 抗体療法の話で CAR-T は付言のみ（S016 と同じ扱い）"}
+{"order": "S058", "pmid": "27139507", "rank": 58, "decision": "include", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": 0, "E3": 0}, "reason": "抄録なし。全基準 0 で組み入れる側"}
+{"order": "S059", "pmid": "28642356", "rank": 59, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 同じ号の論文への論評（commentary）"}
+{"order": "S060", "pmid": "24919807", "rank": 60, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "解説的な文章。総説と明記されていないので E1=0"}
+{"order": "S061", "pmid": "22031866", "rank": 61, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": -1, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（細胞の作製法）。ドナー由来の T 細胞"}
+{"order": "S062", "pmid": "29018147", "rank": 62, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S063", "pmid": "29849141", "rank": 63, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "CLL 1例（症例）で CD19 CAR-T 後の完全寛解。case report は除外しない"}
+{"order": "S064", "pmid": "27592405", "rank": 64, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S065", "pmid": "29665944", "rank": 65, "decision": "exclude", "criteria": {"I1": 1, "I2": 0, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S066", "pmid": "29261129", "rank": 66, "decision": "exclude", "criteria": {"I1": 0, "I2": -1, "I3": -1, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床。標的は HLA-DR（Lym-1）"}
+{"order": "S067", "pmid": "29165008", "rank": 67, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "解説的な文章。総説と明記されていないので E1=0"}
+{"order": "S068", "pmid": "29038338", "rank": 68, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": -1, "E3": -1}, "reason": "133人の CD19 CAR-T 後の感染症。有効性・生存の報告かは不明（I4=0）"}
+{"order": "S069", "pmid": "21304103", "rank": 69, "decision": "exclude", "criteria": {"I1": 0, "I2": -1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床。標的は CD70"}
+{"order": "S070", "pmid": "26357515", "rank": 70, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S071", "pmid": "28039295", "rank": 71, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": -1, "E1": -1, "E2": -1, "E3": 1}, "reason": "E3: 試験計画（プロトコル）のみ"}
+{"order": "S072", "pmid": "23264903", "rank": 72, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 他施設の試験結果を論じる文章"}
+{"order": "S073", "pmid": "26332003", "rank": 73, "decision": "exclude", "criteria": {"I1": 1, "I2": 0, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S074", "pmid": "30082906", "rank": 74, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 診療ガイドライン（患者データなし）"}
+{"order": "S075", "pmid": "27941285", "rank": 75, "decision": "exclude", "criteria": {"I1": 1, "I2": 0, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 解説（総説）"}
+{"order": "S076", "pmid": "28257957", "rank": 76, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S077", "pmid": "30763199", "rank": 77, "decision": "include", "criteria": {"I1": 1, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "高齢者 ALL の治療の解説。総説と明記されず E1=0、CAR の標的も不明（0）"}
+{"order": "S078", "pmid": "27014980", "rank": 78, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": -1, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "I3=-1: ドナー由来（同種）の CAR-T の症例"}
+{"order": "S079", "pmid": "28834486", "rank": 79, "decision": "include", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": 0, "E3": 0}, "reason": "抄録なし。全基準 0 で組み入れる側"}
+{"order": "S080", "pmid": "30573301", "rank": 80, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（レポーター細胞株）"}
+{"order": "S081", "pmid": "30814672", "rank": 81, "decision": "include", "criteria": {"I1": 0, "I2": 0, "I3": 0, "I4": 0, "E1": 0, "E2": 0, "E3": 0}, "reason": "抄録なし。全基準 0 で組み入れる側"}
+{"order": "S082", "pmid": "24411699", "rank": 20, "decision": "exclude", "criteria": {"I1": 1, "I2": -1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説。標的も CD19 以外（判定時に S020 と同一の抄録と気づいた）"}
+{"order": "S083", "pmid": "31038109", "rank": 82, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "技術の歩みの解説。総説と明記されていないので E1=0"}
+{"order": "S084", "pmid": "27320931", "rank": 83, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 概説（総説）"}
+{"order": "S085", "pmid": "25189715", "rank": 84, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S086", "pmid": "24404423", "rank": 85, "decision": "exclude", "criteria": {"I1": 0, "I2": -1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床。CAR を載せたのは NK 細胞株"}
+{"order": "S087", "pmid": "31790161", "rank": 86, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": -1, "E1": 0, "E2": -1, "E3": 1}, "reason": "E3: HTA の計画書（結果なし）"}
+{"order": "S088", "pmid": "27210719", "rank": 87, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": -1, "E1": -1, "E2": -1, "E3": -1}, "reason": "I4=-1: 製造記録の解析で有効性・生存なし（S030 と同じ扱い）"}
+{"order": "S089", "pmid": "27009300", "rank": 88, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 1, "E1": -1, "E2": -1, "E3": -1}, "reason": "第I相試験後の3例の経過、寛解・再発を報告"}
+{"order": "S090", "pmid": "27226436", "rank": 89, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（製造法・異種移植モデル）"}
+{"order": "S091", "pmid": "27258611", "rank": 90, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（細胞・マウス）"}
+{"order": "S092", "pmid": "30936262", "rank": 91, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（マウスの生体イメージング）"}
+{"order": "S093", "pmid": "30261221", "rank": 92, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S094", "pmid": "27084741", "rank": 93, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S095", "pmid": "27098534", "rank": 94, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 1, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "ALL・CLL の CAR-T の解説。総説と明記されていないので E1=0"}
+{"order": "S096", "pmid": "26633875", "rank": 95, "decision": "exclude", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 1, "E2": -1, "E3": -1}, "reason": "E1: 総説"}
+{"order": "S097", "pmid": "23788110", "rank": 96, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（細胞株）"}
+{"order": "S098", "pmid": "31171941", "rank": 97, "decision": "exclude", "criteria": {"I1": 1, "I2": -1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "I2=-1: 骨髄腫の BCMA・integrin β7 の CAR-T の話で CD19 は付言のみ"}
+{"order": "S099", "pmid": "29749441", "rank": 98, "decision": "exclude", "criteria": {"I1": 0, "I2": 1, "I3": 0, "I4": 0, "E1": -1, "E2": 1, "E3": -1}, "reason": "E2: 前臨床（in vitro）"}
+{"order": "S100", "pmid": "28804691", "rank": 99, "decision": "include", "criteria": {"I1": 1, "I2": 1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "併用の提案の文章。種類も結果も抄録からは不明（0）"}
+{"order": "S101", "pmid": "23714527", "rank": 100, "decision": "exclude", "criteria": {"I1": 1, "I2": -1, "I3": 0, "I4": 0, "E1": 0, "E2": -1, "E3": -1}, "reason": "I2=-1: 抗体療法の話で CAR-T は付言のみ（S016・S057 と同じ扱い）"}
