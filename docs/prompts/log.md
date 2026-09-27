@@ -826,3 +826,22 @@ commit したら止まって。
 ## 2026-09-27T20:32:18+09:00
 
 HARNESS に追記して commit して（tag なし）：指示6の試走のあと /context は 326.2k（Messages 289.7k）。50件目の 212.7k との差は約 77k で、51〜101件目の判定とその後の記録を含む。1件あたり約 1.5k が上限の見積もり。本番の 600件を1体でやると約 90万、2体で約 180万トークンになり、1つの会話には収まらない。
+
+---
+
+## 2026-09-27T20:32:50+09:00
+
+
+
+<pasted_content id="2d46">
+ここから止まらずに進めて。止まるのは、作り終えたときと、自分で直せない不備が出たときだけ。途中の確認は要らない。HARNESS・DECISIONS への記録と commit は、節目ごとに自分でやって。
+
+<Cowork のフォルダ>/Blog/slr-kit/report/ の SCHEMA.md を docs/schema.md に、scripts/ の quote_match.py・rules.py・adjudicate.py・build_report.py・report_template.html を scripts/ にコピーする。
+DECISIONS の「指示7で反映する」3点を反映する。schema と quote_match.py は、引用元をタイトルと抄録の両方にし、Unicode の正規化（ハイフンの異体字・空白）をしてから照合する形に直す。build_report.py もタイトルに当たった引用を表示できるようにする。
+承認済みの criteria.md から reviews/<PMID>/criteria.json を作る（E は schema の向き：1＝除外に当たらない）。
+candidates.jsonl を schema 4章の形（candidates.json）に合わせる。
+design.md 4章と schema 5・6章どおりに、screener-a・screener-b（基準を逆順で提示、出力は ID 順）・adjudicator（needs_human の summary だけ書く）と screening-rules skill を作る。skill は screener に preload、screener は omitClaudeMd: true、モデルは Sonnet。
+SubagentStop の hook（matcher screener-*、schema 5章の3点を検査、不備は exit 2）と、subagent の同時起動を6までに抑える hook を作る。hook は、わざと壊した出力（言い換えた引用、基準の欠け、範囲外の値）を pytest で与えて、差し戻されることを確かめる。
+ruff と pytest を通して commit し、snap/07-agents-v1 を付ける。hook の分は snap/09-hook を同じ commit に付けてよい。
+終わったら、作ったファイルの一覧だけ報告して止まって。私が再起動する。
+</pasted_content id="2d46">

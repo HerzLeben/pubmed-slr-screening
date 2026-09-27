@@ -1,0 +1,44 @@
+{
+  "review_pmid": "33746596",
+  "criteria": [
+    {
+      "id": "I1",
+      "type": "inclusion",
+      "text": "対象は multiple myeloma（多発性骨髄腫）の患者か",
+      "note": "RRMM の結果が抄録で分けて書かれていない混合集団の試験は I1 を 0（組み入れる側）とする"
+    },
+    {
+      "id": "I2",
+      "type": "inclusion",
+      "text": "対象の multiple myeloma は relapsed/refractory（再発・難治性）か"
+    },
+    {
+      "id": "I3",
+      "type": "inclusion",
+      "text": "対象は CAR-T therapy を受けたか"
+    },
+    {
+      "id": "I4",
+      "type": "inclusion",
+      "text": "O に挙げた評価項目（overall response rate、complete response rate、MRD negativity rate、relapse rate、progression-free survival、grade 3-4 CRS、neurologic toxicities）のいずれか1つ以上の結果を報告しているか"
+    },
+    {
+      "id": "E1",
+      "type": "exclusion",
+      "text": "その文書自身の患者データを含まず、他の研究を紹介・論評するもの（review・systematic review・meta-analysis・editorial・comment・news・学会報告の紹介）か（原著データを含む学会抄録や letter は E1 に当たらない）",
+      "note": "PubMed に載る学会抄録は除外しない"
+    },
+    {
+      "id": "E2",
+      "type": "exclusion",
+      "text": "in vitro や動物モデルだけの前臨床研究で、患者のデータが無いか"
+    },
+    {
+      "id": "E3",
+      "type": "exclusion",
+      "text": "結果を含まない試験計画（protocol・study design の紹介）だけか"
+    }
+  ],
+  "review_title": "Efficacy and Safety of CAR-T Therapy for Relapse or Refractory Multiple Myeloma: A systematic review and meta-analysis",
+  "review_title_en": "Efficacy and Safety of CAR-T Therapy for Relapse or Refractory Multiple Myeloma: A systematic review and meta-analysis"
+}

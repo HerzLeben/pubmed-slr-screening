@@ -152,15 +152,19 @@ def test_parse_records_article_and_books():
     }
 
 
-def test_rebuild_fetches_only_missing(tmp_path, monkeypatch):
+@pytest.mark.parametrize("legacy", [False, True])
+def test_rebuild_fetches_only_missing(tmp_path, monkeypatch, legacy):
     frozen = {"review_pmid": "999", "maxdate": "2021/02/18", "pmids": ["3", "1", "2"], "all_pmids": ["1", "2", "3", "4"]}
     search_path = tmp_path / "frozen.json"
     search_path.write_text(json.dumps(frozen))
     out = tmp_path / "results" / "999"
     out.mkdir(parents=True)
-    kept = {"pmid": "1", "title": "kept", "abstract": "a", "pubdate": "2020", "epubdate": "",
+    kept = {"pmid": "1", "title": "kept", "abstract": "a", "year": "2020", "pubdate": "2020", "epubdate": "",
             "pubdate_vs_cap": "within", "epubdate_vs_cap": "none"}
-    (out / "candidates.jsonl").write_text(json.dumps({"rank": 2, **kept}) + "\n")
+    if legacy:  # the older one-record-per-line file
+        (out / "candidates.jsonl").write_text(json.dumps({"rank": 2, **kept}) + "\n")
+    else:
+        (out / "candidates.json").write_text(json.dumps({"review_pmid": "999", "records": [{"rank": 2, **kept}]}))
 
     asked = []
 
@@ -175,9 +179,14 @@ def test_rebuild_fetches_only_missing(tmp_path, monkeypatch):
     fetch_pubmed.rebuild_from_search(search_path, str(tmp_path / "results"))
 
     assert asked == [["3", "2"]]
-    lines = [json.loads(x) for x in (out / "candidates.jsonl").read_text().splitlines()]
+    doc = json.loads((out / "candidates.json").read_text())
+    assert doc["review_pmid"] == "999"
+    lines = doc["records"]
     assert [(x["rank"], x["pmid"]) for x in lines] == [(1, "3"), (2, "1"), (3, "2")]
     assert lines[1]["title"] == "kept"
+    assert lines[1]["year"] == 2020  # schema section 4: year is an integer
+    assert lines[0]["year"] is None
+    assert all(set(x) >= {"pmid", "rank", "title", "abstract"} for x in lines)
     assert lines[0]["pubdate_vs_cap"] == "straddles"
     assert lines[0]["epubdate_vs_cap"] == "after"
     meta = json.loads((out / "search.json").read_text())

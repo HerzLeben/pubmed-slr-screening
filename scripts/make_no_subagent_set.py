@@ -44,8 +44,8 @@ def main() -> None:
     ap.add_argument("--results-dir", default="results")
     args = ap.parse_args()
 
-    src = Path(args.results_dir) / args.review_pmid / "candidates.jsonl"
-    candidates = [json.loads(line) for line in src.read_text(encoding="utf-8").splitlines()]
+    src = Path(args.results_dir) / args.review_pmid / "candidates.json"
+    candidates = sorted(json.loads(src.read_text(encoding="utf-8"))["records"], key=lambda c: c["rank"])
     items, key = build(candidates, args.n, args.seed)
 
     out = Path(args.results_dir) / "no-subagent" / args.review_pmid

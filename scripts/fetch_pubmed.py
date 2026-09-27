@@ -6,16 +6,18 @@ Calls NCBI E-utilities (esearch -> efetch) directly. Results are sorted by PubMe
 Outputs (under results/<review_pmid>/):
   search.json       query, date range, retrieval time, counts, top-N PMIDs in rank order (pmids) and
                     every hit's PMID in the same relevance order (all_pmids; for recall over all hits)
-  candidates.jsonl  one record per PMID: rank, pmid, title, abstract, journal, year, publication_types,
-                    pubdate, epubdate (esummary, verbatim) and how each compares with --maxdate
+  candidates.json   {"review_pmid", "records": [...]} in the shape of docs/schema.md section 4: pmid, rank,
+                    title, abstract ("" if none), journal, year (int), publication_types, plus pubdate,
+                    epubdate (esummary, verbatim) and how each compares with --maxdate
 
 datetype=pdat matches either the print (pubdate) or the electronic (epubdate) date. search.json counts
 records whose pubdate is after the cap while epubdate is within it (and the reverse), to show which date
 made them match. --compare-maxdate records total_hits of the same query under other caps.
 
 PubMed's relevance order is not reproducible between calls, so the top-N list of one run is frozen in
-search.json (committed as reviews/<review_pmid>/search.json). --from-search rebuilds candidates.jsonl from
-such a file without searching again: it efetches only the PMIDs not already in candidates.jsonl.
+search.json (committed as reviews/<review_pmid>/search.json). --from-search rebuilds candidates.json from
+such a file without searching again: it efetches only the PMIDs not already in candidates.json (or in the
+older candidates.jsonl).
 NCBI Bookshelf records (PubmedBookArticle) are read as well as journal articles.
 
 NCBI_API_KEY and NCBI_EMAIL are read from the environment, after loading the repo's .env with
@@ -269,11 +271,38 @@ def record_stats(pmids: list[str], records: dict[str, dict]) -> dict:
     }
 
 
-def write_candidates(path: Path, pmids: list[str], records: dict[str, dict]) -> None:
-    with path.open("w", encoding="utf-8") as f:
-        for rank, pmid in enumerate(pmids, start=1):
-            if pmid in records:
-                f.write(json.dumps({"rank": rank, **records[pmid]}, ensure_ascii=False) + "\n")
+def to_year(text) -> int | None:
+    return int(text) if str(text).isdigit() else None
+
+
+def write_candidates(path: Path, review_pmid: str, pmids: list[str], records: dict[str, dict]) -> None:
+    """candidates.json in the shape of docs/schema.md section 4 (plus the esummary dates)."""
+    out = []
+    for rank, pmid in enumerate(pmids, start=1):
+        if pmid in records:
+            rec = records[pmid]
+            out.append({"pmid": pmid, "rank": rank, "title": rec.get("title", ""), "abstract": rec.get("abstract", ""),
+                        **{k: v for k, v in rec.items() if k not in ("pmid", "rank", "title", "abstract")},
+                        "year": to_year(rec.get("year"))})
+    doc = {"review_pmid": review_pmid, "records": out}
+    path.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
+def read_candidates(out: Path) -> dict[str, dict]:
+    """Records already on disk, by PMID (rank dropped). Reads candidates.json, or the older candidates.jsonl."""
+    new, old = out / "candidates.json", out / "candidates.jsonl"
+    if new.exists():
+        rows = json.loads(new.read_text(encoding="utf-8"))["records"]
+    elif old.exists():
+        rows = [json.loads(line) for line in old.read_text(encoding="utf-8").splitlines()]
+    else:
+        rows = []
+    records = {}
+    for rec in rows:
+        rec = dict(rec)
+        rec.pop("rank", None)
+        records[str(rec["pmid"])] = rec
+    return records
 
 
 def parse_cap(maxdate: str) -> date:
@@ -281,26 +310,20 @@ def parse_cap(maxdate: str) -> date:
 
 
 def rebuild_from_search(search_path: Path, out_dir: str) -> None:
-    """Re-create candidates.jsonl for a frozen search.json without searching again (relevance order is
-    not reproducible). Records already in <out_dir>/<review>/candidates.jsonl are kept; only the PMIDs
-    missing from it are fetched."""
+    """Re-create candidates.json for a frozen search.json without searching again (relevance order is
+    not reproducible). Records already in <out_dir>/<review>/candidates.json (or the older
+    candidates.jsonl) are kept; only the PMIDs missing from it are fetched."""
     meta = json.loads(search_path.read_text(encoding="utf-8"))
     pmids = meta["pmids"]
     out = Path(out_dir) / meta["review_pmid"]
     out.mkdir(parents=True, exist_ok=True)
-    cand_path = out / "candidates.jsonl"
-    records = {}
-    if cand_path.exists():
-        for line in cand_path.read_text(encoding="utf-8").splitlines():
-            rec = json.loads(line)
-            rec.pop("rank", None)
-            records[rec["pmid"]] = rec
+    records = read_candidates(out)
     todo = [p for p in pmids if p not in records]
     fetched = efetch(todo) if todo else {}
     add_dates(fetched, parse_cap(meta["maxdate"]))
     records.update(fetched)
     records = {p: records[p] for p in pmids if p in records}
-    write_candidates(cand_path, pmids, records)
+    write_candidates(out / "candidates.json", meta["review_pmid"], pmids, records)
     meta.update(record_stats(pmids, records))
     meta["candidates_rebuilt_at"] = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
     meta["n_fetched_on_rebuild"] = len(fetched)
@@ -346,7 +369,7 @@ def main() -> None:
 
     out = Path(args.out_dir) / args.review_pmid
     out.mkdir(parents=True, exist_ok=True)
-    write_candidates(out / "candidates.jsonl", pmids, records)
+    write_candidates(out / "candidates.json", args.review_pmid, pmids, records)
 
     meta = {
         "review_pmid": args.review_pmid,

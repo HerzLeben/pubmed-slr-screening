@@ -35,7 +35,7 @@ Topic：Immunotherapy
 ## 除外基準（どれか 1 なら除外）
 | ID | 問い | 出典 |
 |---|---|---|
-| E1 | review・systematic review・meta-analysis・editorial・comment など、患者データを新たに報告しない出版の種類か（原著データを含む letter は E1 に当たらない） | PICO 外 |
+| E1 | その文書自身の患者データを含まず、他の研究を紹介・論評するもの（review・systematic review・meta-analysis・editorial・comment・news・学会報告の紹介）か（原著データを含む学会抄録や letter は E1 に当たらない） | PICO 外 |
 | E2 | in vitro や動物モデルだけの前臨床研究で、患者のデータが無いか | PICO 外 |
 | E3 | 結果を含まない試験計画（protocol・study design の紹介）だけか | PICO 外 |
 
@@ -46,3 +46,10 @@ Topic：Immunotherapy
 - 比較群（PICO の C）は基準にしない（案の I5 を削除）。元レビューは単群の割合を統合しており、C を基準にすると方法と矛盾するため（included_pmids は見ずに、元レビューの抄録から判断）
 - 案どおり：I3（autologous）は抄録に書かれなければ 0（組み入れる側）
 - CD19 を標的の1つに含む CAR-T（CD19/CD22 などの二重標的）は I2 を満たす（1）。Recall を優先するため
+- 2026-09-27（人が決定、指示7）：E1 の定義を「その文書自身の患者データを含まず、他の研究を紹介・論評するもの（news・学会報告の紹介を含む）」に広げた。原著データを含む学会抄録や letter は当たらない。判定値の向きは docs/schema.md 3章（E は 1＝除外に当たらない、-1＝除外に当たる）。機械用の写しは criteria.json
+
+## 判定の補足（上の決定事項の写し。criteria.json の note になる）
+| ID | 補足 |
+|---|---|
+| I2 | CD19 を標的の1つに含む CAR-T（CD19/CD22 などの二重標的）は I2 を満たす（1） |
+| I3 | autologous と抄録に書かれなければ 0（組み入れる側） |

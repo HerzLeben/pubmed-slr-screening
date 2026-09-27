@@ -57,3 +57,14 @@
 - 指示7で反映する：試走では E を「1＝除外に当たる」で判定した。docs/schema.md（指示7で入れる）では E は「1＝除外に当たらない」。criteria.json と screening-rules は schema に合わせる
 - 指示7で反映する：引用の照合は Unicode の正規化（ハイフンの異体字・空白）をしてから行う。引用元はタイトルと抄録。言い換え・縮約は不可（試走では 16/101件が逐語でなく、うち4件が言い換え・縮約だった）
 - 指示7で反映する：E1 は「その文書自身の患者データを含まず、他の研究を紹介・論評するもの（review・editorial・comment・news・学会報告の紹介）」。原著データを含む学会抄録や letter は当たらない（試走では、総説と明記されない解説を E1=0 とし、news（S041）と commentary（S059）で線引きが揺れた）
+
+## 2026-09-27 指示7：subagent・skill・hook（snap/07-agents-v1、snap/09-hook）
+
+- 「指示7で反映する」3点を反映した：E の向きは docs/schema.md（1＝除外に当たらない）で criteria.json・screening-rules に明記。引用の照合は Unicode 正規化のうえタイトルと抄録の両方（scripts/quote_match.py、Drive の v2 をそのままコピー。build_report.py もタイトルの引用を `src: "title"` で表示する作りだった）。E1 の定義は3本の criteria.md の表を書き換え、決定事項にも1行足した
+- **差し戻しの hook を SubagentStop から PreToolUse（matcher `Write`）に移した**：公式ドキュメントの「Exit code 2 behavior per event」で SubagentStop は "Exit code 2 isn't honored; the subagent has already finished"、decision control も "does not support blocking"。design.md 4章・schema 5章の「SubagentStop の exit 2 で差し戻す」（2026-09-26 に確認したと書いていた）は今の仕様では成り立たない。PreToolUse の exit 2 は "Blocks the tool call" で、subagent は stderr を受け取って作業を続けるので、screener が出力を Write する直前に検査すれば差し戻しになる。SubagentStop（matcher `screener-a|screener-b`）には、書かれたファイルを検査し直して systemMessage で知らせる観察だけを残した。design.md・schema.md を直した
+- 同時起動の上限は SubagentStart / SubagentStop の hook（`.claude/hooks/agent_gate.py`、セッションごとに動いている subagent を印のファイルで数える）で6までにした。SubagentStart は exit 2 で起動を止められる。Claude Code 自体の上限 `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=6`（settings.json の env、既に設定済み）と二重に掛ける。design.md の `PreToolUse`（`Agent`）案は使わない
+- screener への入力は `results/batches/<review>/<a|b>/batch_<nn>.json`（`scripts/make_batches.py`、20件ずつ）。screener-b の基準の逆順はこのファイルの `criteria` の並びで渡す（指示で頼むだけにしない）。hook はこのファイルの PMID でバッチの全件が揃っているかを見る
+- criteria.json は criteria.md から `scripts/criteria_to_json.py` で機械的に作る。決定事項にあった境界の扱い（CD19 の二重標的、CAR-NK、混合集団など）を criteria.md の「判定の補足」表に写し、criteria.json の基準ごとの `note` にした（omitClaudeMd の screener には criteria.md の決定事項が届かないため）
+- fetch_pubmed.py の出力を candidates.jsonl から schema 4章の candidates.json（`{review_pmid, records}`、year は整数）に変えた。前の jsonl も読める
+- adjudicator は Read・Write だけ（Edit なし）。adjudication ファイル全体を書き直すが、status・reasons・disagree_criteria・並びが変わっていないことを PreToolUse の hook が検査する
+- 参照：https://code.claude.com/docs/en/hooks（Exit code 2 behavior per event、SubagentStop・SubagentStart の入力）、https://code.claude.com/docs/en/sub-agents（frontmatter の `skills`・`omitClaudeMd`（v2.1.271 以降、手元は v2.1.283）・`hooks`、ツール名 `Agent`、同時起動の上限 `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`）

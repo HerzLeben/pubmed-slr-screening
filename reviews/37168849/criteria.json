@@ -1,0 +1,44 @@
+{
+  "review_pmid": "37168849",
+  "criteria": [
+    {
+      "id": "I1",
+      "type": "inclusion",
+      "text": "対象は acute myeloid leukemia（AML、急性骨髄性白血病）の患者か",
+      "note": "RR-AML の結果が抄録で分けて書かれていない混合集団の試験は I1 を 0（組み入れる側）とする"
+    },
+    {
+      "id": "I2",
+      "type": "inclusion",
+      "text": "対象の AML は relapsed/refractory（再発・難治性）か"
+    },
+    {
+      "id": "I3",
+      "type": "inclusion",
+      "text": "対象は chimeric antigen receptor T cell（CAR-T）therapy を受けたか",
+      "note": "CAR-NK など T 細胞以外の CAR 細胞は I3 を満たさない（-1）。γδT・CIK など T 細胞由来の CAR は満たす（1）。境界は「CAR を載せた細胞が T 細胞かどうか」"
+    },
+    {
+      "id": "I4",
+      "type": "inclusion",
+      "text": "O に挙げた評価項目（complete response rate、overall response rate、cytokine release syndrome、immune-effector cell associated neurotoxicity syndrome、graft-versus-host disease）のいずれか1つ以上の結果を報告しているか"
+    },
+    {
+      "id": "E1",
+      "type": "exclusion",
+      "text": "その文書自身の患者データを含まず、他の研究を紹介・論評するもの（review・systematic review・meta-analysis・editorial・comment・news・学会報告の紹介）か（原著データを含む学会抄録や letter は E1 に当たらない）"
+    },
+    {
+      "id": "E2",
+      "type": "exclusion",
+      "text": "in vitro や動物モデルだけの前臨床研究で、患者のデータが無いか"
+    },
+    {
+      "id": "E3",
+      "type": "exclusion",
+      "text": "結果を含まない試験計画（protocol・study design の紹介）だけか"
+    }
+  ],
+  "review_title": "Outcomes with chimeric antigen receptor t-cell therapy in relapsed or refractory acute myeloid leukemia: a systematic review and meta-analysis",
+  "review_title_en": "Outcomes with chimeric antigen receptor t-cell therapy in relapsed or refractory acute myeloid leukemia: a systematic review and meta-analysis"
+}

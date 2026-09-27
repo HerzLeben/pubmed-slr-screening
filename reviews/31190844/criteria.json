@@ -1,0 +1,44 @@
+{
+  "review_pmid": "31190844",
+  "criteria": [
+    {
+      "id": "I1",
+      "type": "inclusion",
+      "text": "対象は hematological malignancies（血液がん）と診断された患者か"
+    },
+    {
+      "id": "I2",
+      "type": "inclusion",
+      "text": "対象は CD19 を標的とする chimeric antigen receptor-T cell（CAR-T）therapy を受けたか",
+      "note": "CD19 を標的の1つに含む CAR-T（CD19/CD22 などの二重標的）は I2 を満たす（1）"
+    },
+    {
+      "id": "I3",
+      "type": "inclusion",
+      "text": "使われた CAR-T cell は autologous（自家）か",
+      "note": "autologous と抄録に書かれなければ 0（組み入れる側）"
+    },
+    {
+      "id": "I4",
+      "type": "inclusion",
+      "text": "survival outcomes（生存）または efficacy（有効性）の結果を1つ以上報告しているか"
+    },
+    {
+      "id": "E1",
+      "type": "exclusion",
+      "text": "その文書自身の患者データを含まず、他の研究を紹介・論評するもの（review・systematic review・meta-analysis・editorial・comment・news・学会報告の紹介）か（原著データを含む学会抄録や letter は E1 に当たらない）"
+    },
+    {
+      "id": "E2",
+      "type": "exclusion",
+      "text": "in vitro や動物モデルだけの前臨床研究で、患者のデータが無いか"
+    },
+    {
+      "id": "E3",
+      "type": "exclusion",
+      "text": "結果を含まない試験計画（protocol・study design の紹介）だけか"
+    }
+  ],
+  "review_title": "Survival outcomes and efficacy of autologous CD19 chimeric antigen receptor-T cell therapy in the patient with diagnosed hematological malignancies: a systematic review and meta-analysis",
+  "review_title_en": "Survival outcomes and efficacy of autologous CD19 chimeric antigen receptor-T cell therapy in the patient with diagnosed hematological malignancies: a systematic review and meta-analysis"
+}

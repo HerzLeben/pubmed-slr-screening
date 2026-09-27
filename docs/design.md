@@ -116,9 +116,10 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 
 | イベント | 対象 | 検査 |
 |---|---|---|
-| `SubagentStop`（matcher：`screener-*`） | screener の出力 | 全基準に判定と引用があるか／**引用文字列が abstract に逐語で存在するか**（スクリプトで照合）／JSON の形。不備は exit 2 で差し戻し（公式ドキュメント 2026-09-26 確認：exit 2 は subagent の停止を止め、stderr が伝わる。最終出力は `last_assistant_message` で読める） |
+| `PreToolUse`（matcher：`Write`） | screener・adjudicator の出力 | 全基準に判定と引用があるか／**引用文字列がタイトルか抄録に逐語で存在するか**（Unicode 正規化のうえスクリプトで照合）／JSON の形／書き込み先。不備は exit 2 で Write を止めて差し戻し（2026-09-27 変更：公式ドキュメントでは SubagentStop は exit 2 を受け付けない。PreToolUse の exit 2 は tool の呼び出しを止め、subagent は stderr を受けて続ける。DECISIONS 参照） |
+| `SubagentStop`（matcher：`screener-a\|screener-b`） | screener の出力 | 書かれたファイルを同じ規則で検査し直し、不備を `systemMessage` で本体に知らせる（観察だけ。書かずに終わった screener を見つける） |
 | `PostToolUse`（Write、`results/prisma.json`） | PRISMA | 各段の件数の和が合うか（除外理由の合計＝除外件数） |
-| `PreToolUse`（`Agent`） | subagent 起動 | 同時起動数・1回の起動件数の上限（課金ゲート）。`Agent` に matcher が掛かるかは要確認 |
+| `SubagentStart` / `SubagentStop`（matcher なし） | subagent 起動 | 同時に動く subagent を6体までにする（`.claude/hooks/agent_gate.py`。SubagentStart は exit 2 で起動を止められる）。Claude Code 自体の上限 `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=6` も settings.json の env で掛ける |
 | `PostToolUse`（Edit/Write、`*.py`） | コード | `ruff`、`pytest`（第1作の構成を流用） |
 | `UserPromptSubmit` | 人が送った指示 | `docs/prompts/log.md` に時刻つきで自動追記（記録用。stdout は出さず exit 0。stdout を出すと Claude の context に入る）。第1作で指示文が残らなかった反省から |
 
@@ -218,7 +219,7 @@ trialmind-slr-claude-code/
 2. TrialReviewBench のどのレビュー（5〜10本）を使うか。`study-search-screening.jsonl` に候補集合（非組み入れ研究）が含まれるかを確認してから決める
 3. ~~screener-b の条件~~ → 基準の逆順（2026-09-27）
 4. ~~自作 MCP か既製か~~ → 公式コネクタ＋スクリプトに決定（2026-09-27）
-5. `PreToolUse` の matcher に subagent 起動のツール名（`Agent`）をどう書くか（実機で確認。`SubagentStop` の exit 2 は確認済み）
+5. （解決 2026-09-27）subagent 起動のツール名は `Agent`（v2.1.63 で Task から改名）。同時起動の上限は SubagentStart の hook と env で掛けた。SubagentStop の exit 2 は受け付けられないと公式ドキュメントで確認し、差し戻しは PreToolUse（Write）に移した
 6. 原著著者への連絡タイミング
 7. リポジトリ名
 
