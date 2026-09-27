@@ -1,0 +1,19 @@
+# HARNESS — 想定と違ったこと・詰まった点・人が決めたこと
+
+- 2026-09-27 フェーズ1：`.claude/settings.json` を保存した直後、再起動なしで同じセッションの `UserPromptSubmit` hook が動いた（次の指示文から log.md に記録された）
+- 2026-09-27 フェーズ1：hook の `prompt` には VS Code の `<ide_selection>` ブロックも含まれる。log.md には送った文面以外も残る
+- 2026-09-27 フェーズ1：design.md 3章の `mcp__pubmed__search` / `mcp__pubmed__fetch` は仮の名前。プラグインの実際の tool 名は `/mcp` で確認してから allow に足す（フェーズ2）
+- 2026-09-27 フェーズ1：「screener は `results/` の外に書かない」は settings.json では書けない（permission rule はセッション全体に効き、subagent ごとには分けられない）。agent 定義の `tools` と hook で担保する（フェーズ6・7）
+- 2026-09-27 フェーズ1：この Claude Code セッションには claude.ai の PubMed コネクタ（`claude.ai PubMed`、未認証）が既に見えている。プラグインと同じ URL なら、公式仕様ではプラグイン側が優先され、コネクタは「hidden」扱いになる
+- 2026-09-27 フェーズ2（人が決定）：PubMed は公式プラグイン `pubmed@life-sciences` を scope: project で入れた（`.claude/settings.json` の `enabledPlugins` に入る）
+- 2026-09-27 フェーズ2：VS Code 拡張のパネルでは `/plugin` が使えなかったため、ターミナルの CLI で入れた
+- 2026-09-27 フェーズ2（人が決定）：承認のたびに yes を押すのは続かないので auto mode にした。止めるべき所は ask・deny・hook で固定する方針
+- 2026-09-27 フェーズ2：CLI でプラグインを入れた後も、実行中の VS Code のセッションには PubMed の tool が出てこなかった（ToolSearch で `pubmed` に当たらない。claude.ai 側の PubMed コネクタも未認証）。コネクタの試験（1回の件数・長い Boolean・出版日の上限）は再起動後に持ち越し
+- 2026-09-27 フェーズ2：`NCBI_API_KEY` / `NCBI_EMAIL` はこのセッションのシェルに入っていなかった（`.env` は読まない規則なので、キーなし・3件/秒で試走）
+- 2026-09-27 フェーズ2：`fetch_pubmed.py` を N=5 で試走。「CAR-T multiple myeloma」、出版日の上限 2021/02/18（33746596 の電子版公開日。仮の値）で 342件がヒットし、上位5件はすべて抄録つき。上位は総説・毒性管理が占め、臨床試験は入っていなかった。PubMed は `CAR-T` を MeSH に対応づけず [All Fields] のまま検索した
+- 2026-09-27 フェーズ2：再起動後もこの VS Code のセッションには PubMed の tool が出てこなかった。`claude mcp list`（別プロセス）では `plugin:pubmed:PubMed`（https://pubmed.mcp.claude.com/mcp）が Connected。ToolSearch で `pubmed` / `plugin_pubmed` に当たらない。コネクタの試験（1回の件数・長い Boolean・出版日の上限）と allow への tool 名の追加はまだ
+- 2026-09-27 フェーズ2：システムの `python3` には python-dotenv が無く `fetch_pubmed.py` が import で落ちた。`.venv/bin/python` で実行する
+- 2026-09-27 フェーズ2：`fetch_pubmed.py` を API key ありで N=5 で再試走（`api_key_used: true`、キーはシェルでなくスクリプトが `.env` から読んだ）。検索式 `"CAR-T" AND "multiple myeloma"`、上限 2021/02/18 で 333件、上位5件のうち抄録つきは3件（抄録なしの2件は Editorial）。前回の 342件・5/5件と違うのは検索式の書き方の違いによるものと思われる
+- 2026-09-27 フェーズ2（人が確認）：前回の N=5 試走の検索式は引用符なしの `CAR-T multiple myeloma`（上限 2021/02/18、342件）だった。今回の `"CAR-T" AND "multiple myeloma"` の 333件との差（9件）は、引用符で Automatic Term Mapping が効かなくなったこと（引用符なしでは `multiple myeloma` が MeSH などにも展開される）によるものとみられる。検索式は毎回 search.json の `query_translation` と一緒に記録する
+- 2026-09-27 フェーズ2：3回目の確認でもこのセッションに PubMed の tool は無かった（ToolSearch の `pubmed` は bio-research の Consensus だけ、`+plugin_pubmed` は該当なし）。tool 名が分からないので allow への追加も保留（推測で書かない）
+- 2026-09-27 フェーズ2（人が決定）：コネクタの試験を待たずに、ここまでを「フェーズ2（途中）」として commit する。3点テストと allow への追加は、VS Code ではなくターミナルの `claude` で `/mcp` を開いて行う（プラグインを CLI で入れたため）
