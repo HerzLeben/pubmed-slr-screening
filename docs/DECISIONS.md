@@ -39,3 +39,9 @@
 - 試行の記録（式・total_count・query_translation）は query-builder が返し、本体が `reviews/<PMID>/query.md` に書く（query-builder に Write を持たせない。設計の「PubMed MCP のみ」を守る）
 - fetch_pubmed.py は esummary の pubdate・epubdate を逐語で候補ごとに保存し、上限との前後（within / after / straddles / none）を付ける。pubdate が年だけ（"2021"）など上限をまたぐものは after に数えず straddles とする。`--compare-maxdate` で別の上限での total_hits も search.json に残す
 - 参照：https://code.claude.com/docs/en/sub-agents（`tools` の MCP tool 名の書き方、MCP tool の継承、agents ディレクトリの再起動条件）、https://www.ncbi.nlm.nih.gov/books/NBK25499/（esummary）
+
+## 2026-09-27 フェーズ5：検索式の形（人が決定）
+
+- 3本とも検索式は P AND I だけにする。relapsed/refractory・評価項目・研究デザインはブロックにせず、スクリーニングで判定する（1回目の 33746596 は R/R ブロックを入れ、37168849 は入れておらず、そろっていなかった）
+- 31190844 の I は「(CAR の語) AND (CD19 の語 OR 製品名)」に分ける。製品名に lisocabtagene・JCAR017 を足す。`*` は使わず語形を並べる。1回目は CD19 と CAR の語が OR で並び、CD19 でない CAR-T（BCMA など）が上位を占めた
+- 同じ語に展開される重複した語は削る。"CART"[tiab] は残す。試行の記録は `reviews/<PMID>/query.md`
