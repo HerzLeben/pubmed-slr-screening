@@ -38,6 +38,7 @@ requirements と design が食い違ったら requirements を優先する。ど
 - 節目で commit し tag を付ける：`snap/02-benchmark`、`snap/03-criteria-draft`（人が直す前）、`snap/04-criteria-approved`、`snap/05-no-subagent`、`snap/06-agents-v1`、`snap/07-first-parallel`、`snap/08-hook`、`snap/09-eval-1`
 - 想定と違ったこと・詰まった点・人が決めたことは、その場で `docs/HARNESS.md` に日付つき1行
 - 設計を変えたら `docs/DECISIONS.md` に1〜3行
+- `docs/prompts/log.md`（hook が記録した指示文）は、フェーズごとの commit に含める
 - 記事に使う結果（最初の試走、subagent なしの試走、最初の並列実行）は `docs/samples/` にコピーして commit（`results/` は gitignore）
 - 公式仕様（hook・subagent・MCP・settings）は記憶でなく公式ドキュメントで確認し、見た URL を DECISIONS に残す
 

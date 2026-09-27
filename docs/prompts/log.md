@@ -212,3 +212,92 @@ commit が済んだら、ターミナルで `claude` を起動してください
 ## 2026-09-27T18:07:18+09:00
 
 commitして
+
+---
+
+## 2026-09-27T18:11:06+09:00
+
+<pasted_content id="45cd">
+次のコネクタ試験は、VS Code に tool 名を渡し直すより、ターミナルで起動した claude にそのままやってもらうほうが早いです。PubMed の tool が読み込まれるのはそのセッションなので、3点の試験も allow への追加もそこで済みます。
+
+ターミナルで cd ~/dev/pubmed-slr-screening && claude を実行し、/mcp で plugin:pubmed:PubMed の tool 一覧が出ることを確かめる
+そのセッションに次の文を送る
+
+/mcp に出ている PubMed の tool で、当日手順フェーズ2の3点（1回で返る件数の上限、長い Boolean 式が通るか、出版日の上限を指定できるか）を試して、結果と実際の tool 名を docs/HARNESS.md に記録して。tool 名を .claude/settings.json の permissions.allow に足し、フェーズ2完了として commit して。
+
+結果が出たら持ってきてください。フェーズ3（ベンチマークの整形）の指示を用意します。
+</pasted_content id="45cd">
+
+上記お願いします
+
+---
+
+## 2026-09-27T18:12:04+09:00
+
+ToolSearch で PubMed の tool を探し、見つかった tool の正確な名前と引数（名前・型・説明）を一覧で返して。tool は呼ばないで。ファイルも書かないで。
+
+---
+
+## 2026-09-27T19:02:39+09:00
+
+<pasted_content id="b9a5">
+私も、その進め方でいいと思います。PubMed の認証は対話型の /mcp からしか通せないので、ここはターミナルでお願いします。
+
+/mcp で見るところ
+
+少し前に claude mcp list を実行したときは Connected と出ていたので、認証が原因とは限りません。plugin:pubmed:PubMed の表示で、次のどれに当たるかを見てください。
+
+認証待ちになっている場合： その場で認証すれば解決です。
+Connected で tool が並んでいる場合： 準備はできています。前に用意した文をそのまま送ってください。
+Connected なのに tool が0個の場合： 別の原因です。画面をそのまま持ってきてください。
+
+待っている間にフェーズ3を進められます
+
+ベンチマークの整形はコネクタを使わないので、VS Code 側で先に進められます。コネクタが必要になるのはフェーズ5（query-builder）からです。
+
+当日手順に書いてある指示3は、Immunotherapy の候補10本を表にして人が3本を選ぶ形になっています。3本はもう決めてあるので、短くした次の文で十分です。
+
+先に docs/HARNESS.md の未 commit の1行だけを commit して。
+そのあとフェーズ3：TrialReviewBench（huggingface.co/datasets/zifeng-ai/TrialReviewBench）を bench/raw/ に取得し、study-search-screening.jsonl から PMID 33746596・31190844・37168849 の3本だけを bench/reviews.jsonl に整形して（PMID、PICO、Involved_Citations の pmid 一覧、Topic）。組み入れ数がそれぞれ 9・7・11 と一致したら、commit して snap/02-benchmark を付けて止まって。一致しなければ commit せずに差を見せて止まって。bench/raw/ を commit に含めるかは、ファイルサイズを見せてから聞いて。
+
+引き継ぎメモには、非対話の claude -p でも PubMed の tool が見つからなかったことと、認証以外の原因も考えられることを書き足しました。Blog フォルダと Project の両方を更新してあります。
+</pasted_content id="b9a5">
+
+これ進められますか？
+
+---
+
+## 2026-09-27T19:09:30+09:00
+
+<pasted_content id="b9a5">
+フェーズ4の指示
+
+当日手順の指示4に、3点を足しました。
+
+新しく作った skill は、起動中のセッションに読み込まれないことがあります。その確認を入れました。
+検索期間の上限（2021/02/18）はまだ仮の値なので、ここで元レビューの出版日から確定させます。
+log.md の扱いを決めました。
+
+フェーズ4：pico-to-criteria の skill（.claude/skills/pico-to-criteria/）を作って。作ったら、このセッションでその skill が認識されているか確かめて。認識されていなければ、Reload Window が必要だと伝えて止まって。
+認識されていれば、bench/reviews.jsonl の3本それぞれの PICO から、適格基準（包含・除外）を reviews/<PMID>/criteria.md に起こして。基準は1つの判定で答えられる粒度にすること。各 criteria.md には、元レビューの出版日（＝検索期間の上限）を PubMed で確認して書いて。
+案ができたら commit して snap/03 を付け、承認を待って止まって。docs/prompts/log.md は今回からフェーズごとの commit に含めて、このルールを CLAUDE.md にも1行足して。
+</pasted_content id="b9a5">
+
+---
+
+## 2026-09-27T19:12:16+09:00
+
+<pasted_content id="b9a5">
+次の手順
+
+VS Code で「Developer: Reload Window」を実行します。再読込みのあとに会話が続いていなければ、過去の会話を開き直してください。HARNESS と DECISIONS に記録が残っているので、新しい会話から始めても大丈夫です。
+次の文を送ってください。
+
+続けて。skill が認識されたのを確かめてから、3本の criteria.md を起こして。検索期間の上限には、出版日に加えて、抄録に検索の終了日（"searched up to …" など）があればそれも参考として並べて。
+</pasted_content id="b9a5">
+
+---
+
+## 2026-09-27T19:13:01+09:00
+
+続けて。skill が認識されたのを確かめてから、3本の criteria.md を起こして。検索期間の上限には、出版日に加えて、抄録に検索の終了日（"searched up to …" など）があればそれも参考として並べて。

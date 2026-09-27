@@ -20,3 +20,7 @@
 - 2026-09-27 フェーズ2：VS Code から非対話の `claude -p` を別に起動しても PubMed の tool は ToolSearch に出なかった。認証が必要な MCP サーバーの一覧（途中で「…and 35 more」と省略）に入っている可能性がある。OAuth は非対話セッションでは通せないので、ターミナルの `claude` で `/mcp` から認証する必要がある
 - 2026-09-27 フェーズ3：TrialReviewBench（HF revision 6dfc322）の study-search-screening.jsonl は100行・6列（PMID, Title, Abstract, PICO, Involved_Citations, Topic）。PICO は dict、Involved_Citations は list としてそのまま入っている。Abstract が null の行が5つ。3本（33746596・31190844・37168849）の組み入れ数は 9・7・11 で想定と一致、pmid の欠落・重複なし。`scripts/build_bench.py` で bench/reviews.jsonl に整形
 - 2026-09-27 フェーズ3（人が決定）：bench/raw/（約1.5 MB）は commit しない（.gitignore のまま）。上の revision から再取得できる
+- 2026-09-27 フェーズ4：`.claude/skills/pico-to-criteria/SKILL.md` を作った直後に Skill tool で呼ぶと `Unknown skill: pico-to-criteria` になった（VS Code 拡張のセッション）。公式ドキュメントでは、`.claude/skills/` をセッション開始後に新しく作った場合は `/reload-skills` が必要とされている。Reload Window 後に続ける
+- 2026-09-27 フェーズ4：Reload Window の前は Skill tool で2回 `Unknown skill` になった。Reload Window 後は skill の一覧に pico-to-criteria が出て、起動できた
+- 2026-09-27 フェーズ4：3本とも、元レビューの抄録に検索の終了日の記載は無かった。上限の案は esummary の epubdate（33746596：2021/02/18、31190844：2019/05/06、37168849：2023/04/24）。参考として received・accepted・entrez も criteria.md に並べた。PubMed コネクタは引き続きこのセッションに無く、E-utilities の esummary・efetch で確認した
+- 2026-09-27 フェーズ4（人が決定）：`docs/prompts/log.md` は今回からフェーズごとの commit に含める（CLAUDE.md に追記）
