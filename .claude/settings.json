@@ -12,7 +12,14 @@
       "Bash(ruff *)",
       "Bash(git status *)",
       "Bash(git diff *)",
-      "Bash(git log *)"
+      "Bash(git log *)",
+      "mcp__plugin_pubmed_PubMed__search_articles",
+      "mcp__plugin_pubmed_PubMed__get_article_metadata",
+      "mcp__plugin_pubmed_PubMed__find_related_articles",
+      "mcp__plugin_pubmed_PubMed__lookup_article_by_citation",
+      "mcp__plugin_pubmed_PubMed__convert_article_ids",
+      "mcp__plugin_pubmed_PubMed__get_copyright_status",
+      "mcp__plugin_pubmed_PubMed__get_full_text_article"
     ],
     "deny": [
       "Read(.env)",

@@ -25,3 +25,10 @@
 - 2026-09-27 適格基準の承認（人が決定）：case report は3本とも除外しない（Recall を優先）。E1〜E3（PICO 外）は採用し、E1 には editorial・comment を含めるが、原著データを含む letter は E1 に当たらない
 - 2026-09-27 検索期間の上限（人が決定）：3本とも元レビューの epubdate で確定（33746596：2021/02/18、31190844：2019/05/06、37168849：2023/04/24）。received は参考として criteria.md に残す。絞り込みは E-utilities の `datetype=pdat` と `maxdate`
 - 2026-09-27 未決2点（人が決定）：31190844 は CD19 を標的の1つに含む CAR-T（CD19/CD22 などの二重標的）も I2 を満たす（Recall 優先）。37168849 は CAR-NK など T 細胞以外の CAR 細胞は I3 を満たさず、γδT・CIK など T 細胞由来の CAR は満たす（境界は CAR を載せた細胞が T 細胞かどうか）
+
+## 2026-09-27 フェーズ2（完了）：PubMed コネクタの tool を allow に追加
+
+- PubMed プラグインの7つの tool はすべて読み取り系なので、ワイルドカードを使わず名前で1つずつ `permissions.allow` に足した（ツールが増えても勝手に許可されないようにするため）
+- コネクタは演算子20個・200件までなので、検索式の試行錯誤は部分式で行い、本検索と取得は `fetch_pubmed.py`（E-utilities）でする。役割の分け方（requirements 決定事項8）は変えない
+- 上限の日付で絞るときは、コネクタでも `date_from` を必ず渡す（`date_to` だけだと絞り込みが無視される）
+- 参照：https://code.claude.com/docs/en/permissions（MCP tool の permission rule の書き方）
