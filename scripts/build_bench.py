@@ -1,0 +1,44 @@
+"""TrialReviewBench の study-search-screening.jsonl から対象レビューだけを bench/reviews.jsonl に整形する。
+
+使い方: python3 scripts/build_bench.py 33746596 31190844 37168849
+"""
+import json
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+RAW = ROOT / "bench" / "raw" / "TrialReviewBench-study-search-screening.jsonl"
+OUT = ROOT / "bench" / "reviews.jsonl"
+
+
+def main(pmids):
+    rows = {}
+    for line in RAW.open(encoding="utf-8"):
+        r = json.loads(line)
+        rows[r["PMID"]] = r
+
+    missing = [p for p in pmids if p not in rows]
+    if missing:
+        sys.exit(f"not found in raw: {missing}")
+
+    with OUT.open("w", encoding="utf-8") as f:
+        for p in pmids:
+            r = rows[p]
+            citations = r["Involved_Citations"]
+            included = [str(c["pmid"]) for c in citations if c.get("pmid")]
+            no_pmid = [c.get("title", "") for c in citations if not c.get("pmid")]
+            rec = {
+                "PMID": r["PMID"],
+                "PICO": r["PICO"],
+                "included_pmids": included,
+                "Topic": r["Topic"],
+            }
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            dup = len(included) - len(set(included))
+            print(f"{p}\tcitations={len(citations)}\twith_pmid={len(included)}\tunique={len(set(included))}\tdup={dup}\tno_pmid={len(no_pmid)}\t{r['Topic']}")
+            for t in no_pmid:
+                print(f"  no pmid: {t[:100]}")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

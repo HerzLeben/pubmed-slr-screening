@@ -18,3 +18,5 @@
 - 2026-09-27 フェーズ2：3回目の確認でもこのセッションに PubMed の tool は無かった（ToolSearch の `pubmed` は bio-research の Consensus だけ、`+plugin_pubmed` は該当なし）。tool 名が分からないので allow への追加も保留（推測で書かない）
 - 2026-09-27 フェーズ2（人が決定）：コネクタの試験を待たずに、ここまでを「フェーズ2（途中）」として commit する。3点テストと allow への追加は、VS Code ではなくターミナルの `claude` で `/mcp` を開いて行う（プラグインを CLI で入れたため）
 - 2026-09-27 フェーズ2：VS Code から非対話の `claude -p` を別に起動しても PubMed の tool は ToolSearch に出なかった。認証が必要な MCP サーバーの一覧（途中で「…and 35 more」と省略）に入っている可能性がある。OAuth は非対話セッションでは通せないので、ターミナルの `claude` で `/mcp` から認証する必要がある
+- 2026-09-27 フェーズ3：TrialReviewBench（HF revision 6dfc322）の study-search-screening.jsonl は100行・6列（PMID, Title, Abstract, PICO, Involved_Citations, Topic）。PICO は dict、Involved_Citations は list としてそのまま入っている。Abstract が null の行が5つ。3本（33746596・31190844・37168849）の組み入れ数は 9・7・11 で想定と一致、pmid の欠落・重複なし。`scripts/build_bench.py` で bench/reviews.jsonl に整形
+- 2026-09-27 フェーズ3（人が決定）：bench/raw/（約1.5 MB）は commit しない（.gitignore のまま）。上の revision から再取得できる
