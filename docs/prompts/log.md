@@ -315,3 +315,15 @@ case report は3本とも除外しない。Recall を優先するため。
 E1〜E3 は採用。E1 には editorial・comment を含める。ただし原著データを含む letter は E1 に当たらないと明記する。
 この判断は DECISIONS.md に記録して。
 </pasted_content id="b9a5">
+
+---
+
+## 2026-09-27T19:20:51+09:00
+
+<pasted_content id="b9a5">
+未決の2点を決めました。criteria.md と DECISIONS.md に反映して commit して（tag は付け直さなくてよい）。
+
+31190844：CD19 を標的の1つに含む CAR-T（CD19/CD22 などの二重標的）は I2 を満たす（1）。Recall 優先のため。
+37168849：CAR-NK など T 細胞以外の CAR 細胞は I3 を満たさない（-1）。γδT・CIK など T 細胞由来の CAR は満たす（1）。境界は「CAR を載せた細胞が T 細胞かどうか」。
+上限の絞り込み（datetype=pdat）が電子版と印刷版のどちらの日付で一致するかを、フェーズ5で確かめて HARNESS に記録する。
+</pasted_content id="b9a5">

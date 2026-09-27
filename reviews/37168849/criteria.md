@@ -44,6 +44,4 @@ Topic：Immunotherapy
 - case report は除外しない（Recall を優先するため）
 - 検索の上限は epubdate で確定。received は参考として残す。絞り込みは E-utilities の `datetype=pdat`、`maxdate` に上の日付（`scripts/fetch_pubmed.py` の既定。実際の値は `results/<PMID>/search.json` に残る）
 - 案どおり：RR-AML の結果が抄録で分けて書かれていない混合集団の試験は I1 を 0（組み入れる側）とする
-
-## 未決（人の指示なし。判定では 0 とし、組み入れる側に倒す）
-- CAR-T 以外の CAR 細胞（CAR-NK など）を I3 で -1 とするか
+- CAR-NK など T 細胞以外の CAR 細胞は I3 を満たさない（-1）。γδT・CIK など T 細胞由来の CAR は満たす（1）。境界は「CAR を載せた細胞が T 細胞かどうか」

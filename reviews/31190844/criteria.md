@@ -45,6 +45,4 @@ Topic：Immunotherapy
 - 検索の上限は epubdate で確定。received は参考として残す。絞り込みは E-utilities の `datetype=pdat`、`maxdate` に上の日付（`scripts/fetch_pubmed.py` の既定。実際の値は `results/<PMID>/search.json` に残る）
 - 比較群（PICO の C）は基準にしない（案の I5 を削除）。元レビューは単群の割合を統合しており、C を基準にすると方法と矛盾するため（included_pmids は見ずに、元レビューの抄録から判断）
 - 案どおり：I3（autologous）は抄録に書かれなければ 0（組み入れる側）
-
-## 未決（人の指示なし。判定では 0 とし、組み入れる側に倒す）
-- CD19 と別の標的を組み合わせた CAR-T（例：CD19/CD22）を I2 で 1 とするか
+- CD19 を標的の1つに含む CAR-T（CD19/CD22 などの二重標的）は I2 を満たす（1）。Recall を優先するため
