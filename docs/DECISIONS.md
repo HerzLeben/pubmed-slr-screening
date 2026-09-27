@@ -32,3 +32,10 @@
 - コネクタは演算子20個・200件までなので、検索式の試行錯誤は部分式で行い、本検索と取得は `fetch_pubmed.py`（E-utilities）でする。役割の分け方（requirements 決定事項8）は変えない
 - 上限の日付で絞るときは、コネクタでも `date_from` を必ず渡す（`date_to` だけだと絞り込みが無視される）
 - 参照：https://code.claude.com/docs/en/permissions（MCP tool の permission rule の書き方）
+
+## 2026-09-27 フェーズ5：query-builder と fetch_pubmed.py
+
+- query-builder の tools はコネクタの `search_articles` と `get_article_metadata` だけ。Read を持たせないので bench/reviews.jsonl（included_pmids）を読めない。PICO・承認済み基準・上限は本体が委任メッセージで渡す。`find_related_articles`・`get_full_text_article` は外す（元レビューの関連論文や参考文献から正解が漏れるため）
+- 試行の記録（式・total_count・query_translation）は query-builder が返し、本体が `reviews/<PMID>/query.md` に書く（query-builder に Write を持たせない。設計の「PubMed MCP のみ」を守る）
+- fetch_pubmed.py は esummary の pubdate・epubdate を逐語で候補ごとに保存し、上限との前後（within / after / straddles / none）を付ける。pubdate が年だけ（"2021"）など上限をまたぐものは after に数えず straddles とする。`--compare-maxdate` で別の上限での total_hits も search.json に残す
+- 参照：https://code.claude.com/docs/en/sub-agents（`tools` の MCP tool 名の書き方、MCP tool の継承、agents ディレクトリの再起動条件）、https://www.ncbi.nlm.nih.gov/books/NBK25499/（esummary）

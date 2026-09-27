@@ -29,6 +29,6 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception:
+    except Exception:  # noqa: BLE001, S110 -- must stay silent and never block (see docstring)
         pass
     sys.exit(0)

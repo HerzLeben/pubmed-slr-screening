@@ -351,3 +351,32 @@ claude
 ## 2026-09-27T19:29:17+09:00
 
 [Image #3]
+
+---
+
+## 2026-09-27T19:34:24+09:00
+
+<pasted_content id="8834">
+フェーズ5に進んで。query-builder の方針は次のとおり。
+
+検索式の試行錯誤はコネクタで部分式ごとに行い（演算子20個・200件の制約内）、試した式・件数・query_translation を残す。
+組み上げた本検索の式は、3本それぞれ人（私）の承認を得てから fetch_pubmed.py で取得する。承認前に取得を始めない。
+query-builder は included_pmids を読まない。
+fetch_pubmed.py は1件ごとに esummary の epubdate と pubdate を両方保存する。取得後、pubdate が上限より後で epubdate が上限以内の件数を数えて、datetype=pdat がどちらの日付で一致するかを HARNESS に記録する。
+33746596 は received から epub まで10か月あるので、上限の違いで件数がどれだけ変わるかも記録する。
+3本の検索式案がそろったところで止めて、報告して。
+</pasted_content id="8834">
+
+---
+
+## 2026-09-27T19:37:52+09:00
+
+
+
+<pasted_content id="607e">
+フェーズ5（途中）として commit して。tag は付けない。log.md も含める。
+補足を2点：
+
+元レビュー自身（例：33746596）が検索結果に入ることがある。query-builder は、そのレコードを検索式の調整に使わない。候補に入った場合は E1 で除外される前提でよいが、HARNESS にその旨を1行書いておいて。
+ruff と pytest は、フェーズ5の取得前に .venv へ入れて、fetch_pubmed.py の日付判定のテストを通しておいて。
+</pasted_content id="607e">

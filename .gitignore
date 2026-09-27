@@ -4,3 +4,5 @@ bench/raw/
 .venv/
 __pycache__/
 .DS_Store
+.ruff_cache/
+.pytest_cache/

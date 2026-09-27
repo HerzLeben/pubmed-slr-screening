@@ -33,3 +33,10 @@
 - 2026-09-27 フェーズ2 試験②（長い Boolean）：演算子（AND/OR/NOT）34個の式は `Query too complex: too many boolean operators (max: 20)`（INVALID_QUERY）で拒否。18個・20個は通った。上限は演算子20個。NCBI 側の制限ではなくコネクタ側の検査で、`fetch_pubmed.py`（E-utilities 直接）には無い。query-builder が作る式は20個以内に収めるか、コネクタで試すのは部分式にする
 - 2026-09-27 フェーズ2 試験③（出版日の上限）：`date_to` だけを渡すと絞り込みが効かない（`CAR-T multiple myeloma` で 2114件、`query_translation` に日付が入らない）。`date_from=1800/01/01` と `date_to=2021/02/18` を両方渡すと `AND 1800/01/01:2021/02/18[Date - Publication]` が付き、342件で `fetch_pubmed.py`（E-utilities、pdat）と一致。上限を指定するときは必ず下限も渡す
 - 2026-09-27 フェーズ4の宿題（pdat の一致）：`pdat`（[Date - Publication]）は電子版と印刷版の**両方**の日付で一致する（1件で確認）。34031533（Leukemia、コネクタの `publication_date` は 2021-05-24、掲載号は vol 35 issue 10）は 2021/04/01–05/31 と 2021/10/01–10/31 の両方でヒットし、その間の 06/01–09/30 ではヒットしなかった。したがって `maxdate` の上限は「どちらかの日付が上限以前なら残る」。電子版が上限前で印刷版が上限後の論文も候補に入る（元レビューが見られた論文なので妥当）。コネクタの `get_article_metadata` は日付を1つしか返さず、電子版と印刷版を区別できない
+- 2026-09-27 フェーズ5：この VS Code のセッションにも PubMed コネクタの tool は出てこなかった（ToolSearch で当たるのは bio-research の Consensus だけ）。subagent は本体の MCP tool を引き継ぐだけなので、ここから query-builder を起動してもコネクタは使えない。query-builder の試行はターミナルの `claude` で行う
+- 2026-09-27 フェーズ5：`.claude/agents/` はこのセッションの開始後に作った。公式仕様では、開始時に無かった agents ディレクトリの最初のファイルは再起動しないと読まれない
+- 2026-09-27 フェーズ5：`ruff` と `pytest` は PATH にも `.venv` にも無い。fetch_pubmed.py の日付判定はネットワークなしで手元の例（"2021"、"2021 Oct-Dec"、"2020 Winter" など）で確かめた
+- 2026-09-27 フェーズ5（人が決定）：元レビュー自身（例：33746596）が検索結果に入ることがある。query-builder はそのレコードを検索式の調整に使わない（agent 定義に明記）。候補に入った場合は E1（review・meta-analysis）で除外される前提とし、検索式で NOT はしない
+- 2026-09-27 フェーズ5：`ruff`（0.16.9）と `pytest`（9.1.1）を `.venv` に入れた（`requirements-dev.txt`）。`tests/test_fetch_pubmed.py`（日付判定 26件、ネットワークなし）は通過
+- 2026-09-27 フェーズ5：テストを書く途中で、`date_range` が年をまたぐ pubdate（`2020 Dec-2021 Jan`）の2つ目の年を読まず、終わりを 2020/01/31（始まりより前）にしていたのを見つけて直した。直す前は、上限をまたぐ範囲でも within になっていた
+- 2026-09-27 フェーズ5：ruff は設定ファイルが無くても I・DTZ・S・BLE・EXE などの規則で指摘した。import の順序と実行権限は直した。hook の例外の握りつぶし（黙って exit 0 するため）と、strptime から日付だけを取る箇所は、理由を書いて noqa にした

@@ -5,7 +5,12 @@ Calls NCBI E-utilities (esearch -> efetch) directly. Results are sorted by PubMe
 
 Outputs (under results/<review_pmid>/):
   search.json       query, date range, retrieval time, counts, PMIDs in rank order
-  candidates.jsonl  one record per PMID: rank, pmid, title, abstract, journal, year, publication_types
+  candidates.jsonl  one record per PMID: rank, pmid, title, abstract, journal, year, publication_types,
+                    pubdate, epubdate (esummary, verbatim) and how each compares with --maxdate
+
+datetype=pdat matches either the print (pubdate) or the electronic (epubdate) date. search.json counts
+records whose pubdate is after the cap while epubdate is within it (and the reverse), to show which date
+made them match. --compare-maxdate records total_hits of the same query under other caps.
 
 NCBI_API_KEY and NCBI_EMAIL are read from the environment, after loading the repo's .env with
 python-dotenv (variables already set in the shell win). They are never printed or written to disk.
@@ -20,13 +25,14 @@ Example:
 import argparse
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -34,6 +40,9 @@ from dotenv import load_dotenv
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 TOOL = "pubmed-slr-screening"
 EFETCH_BATCH = 200
+MONTHS = {m: i for i, m in enumerate(
+    ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], start=1)}
+SEASONS = {"spring": (3, 5), "summer": (6, 8), "fall": (9, 11), "autumn": (9, 11), "winter": (12, 2)}
 
 
 def base_params() -> dict:
@@ -89,6 +98,67 @@ def esearch(query: str, n: int, mindate: str, maxdate: str) -> dict:
     return result
 
 
+def esummary_dates(pmids: list[str]) -> dict[str, dict]:
+    dates = {}
+    for i in range(0, len(pmids), EFETCH_BATCH):
+        chunk = pmids[i : i + EFETCH_BATCH]
+        result = json.loads(post("esummary.fcgi", {"id": ",".join(chunk), "retmode": "json"}))["result"]
+        for pmid in result.get("uids", []):
+            doc = result[pmid]
+            dates[pmid] = {"pubdate": doc.get("pubdate", ""), "epubdate": doc.get("epubdate", "")}
+    return dates
+
+
+def date_range(text: str) -> tuple[date, date] | None:
+    """Earliest and latest day a PubMed date string can mean ("2021", "2021 Oct", "2021 Oct-Dec",
+    "2021 Oct 5", "2020 Winter", "2020 Dec-2021 Jan"). None if empty or unparseable."""
+    m = re.match(r"^(\d{4})\s*(.*)$", text.strip())
+    if not m:
+        return None
+    year, rest = int(m.group(1)), m.group(2).strip().lower()
+    if not rest:
+        return date(year, 1, 1), date(year, 12, 31)
+    words = re.findall(r"[a-z]+|\d+", rest)
+    months = [MONTHS[w[:3]] for w in words if w[:3] in MONTHS]
+    season = next((SEASONS[w] for w in words if w in SEASONS), None)
+    if season:
+        first, last = season
+        end_year = year + 1 if last < first else year
+        return date(year, first, 1), month_end(end_year, last)
+    if not months:
+        return date(year, 1, 1), date(year, 12, 31)
+    # A second 4-digit number is the end year of a cross-year range ("2020 Dec-2021 Jan").
+    years = [int(w) for w in words if w.isdigit() and len(w) == 4]
+    days = [int(w) for w in words if w.isdigit() and len(w) <= 2]
+    if len(months) == 1 and len(days) == 1 and not years:
+        d = date(year, months[0], days[0])
+        return d, d
+    end_year = years[-1] if years else year
+    return date(year, months[0], 1), month_end(end_year, months[-1])
+
+
+def month_end(year: int, month: int) -> date:
+    nxt = date(year + 1, 1, 1) if month == 12 else date(year, month + 1, 1)
+    return date.fromordinal(nxt.toordinal() - 1)
+
+
+def vs_cap(text: str, cap: date) -> str:
+    """'within' / 'after' / 'straddles' (e.g. pubdate "2021" vs cap 2021/02/18) / 'none'."""
+    r = date_range(text)
+    if r is None:
+        return "none"
+    if r[1] <= cap:
+        return "within"
+    if r[0] > cap:
+        return "after"
+    return "straddles"
+
+
+def count_hits(query: str, mindate: str, maxdate: str) -> dict:
+    result = esearch(query, 0, mindate, maxdate)
+    return {"maxdate": maxdate, "total_hits": int(result.get("count", 0))}
+
+
 def text_of(elem) -> str:
     return "".join(elem.itertext()).strip() if elem is not None else ""
 
@@ -133,6 +203,8 @@ def main() -> None:
     ap.add_argument("--maxdate", required=True, help="publication date cap, YYYY/MM/DD (review's publication date)")
     ap.add_argument("--mindate", default="1800/01/01", help="publication date floor, YYYY/MM/DD")
     ap.add_argument("--n", type=int, default=200, help="number of top candidates by relevance")
+    ap.add_argument("--compare-maxdate", action="append", default=[],
+                    help="also record total_hits under this cap, YYYY/MM/DD (repeatable)")
     ap.add_argument("--out-dir", default="results")
     args = ap.parse_args()
 
@@ -141,6 +213,14 @@ def main() -> None:
     search = esearch(args.query, args.n, args.mindate, args.maxdate)
     pmids = search.get("idlist", [])
     records = efetch(pmids) if pmids else {}
+    dates = esummary_dates(pmids) if pmids else {}
+    cap = datetime.strptime(args.maxdate, "%Y/%m/%d").date()  # noqa: DTZ007 -- only the calendar date is used
+    for pmid, rec in records.items():
+        d = dates.get(pmid, {"pubdate": "", "epubdate": ""})
+        rec.update(d)
+        rec["pubdate_vs_cap"] = vs_cap(d["pubdate"], cap)
+        rec["epubdate_vs_cap"] = vs_cap(d["epubdate"], cap)
+    compare = [count_hits(args.query, args.mindate, m) for m in args.compare_maxdate]
 
     out = Path(args.out_dir) / args.review_pmid
     out.mkdir(parents=True, exist_ok=True)
@@ -165,6 +245,13 @@ def main() -> None:
         "n_with_record": len(records),
         "n_with_abstract": sum(1 for r in records.values() if r["abstract"]),
         "missing_pmids": missing,
+        "n_pubdate_after_epubdate_within": sum(
+            1 for r in records.values() if r["pubdate_vs_cap"] == "after" and r["epubdate_vs_cap"] == "within"),
+        "n_epubdate_after_pubdate_within": sum(
+            1 for r in records.values() if r["epubdate_vs_cap"] == "after" and r["pubdate_vs_cap"] == "within"),
+        "n_pubdate_straddles_cap": sum(1 for r in records.values() if r["pubdate_vs_cap"] == "straddles"),
+        "n_no_epubdate": sum(1 for r in records.values() if r["epubdate_vs_cap"] == "none"),
+        "compare_maxdate": compare,
         "api_key_used": bool(os.environ.get("NCBI_API_KEY")),
         "pmids": pmids,
     }
