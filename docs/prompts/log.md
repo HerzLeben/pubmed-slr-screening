@@ -380,3 +380,21 @@ fetch_pubmed.py は1件ごとに esummary の epubdate と pubdate を両方保�
 元レビュー自身（例：33746596）が検索結果に入ることがある。query-builder は、そのレコードを検索式の調整に使わない。候補に入った場合は E1 で除外される前提でよいが、HARNESS にその旨を1行書いておいて。
 ruff と pytest は、フェーズ5の取得前に .venv へ入れて、fetch_pubmed.py の日付判定のテストを通しておいて。
 </pasted_content id="607e">
+
+---
+
+## 2026-09-27T19:41:28+09:00
+
+
+
+<pasted_content id="607e">
+Claude Code に返す文の例
+
+どちらも VS Code パネルのセッションで作ったもので、commit に入れて問題ない。HARNESS には「同じ日のターミナルの対話セッションでは PubMed の tool が使えた。違いの原因は未確定」と1行足して commit して。終わったら再起動するので止めて。
+
+そのあとの手順
+
+/exit で終了して、同じターミナルで claude を起動し直します。
+/agents に query-builder が出ること、/mcp で PubMed が authenticated になっていることを確かめます。
+次の文を送ります。「フェーズ5の続き：3本それぞれ query-builder で検索式案を作って。3本そろったら止めて報告して」
+</pasted_content id="607e">
