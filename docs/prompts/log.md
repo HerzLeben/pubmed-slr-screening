@@ -767,3 +767,18 @@ PubMed コネクタの search_articles と get_article_metadata が使えるか
 CLAUDE.md の tag 一覧にフェーズ5の承認の tag があれば付けて。
 そのあと3本を取得して、search.json の件数（straddles を含む）と、候補が200件ずつ取れたかを報告して。Recall の計算はまだしない（指示11で出す）。
 </pasted_content id="2d46">
+
+---
+
+## 2026-09-27T20:12:45+09:00
+
+
+
+<pasted_content id="2d46">
+3点決めました。
+
+今回の200件を候補として固定する。search.json（all_pmids・上位200件の PMID と並び・取得日時）を commit する。candidates.jsonl は抄録の著作権があるので commit しない（.gitignore を確認）。代わりに、search.json の PMID から efetch で candidates を作り直す手順を README か HARNESS に書く。DECISIONS に「上位200件はこの取得時点の relevance 順で固定。Best Match は呼び出しで揺れる」と書く。
+parse_article を PubmedBookArticle にも対応させ、テストを足す。検索はやり直さず、31190844 の欠けた4件だけ PMID 指定の efetch で取って同じ200件に足す。
+CLAUDE.md の tag 一覧に snap/05-query-approved を足し、072fdf0 に付ける。
+済んだら commit して、31190844 のレコード数が200になったこと、3本の抄録ありの件数を報告して。そこで止まって（次は指示6）。
+</pasted_content id="2d46">

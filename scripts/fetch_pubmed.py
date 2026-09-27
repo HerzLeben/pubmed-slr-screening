@@ -13,6 +13,11 @@ datetype=pdat matches either the print (pubdate) or the electronic (epubdate) da
 records whose pubdate is after the cap while epubdate is within it (and the reverse), to show which date
 made them match. --compare-maxdate records total_hits of the same query under other caps.
 
+PubMed's relevance order is not reproducible between calls, so the top-N list of one run is frozen in
+search.json (committed as reviews/<review_pmid>/search.json). --from-search rebuilds candidates.jsonl from
+such a file without searching again: it efetches only the PMIDs not already in candidates.jsonl.
+NCBI Bookshelf records (PubmedBookArticle) are read as well as journal articles.
+
 NCBI_API_KEY and NCBI_EMAIL are read from the environment, after loading the repo's .env with
 python-dotenv (variables already set in the shell win). They are never printed or written to disk.
 All requests are POSTs so the key never appears in a URL (and so not in error messages).
@@ -21,6 +26,7 @@ Spec: https://www.ncbi.nlm.nih.gov/books/NBK25499/
 Example:
   python3 scripts/fetch_pubmed.py --review-pmid 33746596 \
       --query '"CAR-T" AND "multiple myeloma"' --maxdate 2021/03/01 --n 200
+  python3 scripts/fetch_pubmed.py --from-search reviews/33746596/search.json
 """
 
 import argparse
@@ -178,25 +184,56 @@ def text_of(elem) -> str:
     return "".join(elem.itertext()).strip() if elem is not None else ""
 
 
-def parse_article(article) -> dict:
-    citation = article.find("MedlineCitation")
-    art = citation.find("Article")
+def abstract_of(parent) -> str:
     parts = []
-    for ab in art.findall("Abstract/AbstractText"):
+    for ab in parent.findall("Abstract/AbstractText"):
         label = ab.get("Label")
         txt = text_of(ab)
         parts.append(f"{label}: {txt}" if label else txt)
+    return "\n".join(parts)
+
+
+def parse_article(article) -> dict:
+    citation = article.find("MedlineCitation")
+    art = citation.find("Article")
     year = text_of(art.find("Journal/JournalIssue/PubDate/Year")) or text_of(
         art.find("Journal/JournalIssue/PubDate/MedlineDate")
     )[:4]
     return {
         "pmid": text_of(citation.find("PMID")),
         "title": text_of(art.find("ArticleTitle")),
-        "abstract": "\n".join(parts),
+        "abstract": abstract_of(art),
         "journal": text_of(art.find("Journal/Title")),
         "year": year,
         "publication_types": [text_of(pt) for pt in art.findall("PublicationTypeList/PublicationType")],
     }
+
+
+def parse_book_article(article) -> dict:
+    """NCBI Bookshelf records (e.g. HTA reports). A chapter has its own ArticleTitle; a whole book has
+    only the BookTitle. The book title (or the publisher, for a whole book) stands in for the journal."""
+    doc = article.find("BookDocument")
+    book_title = text_of(doc.find("Book/BookTitle"))
+    chapter_title = text_of(doc.find("ArticleTitle"))
+    return {
+        "pmid": text_of(doc.find("PMID")),
+        "title": chapter_title or book_title,
+        "abstract": abstract_of(doc),
+        "journal": book_title if chapter_title else text_of(doc.find("Book/Publisher/PublisherName")),
+        "year": text_of(doc.find("Book/PubDate/Year")),
+        "publication_types": [text_of(pt) for pt in doc.findall("PublicationType")],
+    }
+
+
+def parse_records(root) -> dict[str, dict]:
+    records = {}
+    for article in root.findall("PubmedArticle"):
+        rec = parse_article(article)
+        records[rec["pmid"]] = rec
+    for article in root.findall("PubmedBookArticle"):
+        rec = parse_book_article(article)
+        records[rec["pmid"]] = rec
+    return records
 
 
 def efetch(pmids: list[str]) -> dict[str, dict]:
@@ -204,26 +241,94 @@ def efetch(pmids: list[str]) -> dict[str, dict]:
     for i in range(0, len(pmids), EFETCH_BATCH):
         chunk = pmids[i : i + EFETCH_BATCH]
         body = post("efetch.fcgi", {"id": ",".join(chunk), "rettype": "abstract", "retmode": "xml"})
-        root = ET.fromstring(body)
-        for article in root.findall("PubmedArticle"):
-            rec = parse_article(article)
-            records[rec["pmid"]] = rec
+        records.update(parse_records(ET.fromstring(body)))
     return records
+
+
+def add_dates(records: dict[str, dict], cap: date) -> None:
+    """Attach esummary pubdate/epubdate (verbatim) and how each compares with the cap."""
+    dates = esummary_dates(list(records)) if records else {}
+    for pmid, rec in records.items():
+        d = dates.get(pmid, {"pubdate": "", "epubdate": ""})
+        rec.update(d)
+        rec["pubdate_vs_cap"] = vs_cap(d["pubdate"], cap)
+        rec["epubdate_vs_cap"] = vs_cap(d["epubdate"], cap)
+
+
+def record_stats(pmids: list[str], records: dict[str, dict]) -> dict:
+    return {
+        "n_with_record": sum(1 for p in pmids if p in records),
+        "n_with_abstract": sum(1 for p in pmids if p in records and records[p]["abstract"]),
+        "missing_pmids": [p for p in pmids if p not in records],
+        "n_pubdate_after_epubdate_within": sum(
+            1 for r in records.values() if r["pubdate_vs_cap"] == "after" and r["epubdate_vs_cap"] == "within"),
+        "n_epubdate_after_pubdate_within": sum(
+            1 for r in records.values() if r["epubdate_vs_cap"] == "after" and r["pubdate_vs_cap"] == "within"),
+        "n_pubdate_straddles_cap": sum(1 for r in records.values() if r["pubdate_vs_cap"] == "straddles"),
+        "n_no_epubdate": sum(1 for r in records.values() if r["epubdate_vs_cap"] == "none"),
+    }
+
+
+def write_candidates(path: Path, pmids: list[str], records: dict[str, dict]) -> None:
+    with path.open("w", encoding="utf-8") as f:
+        for rank, pmid in enumerate(pmids, start=1):
+            if pmid in records:
+                f.write(json.dumps({"rank": rank, **records[pmid]}, ensure_ascii=False) + "\n")
+
+
+def parse_cap(maxdate: str) -> date:
+    return datetime.strptime(maxdate, "%Y/%m/%d").date()  # noqa: DTZ007 -- only the calendar date is used
+
+
+def rebuild_from_search(search_path: Path, out_dir: str) -> None:
+    """Re-create candidates.jsonl for a frozen search.json without searching again (relevance order is
+    not reproducible). Records already in <out_dir>/<review>/candidates.jsonl are kept; only the PMIDs
+    missing from it are fetched."""
+    meta = json.loads(search_path.read_text(encoding="utf-8"))
+    pmids = meta["pmids"]
+    out = Path(out_dir) / meta["review_pmid"]
+    out.mkdir(parents=True, exist_ok=True)
+    cand_path = out / "candidates.jsonl"
+    records = {}
+    if cand_path.exists():
+        for line in cand_path.read_text(encoding="utf-8").splitlines():
+            rec = json.loads(line)
+            rec.pop("rank", None)
+            records[rec["pmid"]] = rec
+    todo = [p for p in pmids if p not in records]
+    fetched = efetch(todo) if todo else {}
+    add_dates(fetched, parse_cap(meta["maxdate"]))
+    records.update(fetched)
+    records = {p: records[p] for p in pmids if p in records}
+    write_candidates(cand_path, pmids, records)
+    meta.update(record_stats(pmids, records))
+    meta["candidates_rebuilt_at"] = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    meta["n_fetched_on_rebuild"] = len(fetched)
+    (out / "search.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"fetched={len(fetched)} with_record={meta['n_with_record']} "
+          f"with_abstract={meta['n_with_abstract']} -> {out}/")
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--review-pmid", required=True, help="PMID of the target review (output folder name)")
-    ap.add_argument("--query", required=True, help="approved PubMed Boolean query")
-    ap.add_argument("--maxdate", required=True, help="publication date cap, YYYY/MM/DD (review's publication date)")
+    ap.add_argument("--review-pmid", help="PMID of the target review (output folder name)")
+    ap.add_argument("--query", help="approved PubMed Boolean query")
+    ap.add_argument("--maxdate", help="publication date cap, YYYY/MM/DD (review's publication date)")
     ap.add_argument("--mindate", default="1800/01/01", help="publication date floor, YYYY/MM/DD")
     ap.add_argument("--n", type=int, default=200, help="number of top candidates by relevance")
     ap.add_argument("--compare-maxdate", action="append", default=[],
                     help="also record total_hits under this cap, YYYY/MM/DD (repeatable)")
+    ap.add_argument("--from-search", type=Path,
+                    help="rebuild candidates.jsonl from this frozen search.json (no esearch); other inputs ignored")
     ap.add_argument("--out-dir", default="results")
     args = ap.parse_args()
 
     load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
+    if args.from_search:
+        rebuild_from_search(args.from_search, args.out_dir)
+        return
+    if not (args.review_pmid and args.query and args.maxdate):
+        ap.error("--review-pmid, --query and --maxdate are required unless --from-search is given")
     retrieved_at = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
     search = esearch(args.query, args.n, args.mindate, args.maxdate)
     pmids = search.get("idlist", [])
@@ -236,22 +341,12 @@ def main() -> None:
     except ValueError as e:
         sys.exit(f"error: {e}")
     records = efetch(pmids) if pmids else {}
-    dates = esummary_dates(pmids) if pmids else {}
-    cap = datetime.strptime(args.maxdate, "%Y/%m/%d").date()  # noqa: DTZ007 -- only the calendar date is used
-    for pmid, rec in records.items():
-        d = dates.get(pmid, {"pubdate": "", "epubdate": ""})
-        rec.update(d)
-        rec["pubdate_vs_cap"] = vs_cap(d["pubdate"], cap)
-        rec["epubdate_vs_cap"] = vs_cap(d["epubdate"], cap)
+    add_dates(records, parse_cap(args.maxdate))
     compare = [count_hits(args.query, args.mindate, m) for m in args.compare_maxdate]
 
     out = Path(args.out_dir) / args.review_pmid
     out.mkdir(parents=True, exist_ok=True)
-    missing = [p for p in pmids if p not in records]
-    with (out / "candidates.jsonl").open("w", encoding="utf-8") as f:
-        for rank, pmid in enumerate(pmids, start=1):
-            if pmid in records:
-                f.write(json.dumps({"rank": rank, **records[pmid]}, ensure_ascii=False) + "\n")
+    write_candidates(out / "candidates.jsonl", pmids, records)
 
     meta = {
         "review_pmid": args.review_pmid,
@@ -269,15 +364,7 @@ def main() -> None:
         "top_n_is_head_of_all": all_pmids[: len(pmids)] == pmids,
         "n_requested": args.n,
         "n_returned": len(pmids),
-        "n_with_record": len(records),
-        "n_with_abstract": sum(1 for r in records.values() if r["abstract"]),
-        "missing_pmids": missing,
-        "n_pubdate_after_epubdate_within": sum(
-            1 for r in records.values() if r["pubdate_vs_cap"] == "after" and r["epubdate_vs_cap"] == "within"),
-        "n_epubdate_after_pubdate_within": sum(
-            1 for r in records.values() if r["epubdate_vs_cap"] == "after" and r["pubdate_vs_cap"] == "within"),
-        "n_pubdate_straddles_cap": sum(1 for r in records.values() if r["pubdate_vs_cap"] == "straddles"),
-        "n_no_epubdate": sum(1 for r in records.values() if r["epubdate_vs_cap"] == "none"),
+        **record_stats(pmids, records),
         "compare_maxdate": compare,
         "api_key_used": bool(os.environ.get("NCBI_API_KEY")),
         "pmids": pmids,

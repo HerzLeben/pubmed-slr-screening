@@ -1,6 +1,8 @@
-"""Date handling and PMID paging in scripts/fetch_pubmed.py (no network)."""
+"""Date handling, PMID paging, record parsing and rebuild in scripts/fetch_pubmed.py (no network)."""
 
+import json
 import sys
+import xml.etree.ElementTree as ET
 from datetime import date
 from pathlib import Path
 
@@ -8,7 +10,15 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from fetch_pubmed import ESEARCH_LIMIT, collect_pmids, date_range, month_end, vs_cap
+import fetch_pubmed
+from fetch_pubmed import (
+    ESEARCH_LIMIT,
+    collect_pmids,
+    date_range,
+    month_end,
+    parse_records,
+    vs_cap,
+)
 
 CAP = date(2021, 2, 18)
 
@@ -100,3 +110,80 @@ def test_collect_pmids_limit():
     with pytest.raises(ValueError):
         collect_pmids(ESEARCH_LIMIT + 1, fetch_page)
     assert calls == []
+
+
+ARTICLE_XML = """<PubmedArticleSet>
+<PubmedArticle><MedlineCitation><PMID Version="1">111</PMID><Article>
+<Journal><JournalIssue><PubDate><Year>2020</Year></PubDate></JournalIssue><Title>Blood</Title></Journal>
+<ArticleTitle>A trial</ArticleTitle>
+<Abstract><AbstractText Label="METHODS">Did it.</AbstractText><AbstractText Label="RESULTS">It worked.</AbstractText></Abstract>
+<PublicationTypeList><PublicationType>Journal Article</PublicationType></PublicationTypeList>
+</Article></MedlineCitation></PubmedArticle>
+<PubmedBookArticle><BookDocument><PMID Version="1">222</PMID>
+<Book><Publisher><PublisherName>CADTH</PublisherName></Publisher><BookTitle book="b">CADTH Report</BookTitle>
+<PubDate><Year>2011</Year></PubDate></Book>
+<ArticleTitle book="b" part="c">A chapter</ArticleTitle>
+<PublicationType UI="D016454">Review</PublicationType>
+<Abstract><AbstractText>Chapter text.</AbstractText></Abstract>
+</BookDocument></PubmedBookArticle>
+<PubmedBookArticle><BookDocument><PMID Version="1">333</PMID>
+<Book><Publisher><PublisherName>CADTH</PublisherName></Publisher><BookTitle book="w">A whole book</BookTitle>
+<PubDate><Year>2018</Year><Month>09</Month></PubDate></Book>
+<PublicationType UI="D016454">Review</PublicationType>
+</BookDocument></PubmedBookArticle>
+</PubmedArticleSet>"""
+
+
+def test_parse_records_article_and_books():
+    recs = parse_records(ET.fromstring(ARTICLE_XML))
+    assert set(recs) == {"111", "222", "333"}
+    assert recs["111"] == {
+        "pmid": "111", "title": "A trial", "abstract": "METHODS: Did it.\nRESULTS: It worked.",
+        "journal": "Blood", "year": "2020", "publication_types": ["Journal Article"],
+    }
+    assert recs["222"] == {
+        "pmid": "222", "title": "A chapter", "abstract": "Chapter text.",
+        "journal": "CADTH Report", "year": "2011", "publication_types": ["Review"],
+    }
+    # a whole book: no ArticleTitle, no abstract
+    assert recs["333"] == {
+        "pmid": "333", "title": "A whole book", "abstract": "",
+        "journal": "CADTH", "year": "2018", "publication_types": ["Review"],
+    }
+
+
+def test_rebuild_fetches_only_missing(tmp_path, monkeypatch):
+    frozen = {"review_pmid": "999", "maxdate": "2021/02/18", "pmids": ["3", "1", "2"], "all_pmids": ["1", "2", "3", "4"]}
+    search_path = tmp_path / "frozen.json"
+    search_path.write_text(json.dumps(frozen))
+    out = tmp_path / "results" / "999"
+    out.mkdir(parents=True)
+    kept = {"pmid": "1", "title": "kept", "abstract": "a", "pubdate": "2020", "epubdate": "",
+            "pubdate_vs_cap": "within", "epubdate_vs_cap": "none"}
+    (out / "candidates.jsonl").write_text(json.dumps({"rank": 2, **kept}) + "\n")
+
+    asked = []
+
+    def fake_efetch(pmids):
+        asked.append(list(pmids))
+        return {p: {"pmid": p, "title": f"new {p}", "abstract": ""} for p in pmids}
+
+    monkeypatch.setattr(fetch_pubmed, "efetch", fake_efetch)
+    monkeypatch.setattr(fetch_pubmed, "esummary_dates",
+                        lambda pmids: {p: {"pubdate": "2021", "epubdate": "2021 Mar 1"} for p in pmids})
+
+    fetch_pubmed.rebuild_from_search(search_path, str(tmp_path / "results"))
+
+    assert asked == [["3", "2"]]
+    lines = [json.loads(x) for x in (out / "candidates.jsonl").read_text().splitlines()]
+    assert [(x["rank"], x["pmid"]) for x in lines] == [(1, "3"), (2, "1"), (3, "2")]
+    assert lines[1]["title"] == "kept"
+    assert lines[0]["pubdate_vs_cap"] == "straddles"
+    assert lines[0]["epubdate_vs_cap"] == "after"
+    meta = json.loads((out / "search.json").read_text())
+    assert meta["pmids"] == frozen["pmids"]
+    assert meta["all_pmids"] == frozen["all_pmids"]
+    assert meta["n_with_record"] == 3
+    assert meta["n_with_abstract"] == 1
+    assert meta["missing_pmids"] == []
+    assert meta["n_fetched_on_rebuild"] == 2
