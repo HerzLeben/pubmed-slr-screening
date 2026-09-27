@@ -1,26 +1,26 @@
 # 検索式 — PMID 33746596
 
-状態：案（人の承認待ち。承認まで `fetch_pubmed.py` で取得しない）
-作成：2026-09-27、query-builder（2回目。人の指示で P AND I の形に作り直し）
+状態：承認済み（2026-09-27、人が式と上限を承認）
+作成：2026-09-27、query-builder（2回目。人の指示で P AND I の形に作り直し）＋人の決定で P に `"myeloma"[tiab]` を追加
 上限：2021/02/18（`datetype=pdat`、`mindate=1800/01/01`）
 
-## 式（演算子6、コネクタで式全体を試験済み）
+## 式（演算子7、コネクタで式全体を試験済み：下の #13）
 ```
-("Multiple Myeloma"[Mesh] OR "multiple myeloma"[tiab] OR "plasma cell myeloma"[tiab]) AND ("Receptors, Chimeric Antigen"[Mesh] OR "chimeric antigen receptor"[tiab] OR "CAR-T"[tiab] OR "CART"[tiab])
+("Multiple Myeloma"[Mesh] OR "multiple myeloma"[tiab] OR "plasma cell myeloma"[tiab] OR "myeloma"[tiab]) AND ("Receptors, Chimeric Antigen"[Mesh] OR "chimeric antigen receptor"[tiab] OR "CAR-T"[tiab] OR "CART"[tiab])
 ```
 
 | 確認の経路 | 上限あり | 上限なし |
 |---|---|---|
-| コネクタ `search_articles` | 418 | — |
-| E-utilities esearch（retmax=0、2026-09-27） | 418 | 2,395 |
+| コネクタ `search_articles` | 436 | — |
+| E-utilities esearch（retmax=0、2026-09-27） | 436 | 2,491 |
 
 esearch の query_translation：
-`("Multiple Myeloma"[MeSH Terms] OR "Multiple Myeloma"[Title/Abstract] OR "plasma cell myeloma"[Title/Abstract]) AND ("receptors, chimeric antigen"[MeSH Terms] OR "chimeric antigen receptor"[Title/Abstract] OR "CAR-T"[Title/Abstract] OR "CART"[Title/Abstract]) AND 1800/01/01:2021/02/18[Date - Publication]`
+`("Multiple Myeloma"[MeSH Terms] OR "Multiple Myeloma"[Title/Abstract] OR "plasma cell myeloma"[Title/Abstract] OR "myeloma"[Title/Abstract]) AND ("receptors, chimeric antigen"[MeSH Terms] OR "chimeric antigen receptor"[Title/Abstract] OR "CAR-T"[Title/Abstract] OR "CART"[Title/Abstract]) AND 1800/01/01:2021/02/18[Date - Publication]`
 
 ## ブロック
 | ブロック | 部分式 | 演算子数 |
 |---|---|---|
-| P（multiple myeloma） | `"Multiple Myeloma"[Mesh] OR "multiple myeloma"[tiab] OR "plasma cell myeloma"[tiab]` | 2 |
+| P（multiple myeloma） | `"Multiple Myeloma"[Mesh] OR "multiple myeloma"[tiab] OR "plasma cell myeloma"[tiab] OR "myeloma"[tiab]` | 3 |
 | I（CAR-T） | `"Receptors, Chimeric Antigen"[Mesh] OR "chimeric antigen receptor"[tiab] OR "CAR-T"[tiab] OR "CART"[tiab]` | 3 |
 
 R/R・評価項目・研究デザインはブロックにしない（人が決定。スクリーニングで判定する）。
@@ -45,7 +45,8 @@ query_translation のうち query-builder が省略して返したものは「�
 | 14 | `"CART"[tiab]` | 9,907 | `"CART"[Title/Abstract] AND ...` | CART の広さ |
 | 15 | P AND `"CART"[tiab]` | 128 | （省略） | CART の寄与 |
 | 16 | P AND I（CART を除く3語） | 415 | （省略） | CART の純増分は3件 |
-| 17 | P AND I（採用） | 418 | 上の esearch と同じ | 最終案 |
+| 17 | P（3語）AND I | 418（esearch：418、上限なし 2,395） | `"myeloma"` が無い以外は上の esearch と同じ | query-builder の最終案 |
+| 18 | P（4語）AND I（本体、esearch。採用） | 436（上限なし 2,491） | 上の esearch のとおり | 人の決定で `"myeloma"[tiab]` を追加。#13 と同数 |
 
 ## 1回目の案（採らなかった。R/R ブロックあり）
 | # | 式 | total_count | query_translation |
@@ -54,7 +55,7 @@ query_translation のうち query-builder が省略して返したものは「�
 | v1-2 | `("Receptors, Chimeric Antigen"[MeSH Terms] OR "chimeric antigen receptor"[tiab] OR "CAR-T"[tiab] OR "CAR T"[tiab] OR "CAR-Ts"[tiab] OR "CART"[tiab] OR "CAR T-cell"[tiab] OR "CAR T cell"[tiab] OR "CAR-T cell"[tiab])` | 14,207 | "CAR-T"・"CAR T" → `"car t"`、3つの cell の表記 → `"car t cell"` |
 | v1-3 | v1-1 AND v1-2 | 220（上限なし 1,482。esearch でも同数） | `... AND 1800/01/01:2021/02/18[Date - Publication]` |
 
-## 未決・気になる点
-- 単独の `"myeloma"[tiab]` は入れていない（人の指示「P は multiple myeloma の語だけ」に従った）。入れると +18件（418→436）。query-builder が抄録を見たのは増えた18件のうち1件だけ
+## 決定・気になる点
+- 2026-09-27（人が決定）：P に単独の `"myeloma"[tiab]` を足す（418→436、+18）。2回目の委任にあった「P は multiple myeloma の語だけ」は人の指示ではなく、本体が委任メッセージに書き足したもの。query-builder はそれに従って外していた
 - `"CART"[tiab]` は人の指示で残す。単独では 9,907件と広いが、P と組むと純増は3件
-- 上位200件は relevance 順（`fetch_pubmed.py` の `sort=relevance`）。418件のうち218件は取らない
+- 上位200件は relevance 順（`fetch_pubmed.py` の `sort=relevance`）。436件のうち236件は取らない

@@ -4,7 +4,8 @@
 Calls NCBI E-utilities (esearch -> efetch) directly. Results are sorted by PubMed relevance.
 
 Outputs (under results/<review_pmid>/):
-  search.json       query, date range, retrieval time, counts, PMIDs in rank order
+  search.json       query, date range, retrieval time, counts, top-N PMIDs in rank order (pmids) and
+                    every hit's PMID in the same relevance order (all_pmids; for recall over all hits)
   candidates.jsonl  one record per PMID: rank, pmid, title, abstract, journal, year, publication_types,
                     pubdate, epubdate (esummary, verbatim) and how each compares with --maxdate
 
@@ -40,6 +41,8 @@ from dotenv import load_dotenv
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 TOOL = "pubmed-slr-screening"
 EFETCH_BATCH = 200
+ESEARCH_PAGE = 5000
+ESEARCH_LIMIT = 10000  # PubMed esearch serves only the first 10,000 records of a search (NBK25499)
 MONTHS = {m: i for i, m in enumerate(
     ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], start=1)}
 SEASONS = {"spring": (3, 5), "summer": (6, 8), "fall": (9, 11), "autumn": (9, 11), "winter": (12, 2)}
@@ -79,12 +82,13 @@ def post(endpoint: str, params: dict, retries: int = 3) -> bytes:
     raise AssertionError("unreachable")
 
 
-def esearch(query: str, n: int, mindate: str, maxdate: str) -> dict:
+def esearch(query: str, n: int, mindate: str, maxdate: str, retstart: int = 0) -> dict:
     body = post(
         "esearch.fcgi",
         {
             "term": query,
             "retmax": n,
+            "retstart": retstart,
             "sort": "relevance",
             "datetype": "pdat",
             "mindate": mindate,
@@ -96,6 +100,17 @@ def esearch(query: str, n: int, mindate: str, maxdate: str) -> dict:
     if "ERROR" in result:
         sys.exit(f"error: esearch: {result['ERROR']}")
     return result
+
+
+def collect_pmids(total: int, fetch_page, page_size: int = ESEARCH_PAGE) -> list[str]:
+    """All PMIDs of a search, page by page. fetch_page(retstart, retmax) returns one page of PMIDs.
+    PubMed esearch serves only the first ESEARCH_LIMIT records of a search, so more is an error."""
+    if total > ESEARCH_LIMIT:
+        raise ValueError(f"{total} hits exceed the esearch limit of {ESEARCH_LIMIT}")
+    pmids: list[str] = []
+    for start in range(0, total, page_size):
+        pmids.extend(fetch_page(start, min(page_size, total - start)))
+    return pmids
 
 
 def esummary_dates(pmids: list[str]) -> dict[str, dict]:
@@ -212,6 +227,14 @@ def main() -> None:
     retrieved_at = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
     search = esearch(args.query, args.n, args.mindate, args.maxdate)
     pmids = search.get("idlist", [])
+    total_hits = int(search.get("count", 0))
+    try:
+        all_pmids = collect_pmids(
+            total_hits,
+            lambda start, size: esearch(args.query, size, args.mindate, args.maxdate, start).get("idlist", []),
+        )
+    except ValueError as e:
+        sys.exit(f"error: {e}")
     records = efetch(pmids) if pmids else {}
     dates = esummary_dates(pmids) if pmids else {}
     cap = datetime.strptime(args.maxdate, "%Y/%m/%d").date()  # noqa: DTZ007 -- only the calendar date is used
@@ -239,7 +262,11 @@ def main() -> None:
         "maxdate": args.maxdate,
         "sort": "relevance",
         "retrieved_at": retrieved_at,
-        "total_hits": int(search.get("count", 0)),
+        "total_hits": total_hits,
+        "n_all_pmids": len(all_pmids),
+        # The top-n list should be the head of the full list (same query, same sort); False means the
+        # order or the hits changed between the two requests.
+        "top_n_is_head_of_all": all_pmids[: len(pmids)] == pmids,
         "n_requested": args.n,
         "n_returned": len(pmids),
         "n_with_record": len(records),
@@ -254,11 +281,12 @@ def main() -> None:
         "compare_maxdate": compare,
         "api_key_used": bool(os.environ.get("NCBI_API_KEY")),
         "pmids": pmids,
+        "all_pmids": all_pmids,
     }
     (out / "search.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     print(
-        f"total_hits={meta['total_hits']} returned={meta['n_returned']} "
+        f"total_hits={meta['total_hits']} all_pmids={meta['n_all_pmids']} returned={meta['n_returned']} "
         f"with_abstract={meta['n_with_abstract']} -> {out}/"
     )
 

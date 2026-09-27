@@ -1,4 +1,4 @@
-"""Date handling in scripts/fetch_pubmed.py (no network)."""
+"""Date handling and PMID paging in scripts/fetch_pubmed.py (no network)."""
 
 import sys
 from datetime import date
@@ -8,7 +8,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from fetch_pubmed import date_range, month_end, vs_cap
+from fetch_pubmed import ESEARCH_LIMIT, collect_pmids, date_range, month_end, vs_cap
 
 CAP = date(2021, 2, 18)
 
@@ -61,3 +61,42 @@ def test_month_end_leap_year():
 )
 def test_vs_cap(text, expected):
     assert vs_cap(text, CAP) == expected
+
+
+def fake_pages(pmids):
+    """fetch_page over a fixed hit list; records each (retstart, retmax) call."""
+    calls = []
+
+    def fetch_page(start, size):
+        calls.append((start, size))
+        return pmids[start : start + size]
+
+    return fetch_page, calls
+
+
+def test_collect_pmids_pages_in_order():
+    hits = [str(i) for i in range(1, 12)]
+    fetch_page, calls = fake_pages(hits)
+    assert collect_pmids(len(hits), fetch_page, page_size=5) == hits
+    assert calls == [(0, 5), (5, 5), (10, 1)]
+
+
+def test_collect_pmids_single_page():
+    hits = ["3", "1", "2"]
+    fetch_page, calls = fake_pages(hits)
+    assert collect_pmids(3, fetch_page) == hits
+    assert calls == [(0, 3)]
+
+
+def test_collect_pmids_no_hits():
+    fetch_page, calls = fake_pages([])
+    assert collect_pmids(0, fetch_page) == []
+    assert calls == []
+
+
+def test_collect_pmids_limit():
+    fetch_page, calls = fake_pages([])
+    assert collect_pmids(ESEARCH_LIMIT, lambda s, n: ["x"] * n) == ["x"] * ESEARCH_LIMIT
+    with pytest.raises(ValueError):
+        collect_pmids(ESEARCH_LIMIT + 1, fetch_page)
+    assert calls == []

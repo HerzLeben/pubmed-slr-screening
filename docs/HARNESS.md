@@ -46,3 +46,4 @@
 - 2026-09-27 フェーズ5（`*`）：コネクタの説明には「`*` は使えない」とあるが、`hematologic malignanc*[tiab]` は拒否されず、query_translation では `"hematologic malignanc*"[Title/Abstract]` と引用符つきで返る。件数は 10,374 で、2語形を並べた式（10,358）より多いので、前方一致として効いている。人の指示で、検索式では `*` を使わず語形を並べる
 - 2026-09-27 フェーズ5：31190844 の2回目の式は演算子28でコネクタの上限（20）を超えるため、式全体はコネクタで試せない。全体の件数は esearch で確かめた。ATM は表記ゆれ（CAR-T / CAR T、CAR T-cell / CAR-T cell）を同じ語に展開し、`"CAR-T"[tiab]` は `"CAR-T cell(s)"` を、`"chimeric antigen receptor"[tiab]` は `"... T cell"` を件数上すべて含む
 - 2026-09-27 フェーズ5：fetch_pubmed.py は esearch を `sort=relevance`、`retmax=--n`（既定200）で呼ぶ。3本とも件数が200を超えるので、PubMed の relevance（Best Match）順の上位200件だけを取る
+- 2026-09-27 フェーズ5：33746596 の2回目の委任メッセージに、本体が人の指示に無い「P は multiple myeloma の語だけ」を書き足していた。query-builder はそれに従って `"myeloma"[tiab]` を外した。人の指摘で見つかり、足し直した。委任には人の決定だけを書く

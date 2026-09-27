@@ -750,3 +750,20 @@ PubMed コネクタの search_articles と get_article_metadata が使えるか
 </result>
 <usage><subagent_tokens>35661</subagent_tokens><tool_uses>20</tool_uses><duration_ms>173325</duration_ms></usage>
 </task-notification>
+
+---
+
+## 2026-09-27T20:05:05+09:00
+
+
+
+<pasted_content id="2d46">
+2点とも足して。
+
+31190844 の I-CAR に "CAR-T"[tiab] を足す。
+33746596 の P に "myeloma"[tiab] を足す。「P は multiple myeloma の語だけ」は私の指示ではないので、今回の決定として DECISIONS に書く。
+足した後の件数を esearch（retmax=0）で確かめ、query.md を更新して。
+そのうえで3本の検索式と上限を承認します。取得に進む前に fetch_pubmed.py を1点直して：抄録を取る上位200件とは別に、esearch の全ヒットの PMID 一覧を search.json に保存する（評価で「全ヒットでの Recall」と「上位200件での Recall」を分けて出すため）。テストを足して通してから commit して。
+CLAUDE.md の tag 一覧にフェーズ5の承認の tag があれば付けて。
+そのあと3本を取得して、search.json の件数（straddles を含む）と、候補が200件ずつ取れたかを報告して。Recall の計算はまだしない（指示11で出す）。
+</pasted_content id="2d46">
