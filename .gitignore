@@ -1,0 +1,6 @@
+.env
+results/
+bench/raw/
+.venv/
+__pycache__/
+.DS_Store
