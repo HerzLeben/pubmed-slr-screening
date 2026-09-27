@@ -62,3 +62,12 @@
 - 2026-09-27 指示7：hook のテストは tests/test_hooks.py。わざと壊した出力（言い換え・省略記号・つなぎ合わせた引用、基準の欠け・重複・未知の ID・ID 順でない、範囲外の値・文字列・bool、引用の欠け、0 に引用、レコードの欠け・よその PMID、overall を書く、screener・batch の食い違い、壊れた JSON、他の screener のフォルダへの Write）をすべて exit 2 で差し戻すこと、adjudicator が status・reasons を変える・summary を欠く・レコードを落とすと差し戻すこと、7体目の起動が止まることを確かめた。pytest 90件・ruff とも通過
 - 2026-09-27 指示7：3本の candidates を candidates.json に変換（取り直し 0件）、バッチを各10本×2体（results/batches/）作った。build_report.py は実データで動いた（判定がまだ無いので警告 1203件＝600件×2体の判定なし＋3本の adjudication なし）
 - 2026-09-27 指示7：hook と agent の定義は、このセッションの途中で足した。新しい agents・hooks を読むには再起動が要る（人が再起動する）
+- 2026-09-27 指示8（試走）：31190844 の batch_01 を screener-a・screener-b で1回ずつ。a は差し戻しなし、b は1回差し戻し（PMID 27518241 の I4・E3 の引用が抄録に逐語で無い）→ 直して通過。両方の出力を hook と同じ検査にかけ直して問題なし。hook が本体の Write でも止めることを、わざと壊した JSON で確かめた。skill・agent 定義は変えずに全件へ進む。所要は1バッチ約7分、約7万トークン
+- 2026-09-27 指示8（数え方）：差し戻しの回数は、subagent の transcript（tasks/<id>.output）で「書き込みを止めた」を含む行の数で数える（hook は差し戻しをファイルに記録しない）
+- 2026-09-27 指示8（同時起動）：本体が動いている数を数え違え、7体目（screener-a 37168849 batch_08）を起動しかけた。Claude Code 組み込みの上限（CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=6）が「Concurrent subagent limit reached」で止めた。agent_gate.py まで届く前に止まったので、プロジェクトの hook は発火していない。空きを待って起動し直した
+- 2026-09-27 指示8（adjudicator）：33746596 の adjudicator は、定義にある入力（adjudication・screen・criteria・candidates）のほかに results/batches や docs/HARNESS.md まで読み、ツール呼び出し43回・約24.5万トークンを使った（31190844 は16回・約15.3万）。最後のメッセージも「件数を1行」でなく、各件の要点と「バッチの大きさが HARNESS の各10本と違う」という誤読（10本×20件のこと）を返した。status・reasons は変えておらず、hook も通った。screener と違い omitClaudeMd が無いので CLAUDE.md が入り、docs を読みにいったと見られる
+- 2026-09-27 指示8（全件）：3本×10バッチ×2体＝60回の screener を同時6までで実行（試走の2回を含む）。60ファイルすべてを hook と同じ検査にかけ直して問題なし。1回の所要は約4.5〜17.5分、約4.7万〜9.4万トークン
+- 2026-09-27 指示8（差し戻し）：PreToolUse の差し戻しは15回（60回中15回の起動で各1回、2回目の Write で全部通過）。理由は、引用が抄録に逐語で無い 13回（17か所）、verdict ±1 なのに quote が無い 2回（1回は40か所超で E1・E2・E3 の「該当しない＝1」に引用を付けていなかった、もう1回は8か所）、レコードの欠け 2回（3件。1回は非逐語と同時）。skill・agent 定義は直していない
+- 2026-09-27 指示8（adjudicate）：規則による判定は 31190844 が組み入れ一致45・除外一致150・要人判断5、33746596 が32・163・5、37168849 が18・175・7
+- 2026-09-27 指示9b：3本の adjudicator が needs_human 17件すべてに summary・summary_en を書き、adjudicate.py の再実行で summary が残ること（needs_summary 0）を確かめた。build_report.py で results/report.html を作成（600件、検査の警告 0件）。レポートは抄録を含むので commit しない
+- 2026-09-27 指示9b（サンプル）：最初の並列実行の結果を docs/samples/first-parallel.jsonl に置いた。no-subagent のサンプルに合わせ、A・B の判定値と status・reasons・disagree_criteria だけで、抄録の引用と summary は入れていない
