@@ -2467,3 +2467,24 @@ commit して snap/08-first-parallel を付ける。
 </result>
 <usage><subagent_tokens>97787</subagent_tokens><tool_uses>12</tool_uses><duration_ms>233066</duration_ms></usage>
 </task-notification>
+
+---
+
+## 2026-09-27T22:41:34+09:00
+
+
+
+<pasted_content id="8f0d">
+results/human/ に人の判断を置いた（17件、組み入れ3・除外14）。note の先頭の「[Cowork代行] 」は消して。指示11（評価）まで止まらずに進めて。
+
+build_report.py を再実行し、3本の最終の組み入れ候補の件数と、未判断が0件であることを確かめる。
+ここで初めて bench/reviews.jsonl の included_pmids を読み、3本それぞれで次を出す：
+検索 Recall：全ヒット（all_pmids）と上位200件（pmids）の2通り
+スクリーニング Recall@20・@50（scripts/rules.py の score の降順、同点は rank の昇順）
+最終の組み入れ候補での Recall と件数：screener-a だけ／screener-b だけ／2体＋規則の裁定＋人の判断
+人に回った件数
+取りこぼした組み入れ研究ごとに、落ちた段（検索／200件の枠／screener の判定／人の判断）とその理由
+結果を docs/eval/eval-1.md にまとめ、評価のスクリプトを scripts/ に置いて commit し、snap/10-eval-1 を付ける。
+そのあと別の commit で、adjudicator の定義に omitClaudeMd: true を足し、読める tool を入力ファイルに限る（関係のない docs まで読んだ件の対策）。
+報告は 2 の表と、取りこぼしの一覧だけでよい。
+</pasted_content id="8f0d">

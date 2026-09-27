@@ -71,3 +71,8 @@
 - 2026-09-27 指示8（adjudicate）：規則による判定は 31190844 が組み入れ一致45・除外一致150・要人判断5、33746596 が32・163・5、37168849 が18・175・7
 - 2026-09-27 指示9b：3本の adjudicator が needs_human 17件すべてに summary・summary_en を書き、adjudicate.py の再実行で summary が残ること（needs_summary 0）を確かめた。build_report.py で results/report.html を作成（600件、検査の警告 0件）。レポートは抄録を含むので commit しない
 - 2026-09-27 指示9b（サンプル）：最初の並列実行の結果を docs/samples/first-parallel.jsonl に置いた。no-subagent のサンプルに合わせ、A・B の判定値と status・reasons・disagree_criteria だけで、抄録の引用と summary は入れていない
+- 2026-09-27 指示10：results/human/ の3ファイル（17件、組み入れ3・除外14）を確かめた。note の先頭に「[Cowork代行] 」は無く、消すものは無かった（ファイルの更新時刻 22:41 は置かれた 22:36 より後）
+- 2026-09-27 指示10：build_report.py を再実行。最終の組み入れ候補は 47／33／18件、未判断 0件、検査の警告 0件
+- 2026-09-27 指示11（評価）：ここで初めて included_pmids を読んだ。取りこぼし19件はすべて検索（3件）か上位200件の枠（16件）で、200件に入った組み入れ研究8件は A・B・2体のどれでも拾えた。31190844 は組み入れ研究が200件に1件も入らなかった（想定外）。詳細は docs/eval/eval-1.md
+- 2026-09-27 指示11：all_pmids の並びでは 88位・102位の組み入れ研究が上位200件（別の呼び出し）に入っていない。relevance 順が呼び出しで変わる件（フェーズ5）が評価の数字に直接効いている
+- 2026-09-27 指示11：評価は design.md では人だけが起動する /eval だが、人が指示11で本体に実行を指示した。スクリプトは design の eval/ ではなく人の指示どおり scripts/eval_screening.py、記録は docs/EVAL.md ではなく docs/eval/eval-1.md
