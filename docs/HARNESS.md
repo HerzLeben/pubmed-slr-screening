@@ -24,3 +24,4 @@
 - 2026-09-27 フェーズ4：Reload Window の前は Skill tool で2回 `Unknown skill` になった。Reload Window 後は skill の一覧に pico-to-criteria が出て、起動できた
 - 2026-09-27 フェーズ4：3本とも、元レビューの抄録に検索の終了日の記載は無かった。上限の案は esummary の epubdate（33746596：2021/02/18、31190844：2019/05/06、37168849：2023/04/24）。参考として received・accepted・entrez も criteria.md に並べた。PubMed コネクタは引き続きこのセッションに無く、E-utilities の esummary・efetch で確認した
 - 2026-09-27 フェーズ4（人が決定）：`docs/prompts/log.md` は今回からフェーズごとの commit に含める（CLAUDE.md に追記）
+- 2026-09-27 フェーズ4：人の判断は criteria.md への直接の書き込みではなく指示文で届いた。Claude が3本の criteria.md に反映し、状態を「承認済み」にした。指示に無かった点（31190844 の CD19 併用標的、37168849 の CAR-NK）は「未決」として残し、判定では 0（組み入れる側）とする

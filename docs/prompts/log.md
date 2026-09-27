@@ -301,3 +301,17 @@ VS Code で「Developer: Reload Window」を実行します。再読込みのあ
 ## 2026-09-27T19:13:01+09:00
 
 続けて。skill が認識されたのを確かめてから、3本の criteria.md を起こして。検索期間の上限には、出版日に加えて、抄録に検索の終了日（"searched up to …" など）があればそれも参考として並べて。
+
+---
+
+## 2026-09-27T19:17:15+09:00
+
+<pasted_content id="b9a5">
+直しました。理由は以下。snap/04-criteria-approved を付けて。
+
+31190844 の I5 は採らない。元レビューは単群の割合の統合で、C を基準にすると方法と矛盾するため（included_pmids は見ずに、抄録から判断）。
+case report は3本とも除外しない。Recall を優先するため。
+検索の上限は3本とも epubdate で確定。received は参考として残す。検索時にどの日付項目で絞り込んだかも記録する。
+E1〜E3 は採用。E1 には editorial・comment を含める。ただし原著データを含む letter は E1 に当たらないと明記する。
+この判断は DECISIONS.md に記録して。
+</pasted_content id="b9a5">

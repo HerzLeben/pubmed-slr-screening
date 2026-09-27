@@ -21,3 +21,6 @@
 - 2026-09-27 API key は `fetch_pubmed.py` が python-dotenv でリポジトリの `.env` から読み込む（シェルの環境変数が優先、値は表示・保存しない）。Claude 自身が `.env` を開く・表示するのは引き続き禁止（人が決定）
 - 2026-09-27 pico-to-criteria は `.claude/skills/pico-to-criteria/SKILL.md`。人も Claude も起動できる（`disable-model-invocation` は付けない）。PICO に無い基準は「PICO 外」と出典に書いて人に採否を委ねる。基準を起こすときは `included_pmids`（正解）を読まない
 - 参照：https://code.claude.com/docs/en/skills（新しい skill は起動中のセッションにも反映されるが、`.claude/skills/` 自体をセッション開始後に作った場合は `/reload-skills` が要る）
+- 2026-09-27 適格基準の承認（人が決定）：31190844 は比較群（C）を基準にしない（案の I5 を削除）。元レビューは単群の割合を統合しており、C を基準にすると方法と矛盾するため。included_pmids は見ずに、元レビューの抄録から判断した
+- 2026-09-27 適格基準の承認（人が決定）：case report は3本とも除外しない（Recall を優先）。E1〜E3（PICO 外）は採用し、E1 には editorial・comment を含めるが、原著データを含む letter は E1 に当たらない
+- 2026-09-27 検索期間の上限（人が決定）：3本とも元レビューの epubdate で確定（33746596：2021/02/18、31190844：2019/05/06、37168849：2023/04/24）。received は参考として criteria.md に残す。絞り込みは E-utilities の `datetype=pdat` と `maxdate`
