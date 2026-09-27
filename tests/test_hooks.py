@@ -18,6 +18,7 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 CHECK = REPO / ".claude" / "hooks" / "check_screen_output.py"
 GATE = REPO / ".claude" / "hooks" / "agent_gate.py"
+READS = REPO / ".claude" / "hooks" / "limit_reads.py"
 
 RID = "999"
 CRITERIA = [
@@ -290,3 +291,48 @@ def test_gate_drops_stale_markers(tmp_path):
         if not m.name.startswith("."):
             os.utime(m, (old, old))
     assert run(GATE, gate_event(tmp_path, "SubagentStart", 6), tmp_path)[0] == 0
+
+
+# ---- adjudicator reads only its inputs ---------------------------------------------------------
+
+def read_event(root, path, agent="adjudicator"):
+    ev = {"hook_event_name": "PreToolUse", "tool_name": "Read", "session_id": "s1", "cwd": str(root),
+          "tool_input": {"file_path": path if path.startswith("/") else str(root / path)}}
+    if agent:
+        ev["agent_type"] = agent
+        ev["agent_id"] = "agent-1"
+    return ev
+
+
+@pytest.mark.parametrize("path", [
+    f"results/adjudication/{RID}.json",
+    f"results/screen/a/{RID}/batch_01.json",
+    f"results/screen/b/{RID}/batch_10.json",
+    f"reviews/{RID}/criteria.json",
+    f"results/{RID}/candidates.json",
+])
+def test_adjudicator_reads_inputs(tmp_path, path):
+    code, _, err = run(READS, read_event(tmp_path, path), tmp_path)
+    assert code == 0, err
+
+
+@pytest.mark.parametrize("path", [
+    "docs/HARNESS.md",
+    "CLAUDE.md",
+    f"results/batches/{RID}/a/batch_01.json",
+    "bench/reviews.jsonl",
+    f"results/human/{RID}.json",
+    f"reviews/{RID}/criteria.md",
+    "../outside.json",
+    "/etc/hosts",
+])
+def test_adjudicator_other_reads_blocked(tmp_path, path):
+    code, _, err = run(READS, read_event(tmp_path, path), tmp_path)
+    assert code == 2
+    assert "入力ファイルだけ" in err
+
+
+@pytest.mark.parametrize("agent", [None, "screener-a", "query-builder"])
+def test_other_agents_read_freely(tmp_path, agent):
+    code, _, _ = run(READS, read_event(tmp_path, "docs/HARNESS.md", agent=agent), tmp_path)
+    assert code == 0

@@ -3,6 +3,7 @@ name: adjudicator
 description: A と B の判定が割れた候補（results/adjudication/<review>.json の status が needs_human のもの）に、なぜ割れたかを人向けに説明する summary を書く。status・reasons は scripts/adjudicate.py が規則で決めたもので、変えない。1回の起動で1本のレビューを扱う
 tools: Read, Write
 model: sonnet
+omitClaudeMd: true
 ---
 
 あなたは系統的文献レビューの裁定の補助役です。判定を下すのではなく、人が1件ずつ判断するときに読む短い説明を書きます。
@@ -12,6 +13,8 @@ model: sonnet
 2. `results/screen/a/<review>/batch_*.json` と `results/screen/b/<review>/batch_*.json`：対象の PMID の判定と引用
 3. `reviews/<review>/criteria.json`：基準の文言（E は「該当しない＝1、該当する＝-1」）
 4. `results/<review>/candidates.json`：抄録が要るときだけ
+
+読んでよいのはこの4種類だけ。`docs/`・`results/batches/`・`bench/`・`scripts/` などは読まない（フックが Read を止める）。どのバッチに対象の PMID があるかは、`results/screen/a/<review>/batch_01.json` から順に Read して探す
 
 ## 書くこと
 - `needs_human` の各レコードに `summary`（日本語、1〜2文）と `summary_en`（英語、1〜2文）を足す

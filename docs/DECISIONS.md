@@ -68,3 +68,9 @@
 - fetch_pubmed.py の出力を candidates.jsonl から schema 4章の candidates.json（`{review_pmid, records}`、year は整数）に変えた。前の jsonl も読める
 - adjudicator は Read・Write だけ（Edit なし）。adjudication ファイル全体を書き直すが、status・reasons・disagree_criteria・並びが変わっていないことを PreToolUse の hook が検査する
 - 参照：https://code.claude.com/docs/en/hooks（Exit code 2 behavior per event、SubagentStop・SubagentStart の入力）、https://code.claude.com/docs/en/sub-agents（frontmatter の `skills`・`omitClaudeMd`（v2.1.271 以降、手元は v2.1.283）・`hooks`、ツール名 `Agent`、同時起動の上限 `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`）
+
+## 2026-09-27 指示11のあと：adjudicator の読み取りを入力に限る
+
+- adjudicator に `omitClaudeMd: true` を足し、Read を入力4種（`results/adjudication/<review>.json`、`results/screen/<a|b>/<review>/batch_<nn>.json`、`reviews/<review>/criteria.json`、`results/<review>/candidates.json`）に限った。指示8〜9b で 33746596 の adjudicator が docs/HARNESS.md や results/batches/ まで読んだ（ツール呼び出し43回）ため
+- subagent の `tools` はツール名だけでパスを指定できない（`disallowedTools` の指定子もツールごと外す）。そこでパスの検査は PreToolUse（matcher `Read`）の hook `.claude/hooks/limit_reads.py` で行う。PreToolUse は subagent の中でも発火し `agent_type` を持つ。exit 2 で Read を止め、stderr が subagent に返る。screener の Read は今回は絞っていない
+- 参照：https://code.claude.com/docs/en/sub-agents（frontmatter の表：`tools`・`disallowedTools`・`omitClaudeMd`）、https://code.claude.com/docs/en/hooks（common input fields の `agent_id`・`agent_type`、PreToolUse の exit 2 は "Blocks the tool call"）

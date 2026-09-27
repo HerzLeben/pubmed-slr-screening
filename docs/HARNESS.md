@@ -76,3 +76,4 @@
 - 2026-09-27 指示11（評価）：ここで初めて included_pmids を読んだ。取りこぼし19件はすべて検索（3件）か上位200件の枠（16件）で、200件に入った組み入れ研究8件は A・B・2体のどれでも拾えた。31190844 は組み入れ研究が200件に1件も入らなかった（想定外）。詳細は docs/eval/eval-1.md
 - 2026-09-27 指示11：all_pmids の並びでは 88位・102位の組み入れ研究が上位200件（別の呼び出し）に入っていない。relevance 順が呼び出しで変わる件（フェーズ5）が評価の数字に直接効いている
 - 2026-09-27 指示11：評価は design.md では人だけが起動する /eval だが、人が指示11で本体に実行を指示した。スクリプトは design の eval/ ではなく人の指示どおり scripts/eval_screening.py、記録は docs/EVAL.md ではなく docs/eval/eval-1.md
+- 2026-09-27 指示11のあと：adjudicator の定義（omitClaudeMd）と Read の hook を入れた。tests/test_hooks.py に16件足して pytest 106件・ruff とも通過。agent 定義の変更は再起動まで効かない見込みなので、実際の adjudicator での確認は次の起動のとき

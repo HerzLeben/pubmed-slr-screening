@@ -62,6 +62,16 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/limit_reads.py\"",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "SubagentStart": [
