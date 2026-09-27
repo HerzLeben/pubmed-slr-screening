@@ -17,3 +17,4 @@
 - 2026-09-27 フェーズ2（人が確認）：前回の N=5 試走の検索式は引用符なしの `CAR-T multiple myeloma`（上限 2021/02/18、342件）だった。今回の `"CAR-T" AND "multiple myeloma"` の 333件との差（9件）は、引用符で Automatic Term Mapping が効かなくなったこと（引用符なしでは `multiple myeloma` が MeSH などにも展開される）によるものとみられる。検索式は毎回 search.json の `query_translation` と一緒に記録する
 - 2026-09-27 フェーズ2：3回目の確認でもこのセッションに PubMed の tool は無かった（ToolSearch の `pubmed` は bio-research の Consensus だけ、`+plugin_pubmed` は該当なし）。tool 名が分からないので allow への追加も保留（推測で書かない）
 - 2026-09-27 フェーズ2（人が決定）：コネクタの試験を待たずに、ここまでを「フェーズ2（途中）」として commit する。3点テストと allow への追加は、VS Code ではなくターミナルの `claude` で `/mcp` を開いて行う（プラグインを CLI で入れたため）
+- 2026-09-27 フェーズ2：VS Code から非対話の `claude -p` を別に起動しても PubMed の tool は ToolSearch に出なかった。認証が必要な MCP サーバーの一覧（途中で「…and 35 more」と省略）に入っている可能性がある。OAuth は非対話セッションでは通せないので、ターミナルの `claude` で `/mcp` から認証する必要がある
