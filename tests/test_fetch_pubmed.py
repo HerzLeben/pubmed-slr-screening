@@ -196,3 +196,40 @@ def test_rebuild_fetches_only_missing(tmp_path, monkeypatch, legacy):
     assert meta["n_with_abstract"] == 1
     assert meta["missing_pmids"] == []
     assert meta["n_fetched_on_rebuild"] == 2
+
+
+def test_candidate_pmids_all_hits_keeps_top_ranks():
+    meta = {"pmids": ["3", "1"], "all_pmids": ["1", "2", "3", "4"]}
+    assert fetch_pubmed.candidate_pmids(meta, False) == ["3", "1"]
+    assert fetch_pubmed.candidate_pmids(meta, True) == ["3", "1", "2", "4"]
+
+
+def test_rebuild_all_hits(tmp_path, monkeypatch):
+    frozen = {"review_pmid": "999", "maxdate": "2021/02/18", "pmids": ["3", "1"], "all_pmids": ["1", "2", "3", "4"]}
+    search_path = tmp_path / "frozen.json"
+    search_path.write_text(json.dumps(frozen))
+    out = tmp_path / "results" / "999"
+    out.mkdir(parents=True)
+    kept = [{"pmid": p, "rank": r, "title": f"kept {p}", "abstract": "a", "year": 2020,
+             "pubdate_vs_cap": "within", "epubdate_vs_cap": "none"} for r, p in ((1, "3"), (2, "1"))]
+    (out / "candidates.json").write_text(json.dumps({"review_pmid": "999", "records": kept}))
+    asked = []
+
+    def fake_efetch(pmids):
+        asked.append(list(pmids))
+        return {p: {"pmid": p, "title": f"new {p}", "abstract": ""} for p in pmids}
+
+    monkeypatch.setattr(fetch_pubmed, "efetch", fake_efetch)
+    monkeypatch.setattr(fetch_pubmed, "esummary_dates", lambda pmids: {p: {"pubdate": "2020", "epubdate": ""} for p in pmids})
+
+    fetch_pubmed.rebuild_from_search(search_path, str(tmp_path / "results"), all_hits=True)
+
+    assert asked == [["2", "4"]]
+    lines = json.loads((out / "candidates.json").read_text())["records"]
+    assert [(x["rank"], x["pmid"], x["title"]) for x in lines] == [
+        (1, "3", "kept 3"), (2, "1", "kept 1"), (3, "2", "new 2"), (4, "4", "new 4")]
+    meta = json.loads((out / "search.json").read_text())
+    assert meta["pmids"] == frozen["pmids"]
+    assert meta["candidates_scope"] == "all_hits"
+    assert meta["n_candidates"] == 4
+    assert meta["n_with_record"] == 4

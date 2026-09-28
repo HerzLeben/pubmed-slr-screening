@@ -74,3 +74,8 @@
 - adjudicator に `omitClaudeMd: true` を足し、Read を入力4種（`results/adjudication/<review>.json`、`results/screen/<a|b>/<review>/batch_<nn>.json`、`reviews/<review>/criteria.json`、`results/<review>/candidates.json`）に限った。指示8〜9b で 33746596 の adjudicator が docs/HARNESS.md や results/batches/ まで読んだ（ツール呼び出し43回）ため
 - subagent の `tools` はツール名だけでパスを指定できない（`disallowedTools` の指定子もツールごと外す）。そこでパスの検査は PreToolUse（matcher `Read`）の hook `.claude/hooks/limit_reads.py` で行う。PreToolUse は subagent の中でも発火し `agent_type` を持つ。exit 2 で Read を止め、stderr が subagent に返る。screener の Read は今回は絞っていない
 - 参照：https://code.claude.com/docs/en/sub-agents（frontmatter の表：`tools`・`disallowedTools`・`omitClaudeMd`）、https://code.claude.com/docs/en/hooks（common input fields の `agent_id`・`agent_type`、PreToolUse の exit 2 は "Blocks the tool call"）
+
+## 2026-09-27 指示12：eval-2（全ヒットをスクリーニング、人が決定）
+
+- 検索式は変えず、上位200件の枠だけを外して all_pmids（固定した全ヒット）をスクリーニングする。P のブロックは直さない（検索で落ちた3件は eval-1.md の記録のまま）
+- 既に判定した200件（rank 1〜200、batch_01〜10）はそのまま使い、残りを all_pmids の並びで rank 201〜、batch_11〜 にする（`fetch_pubmed.py --from-search ... --all-hits`、`make_batches.py` は既存のバッチを変えない）

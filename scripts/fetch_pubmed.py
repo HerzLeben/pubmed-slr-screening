@@ -17,7 +17,8 @@ made them match. --compare-maxdate records total_hits of the same query under ot
 PubMed's relevance order is not reproducible between calls, so the top-N list of one run is frozen in
 search.json (committed as reviews/<review_pmid>/search.json). --from-search rebuilds candidates.json from
 such a file without searching again: it efetches only the PMIDs not already in candidates.json (or in the
-older candidates.jsonl).
+older candidates.jsonl). With --all-hits it covers every hit: the frozen top-N keep ranks 1..N and the
+rest of all_pmids follow in their all_pmids order (ranks N+1..), so earlier batches and judgements stay valid.
 NCBI Bookshelf records (PubmedBookArticle) are read as well as journal articles.
 
 NCBI_API_KEY and NCBI_EMAIL are read from the environment, after loading the repo's .env with
@@ -29,6 +30,7 @@ Example:
   python3 scripts/fetch_pubmed.py --review-pmid 33746596 \
       --query '"CAR-T" AND "multiple myeloma"' --maxdate 2021/03/01 --n 200
   python3 scripts/fetch_pubmed.py --from-search reviews/33746596/search.json
+  python3 scripts/fetch_pubmed.py --from-search reviews/33746596/search.json --all-hits
 """
 
 import argparse
@@ -309,12 +311,21 @@ def parse_cap(maxdate: str) -> date:
     return datetime.strptime(maxdate, "%Y/%m/%d").date()  # noqa: DTZ007 -- only the calendar date is used
 
 
-def rebuild_from_search(search_path: Path, out_dir: str) -> None:
+def candidate_pmids(meta: dict, all_hits: bool) -> list[str]:
+    """The frozen top-N (pmids) in their order; with all_hits, then every other PMID of all_pmids in its order."""
+    pmids = [str(p) for p in meta["pmids"]]
+    if not all_hits:
+        return pmids
+    top = set(pmids)
+    return pmids + [str(p) for p in meta["all_pmids"] if str(p) not in top]
+
+
+def rebuild_from_search(search_path: Path, out_dir: str, all_hits: bool = False) -> None:
     """Re-create candidates.json for a frozen search.json without searching again (relevance order is
     not reproducible). Records already in <out_dir>/<review>/candidates.json (or the older
-    candidates.jsonl) are kept; only the PMIDs missing from it are fetched."""
+    candidates.jsonl) are kept; only the PMIDs missing from it are fetched. all_hits: see candidate_pmids."""
     meta = json.loads(search_path.read_text(encoding="utf-8"))
-    pmids = meta["pmids"]
+    pmids = candidate_pmids(meta, all_hits)
     out = Path(out_dir) / meta["review_pmid"]
     out.mkdir(parents=True, exist_ok=True)
     records = read_candidates(out)
@@ -327,6 +338,8 @@ def rebuild_from_search(search_path: Path, out_dir: str) -> None:
     meta.update(record_stats(pmids, records))
     meta["candidates_rebuilt_at"] = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
     meta["n_fetched_on_rebuild"] = len(fetched)
+    meta["candidates_scope"] = "all_hits" if all_hits else "top_n"
+    meta["n_candidates"] = len(pmids)
     (out / "search.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"fetched={len(fetched)} with_record={meta['n_with_record']} "
           f"with_abstract={meta['n_with_abstract']} -> {out}/")
@@ -342,13 +355,15 @@ def main() -> None:
     ap.add_argument("--compare-maxdate", action="append", default=[],
                     help="also record total_hits under this cap, YYYY/MM/DD (repeatable)")
     ap.add_argument("--from-search", type=Path,
-                    help="rebuild candidates.jsonl from this frozen search.json (no esearch); other inputs ignored")
+                    help="rebuild candidates.json from this frozen search.json (no esearch); other inputs ignored")
+    ap.add_argument("--all-hits", action="store_true",
+                    help="with --from-search: candidates are all_pmids (top-N first, same ranks), not only the top-N")
     ap.add_argument("--out-dir", default="results")
     args = ap.parse_args()
 
     load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
     if args.from_search:
-        rebuild_from_search(args.from_search, args.out_dir)
+        rebuild_from_search(args.from_search, args.out_dir, args.all_hits)
         return
     if not (args.review_pmid and args.query and args.maxdate):
         ap.error("--review-pmid, --query and --maxdate are required unless --from-search is given")

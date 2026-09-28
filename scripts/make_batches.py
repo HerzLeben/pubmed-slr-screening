@@ -8,12 +8,18 @@ Each file holds review_pmid, screener, batch, the output path the screener must 
 (as in criteria.json, order as above) and the records (pmid, title, abstract) copied from
 candidates.json. candidates.json stays the source of the text; the hooks match quotes against it.
 
+A batch file that already exists is left as it is when the new one is identical, and the script stops
+without writing anything when it would differ (a batch that has been screened must not change). This is
+how candidates that grew from the top-N to all hits (fetch_pubmed.py --all-hits, ranks N+1.. appended)
+get new batches after the screened ones.
+
 Example:
   python3 scripts/make_batches.py --review-pmid 31190844 --size 20
 """
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 SCREENERS = ("a", "b")
@@ -52,11 +58,18 @@ def main() -> None:
     criteria = json.loads((Path(args.reviews_dir) / rid / "criteria.json").read_text(encoding="utf-8"))["criteria"]
     candidates = json.loads((Path(args.results_dir) / rid / "candidates.json").read_text(encoding="utf-8"))["records"]
     docs = batch_docs(rid, criteria, candidates, args.size)
-    for who, n, doc in docs:
-        path = Path(args.results_dir) / "batches" / rid / who / f"batch_{n:02d}.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"{rid}: {len(docs) // len(SCREENERS)} batches x {len(SCREENERS)} screeners "
+    planned = [(Path(args.results_dir) / "batches" / rid / who / f"batch_{n:02d}.json",
+                json.dumps(doc, ensure_ascii=False, indent=1) + "\n") for who, n, doc in docs]
+    changed = [str(path) for path, text in planned if path.exists() and path.read_text(encoding="utf-8") != text]
+    if changed:
+        sys.exit(f"{rid}: existing batches would change, nothing written: {', '.join(changed)}")
+    new = 0
+    for path, text in planned:
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+            new += 1
+    print(f"{rid}: {len(docs) // len(SCREENERS)} batches x {len(SCREENERS)} screeners, {new} files new "
           f"-> {Path(args.results_dir) / 'batches' / rid}/")
 
 
