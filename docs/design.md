@@ -148,6 +148,14 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 - **失敗の分類**：基準の粒度不足／abstract に情報が無い／引用の捏造（hook が捕まえた数）／2体とも誤り（相関）／ベンチマークの正解側の問題
 - **記録**：`docs/EVAL.md`（第1作と同じ書式）。所要時間・トークンは比率で記事に、金額は書かない
 
+### 5.1 抽出（下書き、指示書18。extractor はまだ作らない）
+
+- **対象**：33746596・37168849 の答えの研究のうち、PMC の efetch で本文（`<body>`）が取れた7組（研究は6本。30396908 は2本の両方）。全文は `scripts/fetch_pmc.py` が `results/fulltext/<PMID>.xml` に置き、`status.json` に no_pmc／pmc_no_body／body を書く。取れない13組は「全文が手に入らない」として数え、読みに行かない
+- **項目**：`reviews/<PMID>/extraction_items.md`。答えの列名をそのまま並べ、説明は付けない（原著も列名をそのまま渡している）。答えの値は載せない
+- **extractor（subagent、Sonnet）**：入力は全文1本と extraction_items.md だけ。項目ごとに値と全文からの逐語引用を返し、見つからなければ「記載なし」。screener と同じく CLAUDE.md（`omitClaudeMd`）や他の研究の結果は渡さない。抽出の流れには人の判断を入れない
+- **評価（Accuracy）**：前後の空白と大文字・小文字をそろえて、抽出した値と答えが完全に一致したものは規則で正解にする（それ以外の書き換えはしない）。それ以外は人が1件ずつ正解／不正解と一言の理由を付ける。判定の画面は今のレポートと同じ見た目で、1行に「項目名、答えの値、抽出した値、全文からの逐語引用」を並べる。結果は `results/extraction/human/` に保存する。分母は7組の全項目で、「記載なし」は答えに値があれば不正解に数える
+- **原著との違い**（eval とレポートに書く）：原著の採点者は3人（"we enlisted three annotators who manually compared them against the data reported in the original tables"）、こちらは1人。原著は全文を手で集めた（"We manually downloaded the full content"）が、こちらは PMC の efetch で本文が取れるものだけで、対象は原著より狭い
+
 ---
 
 ## 6. 記事での見せ場

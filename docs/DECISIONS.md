@@ -98,3 +98,11 @@
 
 - requirements.md を改訂した：1章を「一次スクリーニングを Claude Code でどこまで肩代わりできるかを公開ベンチマークで確かめる。教育と手法（論文）の検証用で、業務の一次スクリーニングの代わりにはしない」にし、利用者像を「SLR の手法を学ぶ人と、LLM スクリーニングの論文を自分で確かめたい人」に、#7 を「eval-1 は上位200件、eval-2 で全ヒット」に更新、「やらないこと」に PubMed 以外のデータベースの検索と業務の代わりとしての利用を足した。実際の SLR は PubMed 以外も検索する必要があるため
 - 検索の網羅性は2種類に分けて書く：(a) 検索式の限界（PubMed にあるのに式に当たらない。検索 Recall に表れる）と、(b) データベースの限界（PubMed に無い論文）。(b) はベンチマークの答えが PMID の一覧なので、この評価では測れない（eval-2.md「検索の網羅性」）
+
+## 2026-09-29 指示書18：抽出の準備（人が決定）
+
+- 原著の3つの作業（検索・スクリーニング・抽出）をなぞり、研究特性の抽出を足す（requirements 2章 #1・#11）。対象は答えのある 33746596・37168849 の2本、全文は PMC の efetch で本文が取れる研究だけ（原著の限界 "restricted to publicly available sources from PubMed Central"）。結果の統合はしない
+- 答えの食い違い：33746596 の抽出の答えは 30830874（29669947 の Published Erratum）で、included_pmids は 29669947。抽出の評価は抽出の答えの PMID で行う。29669947 の全文も確かめて status.json に書いた（どちらも PMC あり・本文なし）
+- 項目は答えの列名をそのまま使い、説明は付けない（原著 Methods "Each table's column names served as input field descriptions for TrialMind."）
+- 原著の Accuracy は人の採点（"we enlisted three annotators who manually compared them against the data reported in the original tables"）。完全一致（前後の空白と大文字・小文字だけそろえる）は規則で正解、それ以外は人が1件ずつ採点する（`results/extraction/human/`）。分母は本文が取れた7組の全項目、「記載なし」は答えに値があれば不正解。この採点は原著の採点をなぞるためのもので、抽出の流れ（extractor）には人の判断を入れない。原著との違い（採点者 3人→1人、全文を手で集めた→PMC の本文だけ）は eval とレポートに書く
+- 参照：https://arxiv.org/html/2406.17755（Methods の "Data extraction and result extraction"、Discussion の限界の4つ目）
