@@ -7,8 +7,8 @@ results/human/<rid>.json. Prints one JSON object per review.
 Definitions:
 - search recall: |included & all_pmids| / |included|, and the same for the top-200 pmids
 - Recall@k: candidates sorted by score (scripts/rules.py) descending, ties by rank ascending; share of the
-  included studies that are in the top k. Denominator: included studies among the 200 candidates
-  (`in_pool`) and all included studies (`all`). Score = A alone, B alone, and A + B
+  included studies that are in the top k. Denominator: included studies among the screened candidates
+  (`in_pool`; the top 200 in eval-1, all hits in eval-2) and all included studies (`all`). Score = A alone, B alone, and A + B
 - final candidates (docs/schema.md section 8): A only = overall(A) is include; B only = overall(B) is
   include; two screeners = agreed_include + needs_human that the human set to include
 - missed: every included study not in the two-screener final list, with the stage it was lost at
@@ -90,7 +90,7 @@ def run(rid: str, included: list[str], reviews: Path, results: Path) -> dict:
         row: dict = {"pmid": p}
         if p not in all_ids:
             row["stage"] = "search"
-        elif p not in top:
+        elif p not in rank:  # hit by the search but not screened (eval-1: outside the top 200)
             row["stage"] = "top200"
         else:
             r = adj[p]

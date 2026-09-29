@@ -79,3 +79,4 @@
 
 - 検索式は変えず、上位200件の枠だけを外して all_pmids（固定した全ヒット）をスクリーニングする。P のブロックは直さない（検索で落ちた3件は eval-1.md の記録のまま）
 - 既に判定した200件（rank 1〜200、batch_01〜10）はそのまま使い、残りを all_pmids の並びで rank 201〜、batch_11〜 にする（`fetch_pubmed.py --from-search ... --all-hits`、`make_batches.py` は既存のバッチを変えない）
+- 2026-09-29 eval_screening.py の「落ちた段」は、上位200件ではなく「スクリーニングした候補（candidates.json）に入っているか」で分ける。eval-1 と eval-2 で同じスクリプトを使い、eval-1 は `--results results/archive/eval-1` で再現する

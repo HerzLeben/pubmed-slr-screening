@@ -5358,3 +5358,21 @@ P のブロックは直さない。検索で落ちた3件の原因は eval-1.md 
 </result>
 <usage><subagent_tokens>207019</subagent_tokens><tool_uses>16</tool_uses><duration_ms>541391</duration_ms></usage>
 </task-notification>
+
+---
+
+## 2026-09-28T22:04:04+09:00
+
+results/human/ に人の判断を足した（eval-2 で新しく出た13件）。build_report.py を再実行して未判断が0件であることを確かめ、eval-2 の評価を eval-1 と同じ指標で出して docs/eval/eval-2.md にまとめて。eval-1 との比較（200件の枠あり・なし）の表を入れる。commit して止まって。tag は CLAUDE.md の一覧に snap/11-eval-2 を足して付ける。
+
+---
+
+## 2026-09-28T22:11:18+09:00
+
+続けて
+
+---
+
+## 2026-09-29T10:28:14+09:00
+
+続けて
