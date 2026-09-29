@@ -99,3 +99,4 @@
 - 2026-09-29 PRISMA：`scripts/prisma_record.py` で results/prisma.json を作った。全文へ進む件数は 145／59／33（eval-2）、アーカイブの eval-1 では 47／33／18 で、eval-1.md・eval-2.md の最終候補と一致。重複は3本とも0件
 - 2026-09-29 PRISMA：PostToolUse（Write|Edit）の hook は、settings.json に足した直後から同じセッションで動いた。prisma.json の E2 をわざと 4→5 にすると「sum of excluded_by_reason != excluded (551 vs 550)」を返し、戻すと何も言わずに通った
 - 2026-09-29 skill：`.claude/skills/` は既にあったので、prisma-record は作った直後に skill の一覧に出た（`/reload-skills` は不要）。eval は `disable-model-invocation: true` なので Claude 側の一覧には出ない（公式どおり）。`/eval` を人が打って動くかはまだ確かめていない
+- 2026-09-29 指示書17：3本の元のレビューの全文を Cowork 側で照合した（このリポジトリの Claude Code は読んでいない）。本文の組み入れ50本に対してベンチマークの答えは27本。PMID があるのに答えに無い組み入れ研究が3件（30830874・26333935・21540550）あり、いずれも `agreed_include` で最終候補に入っている。指示書の「rank 29・621・674」は `all_pmids` の並びでの位置で、`candidates.json` の rank では 36・4・674（上位200件は別の呼び出しの relevance 順のため）

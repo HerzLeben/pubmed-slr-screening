@@ -74,6 +74,7 @@ button{font:inherit;color:inherit}
 
 /* shell */
 .shell{display:flex;min-height:calc(100% - 60px)}
+.scope{margin:0;padding:6px 16px;font-size:12px;color:var(--ink-secondary);background:var(--surface-sunken);border-bottom:1px solid var(--border)}
 aside.side{width:264px;flex-shrink:0;background:var(--side);border-right:1px solid var(--side-line);padding:20px;display:flex;flex-direction:column;gap:20px}
 .sec{border:1px solid var(--border);background:var(--surface-raised);border-radius:8px}
 .sec h2{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--ink-secondary);margin:0;padding:8px 12px}
@@ -359,6 +360,7 @@ table.rt td.rdet .body{display:grid;border-top:0}
     <a class="brandbar" href="https://herzleben.co.jp/" target="_blank" rel="noopener"><b>HerzLeben</b><span>herzleben.co.jp ↗</span></a>
   </div>
 </header>
+<p class="scope" data-t="hdr.scope"></p>
 
 <div class="shell">
 <aside class="side">
@@ -585,6 +587,7 @@ const I18N = {
     'r.pending':n => `未判断が ${n} 件あります。判断すると、この一覧に反映されます`,
     'r.inc':n => `最終の組み入れ候補 ${n} 件`, 'r.exc':n => `除外 ${n} 件（主な理由別）`,
     'app.title':'PubMed SLR × Screening', 'hdr.stage':'タイトル・抄録スクリーニング',
+    'hdr.scope':'教育と手法の検証用。PubMed だけを検索する。業務の一次スクリーニングの代わりには使わない',
     'side.review':'対象のレビュー', 'rv.cand':n => `候補 ${n} 件`, 'rv.prog':(d, n) => `要判断 ${d}/${n}`, 'rv.done':'判断完了 ✓', 'rv.none':'要判断なし ✓', 'side.progress':'人の判断', 'side.csv':'組み入れ候補（CSV）', 'side.read':'読み方', 'side.credit':'制作',
     'side.save':'人の判断を保存（JSON）', 'prog':(d, n) => `要人判断 ${n} 件のうち ${d} 件を判断済み`, 'prog.none':'要人判断はありません',
     'lg.a':'screener-a の引用', 'lg.b':'screener-b の引用', 'lg.click':'基準の行を押すと、その基準の引用だけをタイトル・抄録に表示', 'lg.e':'除外基準（E）は ✓＝該当せず／✗＝該当',
@@ -637,6 +640,7 @@ const I18N = {
     'r.pending':n => `${n} paper(s) are still open. Decisions show up here.`,
     'r.inc':n => `Final include list: ${n}`, 'r.exc':n => `Excluded: ${n} (by main reason)`,
     'app.title':'PubMed SLR × Screening', 'hdr.stage':'Title/abstract screening',
+    'hdr.scope':'For teaching and for checking the method. Searches PubMed only. Not a substitute for first-pass screening in practice',
     'side.review':'Source reviews', 'rv.cand':n => `${n} candidates`, 'rv.prog':(d, n) => `decided ${d}/${n}`, 'rv.done':'all decided ✓', 'rv.none':'nothing to decide ✓', 'side.progress':'Human review', 'side.csv':'Include list (CSV)', 'side.read':'How to read', 'side.credit':'Built by',
     'side.save':'Save decisions (JSON)', 'prog':(d, n) => `${d} of ${n} decided`, 'prog.none':'Nothing needs human review',
     'lg.a':'Quote by screener-a', 'lg.b':'Quote by screener-b', 'lg.click':'Click a criterion row to show only its quotes in the abstract', 'lg.e':'Exclusion criteria (E): ✓ = does not apply, ✗ = applies',

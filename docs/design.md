@@ -10,7 +10,7 @@
 
 ## 0. 位置づけ
 
-- **第1作との違い**：第1作は「エージェントにアプリを作らせた」。第2作は「**エージェントに業務（文献スクリーニング）を任せ、ハーネスで品質を担保する**」。成果物は Web アプリではなく、Claude Code が回すワークフローとそのレポート
+- **第1作との違い**：第1作は「エージェントにアプリを作らせた」。第2作は「**業務（文献スクリーニング）を題材に、エージェントに任せられる範囲とハーネスでの品質の担保を確かめる**」。成果物は Web アプリではなく、Claude Code が回すワークフローとそのレポート
 - **連載上の焦点**：**subagent の詳細な解説**（主役）。CLAUDE.md（土台5章の新ルールで詳しく扱う）、MCP（PubMed API の接続）、skill、hook、権限、評価も毎回組み込む
 - **型**：A（論文の再実装）。Part0 で原著の紹介と限界を先に書く
 - **原著**：Wang Z, Cao L, Danek B, Jin Q, Lu Z, Sun J. "Accelerating clinical evidence synthesis with large language models", *npj Digital Medicine* 2025（arXiv:2406.17755）。コード `RyanWangZf/TrialMind-SLR`（MIT）、ベンチマーク `zifeng-ai/TrialReviewBench`（Apache-2.0）

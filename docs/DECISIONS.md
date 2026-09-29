@@ -93,3 +93,8 @@
 - 除外理由は1件に1つ：`agreed_exclude` は criteria.json の並びで最初に A か B が -1 を付けた基準、人が除外した `needs_human` は `human`。スクリーニングしていない件数（eval-1 の枠の外）は `not_screened` として別に数え、除外に入れない
 - skill の `eval` は `disable-model-invocation: true`（人だけが `/eval` で起動）。スクリプトは design の `eval/` ではなく、既にある `scripts/eval_screening.py`・`breakdown_final.py`・`prisma_record.py` を使い、記録は `docs/EVAL.md` ではなく `docs/eval/<名前>.md`（eval-1・eval-2 に合わせる）。commit と tag は人の指示を待つ
 - 参照：https://code.claude.com/docs/en/hooks（Exit code 2 behavior per event の PostToolUse）、https://code.claude.com/docs/en/skills（`disable-model-invocation`、`$ARGUMENTS`、スキルのディレクトリの変更検知）
+
+## 2026-09-29 指示書17：位置づけ（人が決定）
+
+- requirements.md を改訂した：1章を「一次スクリーニングを Claude Code でどこまで肩代わりできるかを公開ベンチマークで確かめる。教育と手法（論文）の検証用で、業務の一次スクリーニングの代わりにはしない」にし、利用者像を「SLR の手法を学ぶ人と、LLM スクリーニングの論文を自分で確かめたい人」に、#7 を「eval-1 は上位200件、eval-2 で全ヒット」に更新、「やらないこと」に PubMed 以外のデータベースの検索と業務の代わりとしての利用を足した。実際の SLR は PubMed 以外も検索する必要があるため
+- 検索の網羅性は2種類に分けて書く：(a) 検索式の限界（PubMed にあるのに式に当たらない。検索 Recall に表れる）と、(b) データベースの限界（PubMed に無い論文）。(b) はベンチマークの答えが PMID の一覧なので、この評価では測れない（eval-2.md「検索の網羅性」）

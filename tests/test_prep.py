@@ -102,3 +102,23 @@ def test_report_marks_title_quotes(tmp_path):
     start, end = side["E1"]["span"]
     assert cand["title"][start:end] == "A review of CAR-T therapy"
     assert not [w for w in rv["warnings"] if w[0].startswith("quote")]
+
+
+def test_report_shows_scope_notice(tmp_path):
+    """The report says under its header that it is for teaching and checking the method (requirements 1)."""
+    import subprocess
+
+    rid = "999"
+    (tmp_path / "reviews" / rid).mkdir(parents=True)
+    crit = [{"id": "I1", "type": "inclusion", "text": "x"}]
+    (tmp_path / "reviews" / rid / "criteria.json").write_text(json.dumps({"review_pmid": rid, "criteria": crit}))
+    (tmp_path / "results" / rid).mkdir(parents=True)
+    cand = {"pmid": "1", "rank": 1, "title": "t", "abstract": "a"}
+    (tmp_path / "results" / rid / "candidates.json").write_text(json.dumps({"review_pmid": rid, "records": [cand]}))
+    out = tmp_path / "report.html"
+    subprocess.run([sys.executable, str(REPO / "scripts" / "build_report.py"), "--reviews", str(tmp_path / "reviews"),
+                    "--results", str(tmp_path / "results"), "--out", str(out)], check=True, capture_output=True)
+    html = out.read_text(encoding="utf-8")
+    assert '</header>\n<p class="scope" data-t="hdr.scope"></p>' in html
+    assert "'hdr.scope':'教育と手法の検証用。PubMed だけを検索する。業務の一次スクリーニングの代わりには使わない'" in html
+    assert html.count("'hdr.scope':") == 2  # ja and en
