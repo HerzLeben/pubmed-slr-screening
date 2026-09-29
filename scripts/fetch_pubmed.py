@@ -19,6 +19,8 @@ search.json (committed as reviews/<review_pmid>/search.json). --from-search rebu
 such a file without searching again: it efetches only the PMIDs not already in candidates.json (or in the
 older candidates.jsonl). With --all-hits it covers every hit: the frozen top-N keep ranks 1..N and the
 rest of all_pmids follow in their all_pmids order (ranks N+1..), so earlier batches and judgements stay valid.
+--add-pmid appends PMIDs the search did not find after all of them (eval-3 "原著と同じ作り方": included studies
+the query missed); search.json lists them as added_pmids so the evaluation can tell the two populations apart.
 NCBI Bookshelf records (PubmedBookArticle) are read as well as journal articles.
 
 NCBI_API_KEY and NCBI_EMAIL are read from the environment, after loading the repo's .env with
@@ -31,6 +33,8 @@ Example:
       --query '"CAR-T" AND "multiple myeloma"' --maxdate 2021/03/01 --n 200
   python3 scripts/fetch_pubmed.py --from-search reviews/33746596/search.json
   python3 scripts/fetch_pubmed.py --from-search reviews/33746596/search.json --all-hits
+  python3 scripts/fetch_pubmed.py --from-search reviews/37168849/eval-3/search.json --all-hits \
+      --add-pmid 28864289 --out-dir results/eval-3
 """
 
 import argparse
@@ -320,12 +324,16 @@ def candidate_pmids(meta: dict, all_hits: bool) -> list[str]:
     return pmids + [str(p) for p in meta["all_pmids"] if str(p) not in top]
 
 
-def rebuild_from_search(search_path: Path, out_dir: str, all_hits: bool = False) -> None:
+def rebuild_from_search(search_path: Path, out_dir: str, all_hits: bool = False,
+                        add_pmids: list[str] | None = None) -> None:
     """Re-create candidates.json for a frozen search.json without searching again (relevance order is
     not reproducible). Records already in <out_dir>/<review>/candidates.json (or the older
-    candidates.jsonl) are kept; only the PMIDs missing from it are fetched. all_hits: see candidate_pmids."""
+    candidates.jsonl) are kept; only the PMIDs missing from it are fetched. all_hits: see candidate_pmids.
+    add_pmids: appended after every searched PMID, in the given order (those already found are skipped)."""
     meta = json.loads(search_path.read_text(encoding="utf-8"))
     pmids = candidate_pmids(meta, all_hits)
+    added = [p for p in dict.fromkeys(str(a) for a in add_pmids or []) if p not in set(pmids)]
+    pmids += added
     out = Path(out_dir) / meta["review_pmid"]
     out.mkdir(parents=True, exist_ok=True)
     records = read_candidates(out)
@@ -339,6 +347,7 @@ def rebuild_from_search(search_path: Path, out_dir: str, all_hits: bool = False)
     meta["candidates_rebuilt_at"] = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
     meta["n_fetched_on_rebuild"] = len(fetched)
     meta["candidates_scope"] = "all_hits" if all_hits else "top_n"
+    meta["added_pmids"] = added
     meta["n_candidates"] = len(pmids)
     (out / "search.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"fetched={len(fetched)} with_record={meta['n_with_record']} "
@@ -358,12 +367,14 @@ def main() -> None:
                     help="rebuild candidates.json from this frozen search.json (no esearch); other inputs ignored")
     ap.add_argument("--all-hits", action="store_true",
                     help="with --from-search: candidates are all_pmids (top-N first, same ranks), not only the top-N")
+    ap.add_argument("--add-pmid", action="append", default=[],
+                    help="with --from-search: append this PMID after the searched ones (repeatable)")
     ap.add_argument("--out-dir", default="results")
     args = ap.parse_args()
 
     load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
     if args.from_search:
-        rebuild_from_search(args.from_search, args.out_dir, args.all_hits)
+        rebuild_from_search(args.from_search, args.out_dir, args.all_hits, args.add_pmid)
         return
     if not (args.review_pmid and args.query and args.maxdate):
         ap.error("--review-pmid, --query and --maxdate are required unless --from-search is given")

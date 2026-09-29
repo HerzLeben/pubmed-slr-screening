@@ -1,0 +1,207 @@
+{
+ "review_pmid": "31190844",
+ "screener": "a",
+ "batch": 1,
+ "records": [
+  {"pmid": "27462436", "criteria": [
+   {"id": "I1", "verdict": -1, "quote": "mouse xenograft tumor models of human B-cell malignancies"},
+   {"id": "I2", "verdict": -1, "quote": "mouse xenograft tumor models of human B-cell malignancies"},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null, "note": "マウスでの結果のみ"},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": 1, "quote": "Here we showed that the transient delivery of modified mRNA encoding telomerase reverse transcriptase"},
+   {"id": "E2", "verdict": -1, "quote": "mouse xenograft tumor models of human B-cell malignancies"},
+   {"id": "E3", "verdict": 1, "quote": "Here we showed that the transient delivery of modified mRNA encoding telomerase reverse transcriptase"}
+  ]},
+  {"pmid": "30736352", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "Acute Myeloid Leukemia (AML)"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "This article gives an overview on the state-of-the art of preclinical and clinical studies"},
+   {"id": "E2", "verdict": 1, "quote": "This article gives an overview on the state-of-the art of preclinical and clinical studies"},
+   {"id": "E3", "verdict": 1, "quote": "This article gives an overview on the state-of-the art of preclinical and clinical studies"}
+  ]},
+  {"pmid": "30713539", "criteria": [
+   {"id": "I1", "verdict": 0, "quote": null},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "In this review we will discuss the strategies that regulate the CAR T cells efficacy and persistence"},
+   {"id": "E2", "verdict": 1, "quote": "In this review we will discuss the strategies that regulate the CAR T cells efficacy and persistence"},
+   {"id": "E3", "verdict": 1, "quote": "In this review we will discuss the strategies that regulate the CAR T cells efficacy and persistence"}
+  ]},
+  {"pmid": "31824840", "criteria": [
+   {"id": "I1", "verdict": 0, "quote": null},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "This review provides a comprehensive picture of the mechanisms of resistance to CAR T-cell therapy"},
+   {"id": "E2", "verdict": 1, "quote": "This review provides a comprehensive picture of the mechanisms of resistance to CAR T-cell therapy"},
+   {"id": "E3", "verdict": 1, "quote": "This review provides a comprehensive picture of the mechanisms of resistance to CAR T-cell therapy"}
+  ]},
+  {"pmid": "30646790", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "acute lymphoblastic leukemia"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "state of the art and beyond"},
+   {"id": "E2", "verdict": 0, "quote": null},
+   {"id": "E3", "verdict": 0, "quote": null}
+  ]},
+  {"pmid": "27384848", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "pediatric hematologic malignancies"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "CAR T cell therapies for myeloma, acute myeloid leukemia, and T-cell leukemia are still under development."},
+   {"id": "E2", "verdict": 1, "quote": "CAR T cell therapies for myeloma, acute myeloid leukemia, and T-cell leukemia are still under development."},
+   {"id": "E3", "verdict": 0, "quote": null}
+  ]},
+  {"pmid": "30444200", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "an acute lymphoblastic leukemia (ALL) patient"},
+   {"id": "I2", "verdict": 1, "quote": "the CD19-specific 153z CART treatment"},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 1, "quote": "The patient achieved complete remission after the 153z CART cell infusion."},
+   {"id": "I5", "verdict": 0, "quote": null, "note": "1例のみで比較群の記載なし"},
+   {"id": "E1", "verdict": 1, "quote": "The patient achieved complete remission after the 153z CART cell infusion."},
+   {"id": "E2", "verdict": 1, "quote": "an acute lymphoblastic leukemia (ALL) patient"},
+   {"id": "E3", "verdict": 1, "quote": "The patient achieved complete remission after the 153z CART cell infusion."}
+  ]},
+  {"pmid": "31019670", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "B-cell non-Hodgkin's lymphoma (NHL)"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "Here, we review the s biology"},
+   {"id": "E2", "verdict": 1, "quote": "Here, we review the s biology"},
+   {"id": "E3", "verdict": 1, "quote": "Here, we review the s biology"}
+  ]},
+  {"pmid": "27139507", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "hematologic malignancies"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": 0, "quote": null},
+   {"id": "E2", "verdict": 0, "quote": null},
+   {"id": "E3", "verdict": 0, "quote": null}
+  ]},
+  {"pmid": "31354695", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "patients with hematological malignancies"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "In the present review, we describe the most recent advances in graft engineering and post-HSCT adoptive immunotherapy."},
+   {"id": "E2", "verdict": 1, "quote": "In the present review, we describe the most recent advances in graft engineering and post-HSCT adoptive immunotherapy."},
+   {"id": "E3", "verdict": 1, "quote": "In the present review, we describe the most recent advances in graft engineering and post-HSCT adoptive immunotherapy."}
+  ]},
+  {"pmid": "30280289", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "CD19+ B cell non-Hodgkin lymphoma (NHL)"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "PURPOSE OF REVIEW"},
+   {"id": "E2", "verdict": 1, "quote": "PURPOSE OF REVIEW"},
+   {"id": "E3", "verdict": 1, "quote": "PURPOSE OF REVIEW"}
+  ]},
+  {"pmid": "29421980", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "chronic lymphocytic leukemia"},
+   {"id": "I2", "verdict": 1, "quote": "CD19-specific chimeric antigen receptor-modified (CAR)-T cell therapy"},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": 0, "quote": null},
+   {"id": "E2", "verdict": 0, "quote": null},
+   {"id": "E3", "verdict": 0, "quote": null}
+  ]},
+  {"pmid": "28766894", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "relapsed acute lymphoblastic leukemia"},
+   {"id": "I2", "verdict": 1, "quote": "CD19-directed CAR T-cell therapy"},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": 0, "quote": null},
+   {"id": "E2", "verdict": 0, "quote": null},
+   {"id": "E3", "verdict": 0, "quote": null}
+  ]},
+  {"pmid": "29156206", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "relapsed and refractory acute lymphoblastic leukemia (ALL)"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "Tocilizumab, an anti-IL-6 receptor antagonist, provides control of severe CRS induced by CAR T cells without being directly T cell toxic."},
+   {"id": "E2", "verdict": 1, "quote": "Tocilizumab, an anti-IL-6 receptor antagonist, provides control of severe CRS induced by CAR T cells without being directly T cell toxic."},
+   {"id": "E3", "verdict": 1, "quote": "Tocilizumab, an anti-IL-6 receptor antagonist, provides control of severe CRS induced by CAR T cells without being directly T cell toxic."}
+  ]},
+  {"pmid": "23714527", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "acute lymphoblastic leukemia"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "Monoclonal antibody-based therapies bring the promise of increased response rates without excessive toxicity."},
+   {"id": "E2", "verdict": 1, "quote": "Monoclonal antibody-based therapies bring the promise of increased response rates without excessive toxicity."},
+   {"id": "E3", "verdict": 1, "quote": "Monoclonal antibody-based therapies bring the promise of increased response rates without excessive toxicity."}
+  ]},
+  {"pmid": "30042816", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "diffuse large B-cell lymphoma"},
+   {"id": "I2", "verdict": 1, "quote": "CD19 directed CAR T cell therapy"},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": 0, "quote": null},
+   {"id": "E2", "verdict": 0, "quote": null},
+   {"id": "E3", "verdict": 0, "quote": null}
+  ]},
+  {"pmid": "28257957", "criteria": [
+   {"id": "I1", "verdict": 0, "quote": null},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "This review discusses recent advancements of DC vaccines and CAR T-cells"},
+   {"id": "E2", "verdict": 1, "quote": "This review discusses recent advancements of DC vaccines and CAR T-cells"},
+   {"id": "E3", "verdict": 1, "quote": "This review discusses recent advancements of DC vaccines and CAR T-cells"}
+  ]},
+  {"pmid": "25621840", "criteria": [
+   {"id": "I1", "verdict": 0, "quote": null},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "This review will discuss recent concepts in the development of effective and safe synthetic CARs"},
+   {"id": "E2", "verdict": 1, "quote": "This review will discuss recent concepts in the development of effective and safe synthetic CARs"},
+   {"id": "E3", "verdict": 1, "quote": "This review will discuss recent concepts in the development of effective and safe synthetic CARs"}
+  ]},
+  {"pmid": "27111235", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "adults with B cell acute lymphoblastic leukemia"},
+   {"id": "I2", "verdict": 1, "quote": "We conducted a clinical trial to evaluate CD19 CAR-T cells"},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 1, "quote": "27 of 29 patients (93%) achieved BM remission"},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": 1, "quote": "We conducted a clinical trial to evaluate CD19 CAR-T cells"},
+   {"id": "E2", "verdict": 1, "quote": "27 of 29 patients (93%) achieved BM remission"},
+   {"id": "E3", "verdict": 1, "quote": "27 of 29 patients (93%) achieved BM remission"}
+  ]},
+  {"pmid": "28719798", "criteria": [
+   {"id": "I1", "verdict": 1, "quote": "B-cell malignancies"},
+   {"id": "I2", "verdict": 0, "quote": null},
+   {"id": "I3", "verdict": 0, "quote": null},
+   {"id": "I4", "verdict": 0, "quote": null},
+   {"id": "I5", "verdict": 0, "quote": null},
+   {"id": "E1", "verdict": -1, "quote": "In this review, we will discuss the background and rationale for the use of CAR-Ts"},
+   {"id": "E2", "verdict": 1, "quote": "In this review, we will discuss the background and rationale for the use of CAR-Ts"},
+   {"id": "E3", "verdict": 1, "quote": "In this review, we will discuss the background and rationale for the use of CAR-Ts"}
+  ]}
+ ]
+}

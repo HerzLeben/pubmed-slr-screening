@@ -1,0 +1,47 @@
+{
+  "review_pmid": "31190844",
+  "source": "criteria_draft.md",
+  "criteria": [
+    {
+      "id": "I1",
+      "type": "inclusion",
+      "text": "対象は hematological malignancies（血液がん）と診断された患者か"
+    },
+    {
+      "id": "I2",
+      "type": "inclusion",
+      "text": "対象は CD19 を標的とする chimeric antigen receptor-T cell（CAR-T）therapy を受けたか"
+    },
+    {
+      "id": "I3",
+      "type": "inclusion",
+      "text": "使われた CAR-T cell は autologous（自家）か"
+    },
+    {
+      "id": "I4",
+      "type": "inclusion",
+      "text": "survival outcomes（生存）または efficacy（有効性）の結果を1つ以上報告しているか"
+    },
+    {
+      "id": "I5",
+      "type": "inclusion",
+      "text": "standard care or alternative treatments（標準治療または別の治療）の比較群があるか"
+    },
+    {
+      "id": "E1",
+      "type": "exclusion",
+      "text": "review・systematic review・meta-analysis・editorial・commentary など、患者データを新たに報告しない出版の種類か",
+      "note": "case report は除外しない"
+    },
+    {
+      "id": "E2",
+      "type": "exclusion",
+      "text": "in vitro や動物モデルだけの前臨床研究で、患者のデータが無いか"
+    },
+    {
+      "id": "E3",
+      "type": "exclusion",
+      "text": "結果を含まない試験計画（protocol・study design の紹介）だけか"
+    }
+  ]
+}

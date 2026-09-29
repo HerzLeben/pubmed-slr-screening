@@ -233,3 +233,22 @@ def test_rebuild_all_hits(tmp_path, monkeypatch):
     assert meta["candidates_scope"] == "all_hits"
     assert meta["n_candidates"] == 4
     assert meta["n_with_record"] == 4
+
+
+def test_rebuild_add_pmids_go_last(tmp_path, monkeypatch):
+    frozen = {"review_pmid": "999", "maxdate": "2021/02/18", "pmids": ["3", "1"], "all_pmids": ["1", "2", "3"]}
+    search_path = tmp_path / "frozen.json"
+    search_path.write_text(json.dumps(frozen))
+    monkeypatch.setattr(fetch_pubmed, "efetch",
+                        lambda pmids: {p: {"pmid": p, "title": f"t {p}", "abstract": "a"} for p in pmids})
+    monkeypatch.setattr(fetch_pubmed, "esummary_dates", lambda pmids: {p: {"pubdate": "2020", "epubdate": ""} for p in pmids})
+
+    fetch_pubmed.rebuild_from_search(search_path, str(tmp_path / "results"), all_hits=True, add_pmids=["9", "2", "9"])
+
+    out = tmp_path / "results" / "999"
+    ranks = [(x["rank"], x["pmid"]) for x in json.loads((out / "candidates.json").read_text())["records"]]
+    assert ranks == [(1, "3"), (2, "1"), (3, "2"), (4, "9")]
+    meta = json.loads((out / "search.json").read_text())
+    assert meta["added_pmids"] == ["9"]
+    assert meta["all_pmids"] == frozen["all_pmids"]
+    assert meta["n_candidates"] == 4

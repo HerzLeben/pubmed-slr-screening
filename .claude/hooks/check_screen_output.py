@@ -13,9 +13,12 @@ PreToolUse (matcher Write) -- the send-back. Runs before the file is written. Ex
          verdict -1/0/1; no overall/score
       3. every +/-1 has a quote found in the title or abstract of results/<review>/candidates.json
          (scripts/quote_match.py: NFKC, hyphen variants, whitespace); 0 has quote null
+    The same checks apply to results/eval-3/screen/<a|b>/<review>/batch_<nn>.json, matched against the
+    eval-3 inputs instead (run_files): results/eval-3/batches/..., reviews/<review>/eval-3/criteria.json
+    (the unapproved draft criteria, DECISIONS 指示書19 2章) and results/eval-3/<review>/candidates.json.
   - results/adjudication/<review>.json written by the adjudicator (schema 6): records, status, reasons and
     disagree_criteria unchanged; every needs_human record has a summary
-  - a screener may write only under results/screen/<its letter>/, the adjudicator only
+  - a screener may write only under results/[eval-3/]screen/<its letter>/, the adjudicator only
     results/adjudication/<review>.json
 SubagentStop (matcher screener-a|screener-b) -- observation only. SubagentStop cannot block ("Exit code 2
   isn't honored; the subagent has already finished"), so this re-checks the files named in the subagent's
@@ -30,9 +33,9 @@ import re
 import sys
 from pathlib import Path
 
-SCREEN = re.compile(r"^results/screen/([ab])/(\d+)/batch_(\d{2})\.json$")
+SCREEN = re.compile(r"^results/(?:(eval-3)/)?screen/([ab])/(\d+)/batch_(\d{2})\.json$")
 ADJ = re.compile(r"^results/adjudication/(\d+)\.json$")
-MENTION = re.compile(r"results/screen/[ab]/\d+/batch_\d{2}\.json")
+MENTION = re.compile(r"results/(?:eval-3/)?screen/[ab]/\d+/batch_\d{2}\.json")
 MAX_LINES = 40
 
 
@@ -57,8 +60,20 @@ def id_key(cid: str) -> tuple[int, int]:
     return (0 if cid.startswith("I") else 1, int(cid[1:]))
 
 
+def run_files(run: str | None, who: str, rid: str, nn: str, root: Path) -> tuple[Path, Path, Path]:
+    """(batch input, criteria, candidates) for a screener output of this run. None is eval-1/eval-2."""
+    if run == "eval-3":
+        res = root / "results" / "eval-3"
+        return (res / "batches" / rid / who / f"batch_{nn}.json",
+                root / "reviews" / rid / "eval-3" / "criteria.json",
+                res / rid / "candidates.json")
+    return (root / "results" / "batches" / rid / who / f"batch_{nn}.json",
+            root / "reviews" / rid / "criteria.json",
+            root / "results" / rid / "candidates.json")
+
+
 def check_screen(content: str, relpath: str, root: Path) -> list[str]:
-    who, rid, nn = SCREEN.match(relpath).groups()
+    run, who, rid, nn = SCREEN.match(relpath).groups()
     errs: list[str] = []
     try:
         doc = json.loads(content)
@@ -76,9 +91,7 @@ def check_screen(content: str, relpath: str, root: Path) -> list[str]:
     sys.path.insert(0, str(root / "scripts"))
     from quote_match import quote_exists
 
-    batch_in = root / "results" / "batches" / rid / who / f"batch_{nn}.json"
-    crit_path = root / "reviews" / rid / "criteria.json"
-    cand_path = root / "results" / rid / "candidates.json"
+    batch_in, crit_path, cand_path = run_files(run, who, rid, nn, root)
     for p in (batch_in, crit_path, cand_path):
         if not p.exists():
             return errs + [f"照合に使うファイルが無い: {p.relative_to(root)}"]
@@ -166,8 +179,9 @@ def pre_tool_use(event: dict, root: Path) -> int:
     if agent.startswith("screener-"):
         letter = agent.removeprefix("screener-")
         m = SCREEN.match(relpath or "")
-        if not m or m.group(1) != letter:
-            return block([(f"{agent} が書けるのは results/screen/{letter}/<review>/batch_<nn>.json だけ"
+        if not m or m.group(2) != letter:
+            return block([(f"{agent} が書けるのは results/screen/{letter}/<review>/batch_<nn>.json"
+                           f"（eval-3 は results/eval-3/screen/{letter}/<review>/batch_<nn>.json）だけ"
                            f"（{tool_input.get('file_path')}）")])
     if agent == "adjudicator" and not ADJ.match(relpath or ""):
         return block([f"adjudicator が書けるのは results/adjudication/<review>.json だけ（{tool_input.get('file_path')}）"])

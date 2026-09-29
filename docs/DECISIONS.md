@@ -106,3 +106,48 @@
 - 項目は答えの列名をそのまま使い、説明は付けない（原著 Methods "Each table's column names served as input field descriptions for TrialMind."）
 - 原著の Accuracy は人の採点（"we enlisted three annotators who manually compared them against the data reported in the original tables"）。完全一致（前後の空白と大文字・小文字だけそろえる）は規則で正解、それ以外は人が1件ずつ採点する（`results/extraction/human/`）。分母は本文が取れた7組の全項目、「記載なし」は答えに値があれば不正解。この採点は原著の採点をなぞるためのもので、抽出の流れ（extractor）には人の判断を入れない。原著との違い（採点者 3人→1人、全文を手で集めた→PMC の本文だけ）は eval とレポートに書く
 - 参照：https://arxiv.org/html/2406.17755（Methods の "Data extraction and result extraction"、Discussion の限界の4つ目）
+
+## 2026-09-29 指示書19：人の介入を外した検索式（eval-3、人が決定）
+
+- 1章で検索式に人の手（語の追加、ブロックの形の指示）が入っていたので、3本とも query-builder に人の手なしで作り直させる（案2）。PICO は `bench/reviews.jsonl` が raw と完全一致し、人の指示は検索式の形と語だけで PICO には触れていなかった（HARNESS）
+- query-builder に渡すのは PICO（ベンチマークの値をそのまま）、検索期間の上限、書き方の制約（`*` を使わない、演算子20以下）だけ。適格基準は渡さない。レビューの PMID は agent 定義の「元レビュー自身を検索式の調整に使わない」のために渡す（条件ではなく識別子）。本体は条件を書き足さない。agent 定義は変えない
+- 1本につき1回だけ走らせ、最終案を中身にかかわらずそのまま使う。エラーで止まったときだけやり直す（HARNESS に書く）。人は検索式を承認しない（動いたかの確認だけ）。より良い案を選ぶための作り直しはしない。本体は委任文に条件を書き足さない
+- 置き場所：eval-1・eval-2 の `reviews/<PMID>/query.md`・`search.json` は上書きしない。eval-3 は `reviews/<PMID>/eval-3/`（query.md・search.json）、候補と抄録は `results/eval-3/<PMID>/`（`fetch_pubmed.py --out-dir results/eval-3`）
+- 委任文（3本とも同じ形。<...> だけ差し替える）：
+
+```
+レビュー PMID <PMID> の PubMed 検索式の案を1本作ってください。
+
+PICO：
+P: <PICO.P>
+I: <PICO.I>
+C: <PICO.C>
+O: <PICO.O>
+
+検索期間の上限：<YYYY/MM/DD>（date_from=1800/01/01）
+
+書き方の制約：
+- `*`（前方一致）を使わない
+- 式全体の演算子（AND・OR・NOT）は合わせて20個以下
+```
+
+  上限は 33746596：2021/02/18、31190844：2019/05/06、37168849：2023/04/24（元のレビューの出版日。eval-2 と同じ）
+
+## 2026-09-29 指示書19 2章：基準は案のまま（人が決定）
+
+- `reviews/<PMID>/criteria_draft.md` は `snap/03-criteria-draft` の criteria.md そのまま。screener に渡す形は `scripts/draft_criteria_to_json.py` が `reviews/<PMID>/eval-3/criteria.json` に出す。包含・除外の表の「問い」を一字も変えずに写す（eval-2 と同じく、出典の列は screener に渡さない）
+- 31190844 の I5（比較群）は表のまま使う（出典の欄の「採否は人が決める。下記参照」も criteria_draft.md では変えない）。単群試験は I5 で -1 になり除外される見込み。eval-3 で原著と並べるのは I5 を含む値だけ。参考として、同じ判定から I5 を外して合計を取り直した Recall@20・@50 を eval-3.md に1行だけ載せる（スクリーニングはやり直さない。「参考。原著との比較には使わない」と明記）
+- 「人に決めてほしい点」の節は screener に渡さない。案の中で既に決めてある扱いだけを、その基準の note として残す（文言は案に近いまま）：
+
+| レビュー | 残した（note） | 外した（人への問い） |
+|---|---|---|
+| 33746596 | I1：混合集団で RRMM の結果が分かれていなければ I1 を 0。E1：PubMed に載る学会抄録は除外しない、case report は除外しない | E1〜E3 を採るか、上限を epubdate か received か |
+| 31190844 | E1：case report は除外しない | I5 を採るか（案は「承認で外すかを決める」で、決めていない）、I3 は 0 が多くなる見込み（見込みで扱いではない）、CD19/CD22 などを I2 で 1 とするか、E1〜E3 を採るか、上限 |
+| 37168849 | I1：AML と他の疾患をまとめた試験で RR-AML の結果が分かれていなければ I1 を 0。E1：case report は除外しない | E1〜E3 を採るか、CAR-NK などを I3 で -1 とするか、上限 |
+
+## 2026-09-29 指示書19 3〜4章：候補とスクリーニングの置き場所
+
+- 検索は query-builder の最終案（3本とも1回）を `fetch_pubmed.py --out-dir results/eval-3` で実行し、all_pmids を `reviews/<PMID>/eval-3/search.json` に固定した（683／698／484件）
+- 母集団は2通り。「全ヒット」は all_pmids。「原著と同じ作り方」は、全ヒットに、新しい検索で拾えなかった答えの PMID を足したもの。数え直した結果は 37168849 の 28864289 の1件だけ（指示書の決め打ちの3件のうち、31190844 の 22160384・24030379 は新しい検索で拾えた）。足した PMID は `fetch_pubmed.py --add-pmid` で候補の最後（最後のバッチ）に入れ、search.json の `added_pmids` に記録する。screener のバッチには足したかどうかを書かない
+- 原著の引用（arXiv HTML 版、Results の "TrialMind enhances literature screening and ranking"）："A candidate set of 2,000 citations is created by combining the actual studies included in the review with additional citations retrieved during the search but not included in the review." 参照：https://arxiv.org/html/2406.17755
+- スクリーニングの置き場所は `results/eval-3/`（batches・screen・`<PMID>/candidates.json`）。hook（check_screen_output.py）と make_batches.py がパスで入力を選ぶため、パスの `results/eval-3/` で run を見分け、eval-3 は `reviews/<PMID>/eval-3/criteria.json` で検査する。検査の中身は eval-2 と同じ。eval-3 は screener-a だけなので、バッチも a の分だけ作る（`make_batches.py --run eval-3`）

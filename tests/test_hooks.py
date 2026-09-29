@@ -105,6 +105,112 @@ def test_unrelated_write_by_main_session_passes(project):
     assert code == 0
 
 
+# ---- eval-3: the run picks the criteria file (reviews/<rid>/eval-3/criteria.json) -------------------------
+E3_RID = "31190844"  # the real draft criteria of eval-3 have I5 (comparator); eval-2's criteria.json does not
+E3_CAND = {"pmid": "5", "rank": 1, "title": "CD19 CAR-T cells versus chemotherapy in B-ALL",
+           "abstract": "Adults with relapsed B-ALL received autologous CD19 CAR-T cells."}
+
+
+def e3_output(ids, who="a"):
+    crit = [{"id": i, "verdict": 1, "quote": "CD19 CAR-T cells"} if i == "I2" else {"id": i, "verdict": 0, "quote": None}
+            for i in ids]
+    return {"review_pmid": E3_RID, "screener": who, "batch": 1, "records": [{"pmid": "5", "criteria": crit}]}
+
+
+def ids_of(path):
+    return [c["id"] for c in json.loads(path.read_text(encoding="utf-8"))["criteria"]]
+
+
+@pytest.fixture
+def e3_project(tmp_path):
+    (tmp_path / "scripts").mkdir()
+    shutil.copy(REPO / "scripts" / "quote_match.py", tmp_path / "scripts")
+    for sub in ("", "eval-3"):
+        d = tmp_path / "reviews" / E3_RID / sub
+        d.mkdir(parents=True, exist_ok=True)
+        shutil.copy(REPO / "reviews" / E3_RID / sub / "criteria.json", d / "criteria.json")
+    rec = {k: E3_CAND[k] for k in ("pmid", "title", "abstract")}
+    for res in (tmp_path / "results", tmp_path / "results" / "eval-3"):
+        (res / E3_RID).mkdir(parents=True)
+        (res / E3_RID / "candidates.json").write_text(json.dumps({"review_pmid": E3_RID, "records": [E3_CAND]}))
+        for who in ("a", "b"):
+            d = res / "batches" / E3_RID / who
+            d.mkdir(parents=True)
+            (d / "batch_01.json").write_text(json.dumps({"review_pmid": E3_RID, "screener": who, "batch": 1,
+                                                         "records": [rec]}))
+    return tmp_path
+
+
+def test_eval3_criteria_have_i5_and_eval2_do_not():
+    assert "I5" in ids_of(REPO / "reviews" / E3_RID / "eval-3" / "criteria.json")
+    assert "I5" not in ids_of(REPO / "reviews" / E3_RID / "criteria.json")
+
+
+def test_eval3_output_with_i5_passes(e3_project):
+    ids = ids_of(e3_project / "reviews" / E3_RID / "eval-3" / "criteria.json")
+    path = f"results/eval-3/screen/a/{E3_RID}/batch_01.json"
+    code, _, err = run(CHECK, write_event(e3_project, path, e3_output(ids)), e3_project)
+    assert code == 0, err
+
+
+def test_eval3_output_without_i5_is_sent_back(e3_project):
+    ids = ids_of(e3_project / "reviews" / E3_RID / "criteria.json")
+    path = f"results/eval-3/screen/a/{E3_RID}/batch_01.json"
+    code, _, err = run(CHECK, write_event(e3_project, path, e3_output(ids)), e3_project)
+    assert code == 2
+    assert "基準 I5: 無い" in err
+
+
+def test_eval2_still_checks_against_eval2_criteria(e3_project):
+    eval2 = ids_of(e3_project / "reviews" / E3_RID / "criteria.json")
+    path = f"results/screen/a/{E3_RID}/batch_01.json"
+    code, _, err = run(CHECK, write_event(e3_project, path, e3_output(eval2)), e3_project)
+    assert code == 0, err
+    eval3 = ids_of(e3_project / "reviews" / E3_RID / "eval-3" / "criteria.json")
+    code, _, err = run(CHECK, write_event(e3_project, path, e3_output(eval3)), e3_project)
+    assert code == 2
+    assert "基準 I5: 知らない基準 ID" in err
+
+
+def test_eval3_quote_checked_against_eval3_candidates(e3_project):
+    (e3_project / "results" / "eval-3" / E3_RID / "candidates.json").write_text(json.dumps(
+        {"review_pmid": E3_RID, "records": [{**E3_CAND, "title": "Other title", "abstract": "Other text."}]}))
+    ids = ids_of(e3_project / "reviews" / E3_RID / "eval-3" / "criteria.json")
+    path = f"results/eval-3/screen/a/{E3_RID}/batch_01.json"
+    code, _, err = run(CHECK, write_event(e3_project, path, e3_output(ids)), e3_project)
+    assert code == 2
+    assert "逐語で無い" in err
+
+
+def test_eval3_missing_input_is_reported(e3_project):
+    (e3_project / "reviews" / E3_RID / "eval-3" / "criteria.json").unlink()
+    ids = ids_of(e3_project / "reviews" / E3_RID / "criteria.json")
+    path = f"results/eval-3/screen/a/{E3_RID}/batch_01.json"
+    code, _, err = run(CHECK, write_event(e3_project, path, e3_output(ids)), e3_project)
+    assert code == 2
+    assert f"reviews/{E3_RID}/eval-3/criteria.json" in err
+
+
+def test_screener_a_cannot_write_eval3_b_folder(e3_project):
+    ids = ids_of(e3_project / "reviews" / E3_RID / "eval-3" / "criteria.json")
+    path = f"results/eval-3/screen/b/{E3_RID}/batch_01.json"
+    code, _, err = run(CHECK, write_event(e3_project, path, e3_output(ids, "b")), e3_project)
+    assert code == 2
+    assert "results/eval-3/screen/a/" in err
+
+
+def test_subagent_stop_rechecks_eval3_output(e3_project):
+    ids = ids_of(e3_project / "reviews" / E3_RID / "criteria.json")  # no I5: wrong for eval-3
+    rel = f"results/eval-3/screen/a/{E3_RID}/batch_01.json"
+    (e3_project / rel).parent.mkdir(parents=True)
+    (e3_project / rel).write_text(json.dumps(e3_output(ids)))
+    ev = {"hook_event_name": "SubagentStop", "agent_type": "screener-a", "cwd": str(e3_project),
+          "last_assistant_message": f"書きました: {rel}"}
+    code, out, _ = run(CHECK, ev, e3_project)
+    assert code == 0
+    assert "I5" in json.loads(out)["systemMessage"]
+
+
 # ---- screener output: sent back ----------------------------------------------------------------
 
 def broken(mutate):

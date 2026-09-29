@@ -1,0 +1,43 @@
+{
+  "review_pmid": "33746596",
+  "source": "criteria_draft.md",
+  "criteria": [
+    {
+      "id": "I1",
+      "type": "inclusion",
+      "text": "対象は multiple myeloma（多発性骨髄腫）の患者か",
+      "note": "multiple myeloma 以外の疾患も含む試験（例：複数の血液がんをまとめた phase 1）で、抄録に RRMM の結果が分けて書かれていないものは I1 を 0 とし、組み入れる側に倒す"
+    },
+    {
+      "id": "I2",
+      "type": "inclusion",
+      "text": "対象の multiple myeloma は relapsed/refractory（再発・難治性）か"
+    },
+    {
+      "id": "I3",
+      "type": "inclusion",
+      "text": "対象は CAR-T therapy を受けたか"
+    },
+    {
+      "id": "I4",
+      "type": "inclusion",
+      "text": "O に挙げた評価項目（overall response rate、complete response rate、MRD negativity rate、relapse rate、progression-free survival、grade 3-4 CRS、neurologic toxicities）のいずれか1つ以上の結果を報告しているか"
+    },
+    {
+      "id": "E1",
+      "type": "exclusion",
+      "text": "review・systematic review・meta-analysis・editorial・commentary など、患者データを新たに報告しない出版の種類か",
+      "note": "PubMed に載る学会抄録（journal supplement）は除外しない。case report（1例報告）は除外しない"
+    },
+    {
+      "id": "E2",
+      "type": "exclusion",
+      "text": "in vitro や動物モデルだけの前臨床研究で、患者のデータが無いか"
+    },
+    {
+      "id": "E3",
+      "type": "exclusion",
+      "text": "結果を含まない試験計画（protocol・study design の紹介）だけか"
+    }
+  ]
+}

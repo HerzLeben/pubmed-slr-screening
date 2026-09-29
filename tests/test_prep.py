@@ -80,6 +80,15 @@ def test_batches_split_and_order():
     assert len(docs[4][2]["records"]) == 5
 
 
+
+def test_batches_eval3_screener_a_only():
+    cands = [{"pmid": str(n), "rank": n, "title": f"t{n}", "abstract": f"a{n}"} for n in range(1, 26)]
+    docs = batch_docs("999", CRIT, cands, 20, "results/eval-3", ("a",))
+    assert [(w, n) for w, n, _ in docs] == [("a", 1), ("a", 2)]
+    assert docs[0][2]["criteria_order"] == ["I1", "I2", "E1"]
+    assert docs[1][2]["output"] == "results/eval-3/screen/a/999/batch_02.json"
+    assert [r["pmid"] for r in docs[1][2]["records"]] == [str(n) for n in range(21, 26)]
+
 def test_report_marks_title_quotes(tmp_path):
     rid = "999"
     (tmp_path / "reviews" / rid).mkdir(parents=True)
