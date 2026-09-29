@@ -96,3 +96,6 @@
 - 2026-09-29 指示書16：37168849 の元のレビューの全文は Cowork 側で確かめた（このリポジトリの Claude Code は読んでいない）。WebFetch は PubMed（robots）と Europe PMC（429）で読めず、Mac から NCBI efetch（db=pmc）で取得した。全文はリポジトリに置かない
 - 2026-09-29 指示書16：breakdown_final.py の最初の版は、指示書に無い「-1 を含む」区分を足していたため 31190844 の「0 を含む」が 83／27 になり、確かめる数字（86／29）と合わなかった。人が組み入れた needs_human の5件は 0 も含むので、指示書の3区分どおり 0 の有無で先に振るように直すと、確かめる数字とすべて一致した
 - 2026-09-29 人の決定：このツールの位置づけは業務での一次スクリーニングの代替ではなく、教育と論文（手法）の検証用とする。実際の SLR は PubMed 以外のデータベース（Embase、Cochrane CENTRAL など）も検索する必要があり、PubMed だけでは業務に足りないため
+- 2026-09-29 PRISMA：`scripts/prisma_record.py` で results/prisma.json を作った。全文へ進む件数は 145／59／33（eval-2）、アーカイブの eval-1 では 47／33／18 で、eval-1.md・eval-2.md の最終候補と一致。重複は3本とも0件
+- 2026-09-29 PRISMA：PostToolUse（Write|Edit）の hook は、settings.json に足した直後から同じセッションで動いた。prisma.json の E2 をわざと 4→5 にすると「sum of excluded_by_reason != excluded (551 vs 550)」を返し、戻すと何も言わずに通った
+- 2026-09-29 skill：`.claude/skills/` は既にあったので、prisma-record は作った直後に skill の一覧に出た（`/reload-skills` は不要）。eval は `disable-model-invocation: true` なので Claude 側の一覧には出ない（公式どおり）。`/eval` を人が打って動くかはまだ確かめていない

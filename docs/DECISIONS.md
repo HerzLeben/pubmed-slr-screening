@@ -86,3 +86,10 @@
 - 31190844 の P のブロックは見直さない。検索に当たらなかった2件（22160384・24030379）は、検索の段の取りこぼしとして報告する。答えに合わせて検索式を直すと、Recall が答えを見て調整した数字になるため
 - 37168849 の基準（CAR-NK は I3 を満たさない、前臨床は E2 で除外）は変えない。元のレビューの Selection criteria と照らすと criteria.md はそのとおりで、答えのほうが元のレビュー自身の基準から外れていた（eval-2.md「元のレビューとの照合」）。取りこぼし3件は分類して報告する
 - 最終候補が多いこと（31190844 の145件）には、規則（0 は組み入れ側、I3 の注）を変えずに内訳を出して対処する（`scripts/breakdown_final.py`）。作業量は「スコア順に全文を読んだとき何件で組み入れ研究に届くか」で示す（上位96件）
+
+## 2026-09-29 PRISMA の記録と /eval
+
+- PRISMA の件数は `scripts/prisma_record.py` が数えて、和を確かめてから `results/prisma.json` に書く（Claude が手で写さない）。PostToolUse（matcher `Write|Edit`）の hook `.claude/hooks/check_prisma.py` は、手で直したときに同じ和（`prisma_record.check`）を検査する。PostToolUse の exit 2 は書き込みを止めず、stderr を Claude に見せる
+- 除外理由は1件に1つ：`agreed_exclude` は criteria.json の並びで最初に A か B が -1 を付けた基準、人が除外した `needs_human` は `human`。スクリーニングしていない件数（eval-1 の枠の外）は `not_screened` として別に数え、除外に入れない
+- skill の `eval` は `disable-model-invocation: true`（人だけが `/eval` で起動）。スクリプトは design の `eval/` ではなく、既にある `scripts/eval_screening.py`・`breakdown_final.py`・`prisma_record.py` を使い、記録は `docs/EVAL.md` ではなく `docs/eval/<名前>.md`（eval-1・eval-2 に合わせる）。commit と tag は人の指示を待つ
+- 参照：https://code.claude.com/docs/en/hooks（Exit code 2 behavior per event の PostToolUse）、https://code.claude.com/docs/en/skills（`disable-model-invocation`、`$ARGUMENTS`、スキルのディレクトリの変更検知）

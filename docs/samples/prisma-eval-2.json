@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-09-29T21:47:42+09:00",
+  "generator": "scripts/prisma_record.py",
+  "stage": "title/abstract",
+  "reviews": [
+    {
+      "review_pmid": "31190844",
+      "database": "PubMed",
+      "search_retrieved_at": "2026-09-27T20:07:21+09:00",
+      "maxdate": "2019/05/06",
+      "identified": 695,
+      "duplicates_removed": 0,
+      "after_duplicates": 695,
+      "not_screened": 0,
+      "screened": 695,
+      "excluded": 550,
+      "excluded_by_reason": {
+        "I1": 168,
+        "I2": 37,
+        "I3": 19,
+        "I4": 16,
+        "E1": 298,
+        "E2": 4,
+        "E3": 1,
+        "human": 7
+      },
+      "awaiting_human": 0,
+      "to_full_text": 145,
+      "detail": {
+        "agreed_include": 140,
+        "agreed_exclude": 543,
+        "needs_human": 12,
+        "human_include": 5,
+        "human_exclude": 7,
+        "undecided": 0
+      }
+    },
+    {
+      "review_pmid": "33746596",
+      "database": "PubMed",
+      "search_retrieved_at": "2026-09-27T20:07:41+09:00",
+      "maxdate": "2021/02/18",
+      "identified": 436,
+      "duplicates_removed": 0,
+      "after_duplicates": 436,
+      "not_screened": 0,
+      "screened": 436,
+      "excluded": 377,
+      "excluded_by_reason": {
+        "I1": 76,
+        "I2": 2,
+        "I3": 71,
+        "I4": 4,
+        "E1": 220,
+        "E2": 0,
+        "E3": 0,
+        "human": 4
+      },
+      "awaiting_human": 0,
+      "to_full_text": 59,
+      "detail": {
+        "agreed_include": 56,
+        "agreed_exclude": 373,
+        "needs_human": 7,
+        "human_include": 3,
+        "human_exclude": 4,
+        "undecided": 0
+      }
+    },
+    {
+      "review_pmid": "37168849",
+      "database": "PubMed",
+      "search_retrieved_at": "2026-09-27T20:07:56+09:00",
+      "maxdate": "2023/04/24",
+      "identified": 473,
+      "duplicates_removed": 0,
+      "after_duplicates": 473,
+      "not_screened": 0,
+      "screened": 473,
+      "excluded": 440,
+      "excluded_by_reason": {
+        "I1": 139,
+        "I2": 5,
+        "I3": 117,
+        "I4": 39,
+        "E1": 117,
+        "E2": 12,
+        "E3": 0,
+        "human": 11
+      },
+      "awaiting_human": 0,
+      "to_full_text": 33,
+      "detail": {
+        "agreed_include": 33,
+        "agreed_exclude": 429,
+        "needs_human": 11,
+        "human_include": 0,
+        "human_exclude": 11,
+        "undecided": 0
+      }
+    }
+  ]
+}
