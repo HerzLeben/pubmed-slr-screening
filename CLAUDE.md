@@ -43,6 +43,32 @@ requirements と design が食い違ったら requirements を優先する。ど
 - 記事に使う結果（最初の試走、subagent なしの試走、最初の並列実行）は `docs/samples/` にコピーして commit（`results/` は gitignore）
 - 公式仕様（hook・subagent・MCP・settings）は記憶でなく公式ドキュメントで確認し、見た URL を DECISIONS に残す
 
+## コマンド
+- 環境：`.venv`（`requirements.txt` は python-dotenv だけ、`requirements-dev.txt` は ruff・pytest）。設定ファイル（pyproject 等）は無い
+- テスト：`python3 -m pytest -q`（ネットワーク不要）。1つだけ：`python3 -m pytest tests/test_rules.py -q`、`-k <名前>` で絞る
+- lint：`ruff check .`
+- テストは `sys.path` に `scripts/` を足して import する（パッケージ化していない）。hook のテストは `tests/test_hooks.py`
+
+## データの流れ（どのスクリプトが何を読み書きするか。ファイルの形の正本は `docs/schema.md`）
+レビューは PMID で呼ぶ（31190844、33746596、37168849）。`reviews/<rid>/` は commit する、`results/` は gitignore。
+1. `scripts/build_bench.py` → `bench/reviews.jsonl`（答えの `included_pmids`。screener・PRISMA は読まない）
+2. `/pico-to-criteria` → `reviews/<rid>/criteria.md`（人が承認）→ `scripts/criteria_to_json.py` → `criteria.json`
+3. `scripts/fetch_pubmed.py` → `results/<rid>/{search,candidates}.json`。PubMed の relevance 順は再現しないので、上位リストは `reviews/<rid>/search.json` に固定し、`--from-search` で candidates を作り直す。`--all-hits` で全ヒットに広げる
+4. `scripts/make_batches.py` → `results/batches/<rid>/{a,b}/batch_<nn>.json`（a は基準の正順、b は逆順）。既に判定済みのバッチと中身が変わるなら書かずに止まる
+5. screener-a / screener-b（subagent）→ `results/screen/{a,b}/<rid>/batch_<nn>.json`
+6. `scripts/adjudicate.py` が status を規則で決める → adjudicator（subagent）は needs_human の `summary` を書くだけ
+7. 人の判断：HTML レポートから `results/human/<rid>.json` を保存
+8. `scripts/prisma_record.py` → `results/prisma.json`、`scripts/build_report.py` → `results/report.html`、`scripts/eval_screening.py`（評価。`/eval` は人だけが起動）
+- 判定の集計（`score`・`overall`）は `scripts/rules.py`、引用の照合は `scripts/quote_match.py` に1つだけ定義し、hook・adjudicate・report・eval が共有する。規則を変えるならここと `docs/schema.md` を一緒に直す
+- eval-3 は別の系：`--run eval-3` で `reviews/<rid>/eval-3/`（未承認の `criteria_draft.md` から `draft_criteria_to_json.py`）と `results/eval-3/` を使い、screener-a だけ・adjudication と人の判断なし（`docs/eval/eval-3.md`）
+
+## hook（`.claude/settings.json`、`.claude/hooks/`）
+- `log_prompt.py`（UserPromptSubmit）：指示文を `docs/prompts/log.md` に追記。何も出力せず止めない
+- `check_screen_output.py`（PreToolUse Write と SubagentStop）：screener・adjudicator の出力の形と逐語引用を検査し、exit 2 で差し戻す
+- `limit_reads.py`（PreToolUse Read）：adjudicator が読めるのは自分の入力ファイルだけ
+- `agent_gate.py`（SubagentStart/Stop）：同時起動を6に制限（`.claude/state/running/` の marker）
+- `check_prisma.py`（PostToolUse Write|Edit）：`results/prisma.json` の件数の足し算を検査
+
 ## 用語と表記
 - API のパラメータ・技術用語は英語のまま書く（`temperature`、`max_tokens`、subagent、few-shot、prompt caching）。コメント・docs も同じ
 - コマンドは1つずつ実行する（`;` や `&&` で繋がない。権限のパターンに当たらなくなる）
