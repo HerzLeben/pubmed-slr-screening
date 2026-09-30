@@ -1,0 +1,256 @@
+<!-- eval-3 body. build_report.py --run eval-3 puts this after the <head> and header of report_template.html (same CSS). -->
+<style>
+.e3note{margin:0 0 14px;padding:10px 14px;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);background:var(--surface-raised);font-size:12.5px;color:var(--ink-secondary)}
+.e3t{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.e3t th,.e3t td{border-bottom:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:top}
+.e3t th{font-size:11px;color:var(--ink-muted);font-weight:600}
+.e3t td.n,.e3t th.n{text-align:right}
+.e3t tr.orig td{background:var(--surface-sunken);font-weight:600}
+.e3w{overflow-x:auto}
+.qbox{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;white-space:pre-wrap;word-break:break-word;background:var(--surface-sunken);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin:0 0 10px}
+.mk{display:inline-block;font-size:10.5px;font-weight:600;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+.mk.inc{background:var(--accent-soft);color:var(--accent)}
+.mk.add{background:var(--surface-sunken);color:var(--ink-secondary);border:1px dashed var(--border)}
+.rt tr.isinc td{background:var(--accent-soft)}
+.sc{font-weight:600;font-variant-numeric:tabular-nums}
+.more{margin:10px 0 0;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--ink-muted)}
+.e3sec{margin:0 0 6px;font-size:15px}
+.sm{font-size:11.5px;color:var(--ink-muted);margin:6px 0 0}
+</style>
+<div class="shell">
+<aside class="side">
+  <section class="sec">
+    <h2><span data-t="side.review"></span></h2>
+    <div class="in rvb" id="reviews"></div>
+  </section>
+  <section class="sec">
+    <h2><span data-t="side.read"></span></h2>
+    <div class="in lg">
+      <span><span class="sw a"></span><span data-t="lg.a"></span></span>
+      <span data-t="lg.click"></span>
+      <span data-t="lg.e"></span>
+      <span data-t="lg.mk"></span>
+    </div>
+  </section>
+  <a class="credit" href="https://herzleben.co.jp/" target="_blank" rel="noopener">
+    <img class="only-light" src="__LOGO_MARK__" alt=""><img class="only-dark" src="__LOGO_MARK_WHITE__" alt="">
+    <span><small data-t="side.credit"></small><b>HerzLeben</b><small>herzleben.co.jp ↗</small></span>
+  </a>
+</aside>
+<main><div class="wrap">
+  <p class="e3note" data-t="note"></p>
+  <section class="panel">
+    <h3 class="ph" data-t="cmp.title"></h3>
+    <div class="e3w" id="cmp"></div>
+    <p class="sm" data-t="cmp.foot"></p>
+  </section>
+  <div class="rhead">
+    <h2 class="rh"><span id="rtitle"></span></h2>
+    <div class="sub tnum" id="rsub"></div>
+  </div>
+  <section class="panel">
+    <h3 class="e3sec" data-t="s.search"></h3>
+    <div id="search"></div>
+  </section>
+  <section class="panel">
+    <h3 class="e3sec" data-t="s.screen"></h3>
+    <div id="rk"></div>
+    <div id="list"></div>
+  </section>
+  <section class="panel">
+    <h3 class="e3sec" data-t="s.extract"></h3>
+    <p class="sm" data-t="s.extract.todo"></p>
+  </section>
+</div></main>
+</div>
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(() => {
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const f3 = x => x == null ? '—' : x.toFixed(3);
+const I18N = {
+  ja: {
+    'app.title':'PubMed SLR × Screening', 'hdr.stage':'eval-3：人の判断なし（原著と同じ流れ）',
+    'hdr.scope':'教育と手法の検証用。PubMed だけを検索する。業務の一次スクリーニングの代わりには使わない',
+    'note':'eval-3 は、PICO → query-builder の検索式 → /pico-to-criteria の基準の案のまま → screener-a（1体）→ A のスコア（判定値の合計）で順位、の流れで、人は判断していない。裁定・人の判断は無い。原著との比較はこの eval-3 だけで行う。',
+    'cmp.title':'原著との比較（Recall@20・@50、A のスコア順）',
+    'cmp.foot':'原著の値は arXiv 2406.17755（HTML 版）の Immunotherapy。npj Digital Medicine 掲載版との照合はしていない。候補の母集団（原著 2,000件、こちら 484〜698件）、レビューの数（100本と3本）、モデル（GPT-4 など と Sonnet）が違う。',
+    'c.rv':'レビュー', 'c.pop':'母集団', 'c.n':'候補', 'c.inc':'母集団内の組み入れ', 'c.orig':'原著（TrialMind、Immunotherapy）',
+    'pop.all_hits':'全ヒット', 'pop.original':'原著と同じ作り方（全ヒット＋検索で拾えなかった組み入れ研究）',
+    'ref':(c, a, b) => `参考（${c} を外した合計で順位。原著との比較には使わない）：Recall@20 ${a}、@50 ${b}`,
+    'side.review':'対象のレビュー', 'side.read':'読み方', 'side.credit':'制作',
+    'lg.a':'screener-a の引用', 'lg.click':'論文の行を押すと、抄録と基準ごとの判定を表示。基準の行を押すと、その引用だけをハイライト', 'lg.e':'除外基準（E）は ✓＝該当せず／✗＝該当', 'lg.mk':'「組み入れ」＝ベンチマークの答え、「追加」＝検索で拾えず候補に足した研究',
+    'sub':(p, n, g) => `元レビュー PMID ${p} · 基準 ${n} 個（案のまま）· 生成 ${g}`,
+    's.search':'検索', 's.screen':'スクリーニング（A のスコア順）', 's.extract':'抽出', 's.extract.todo':'extractor を作ったあとで足す（今回の範囲外）',
+    'se.q':'検索式（query-builder の案のまま）', 'se.n':'全ヒット', 'se.r':'検索 Recall', 'se.miss':'検索で拾えなかった組み入れ研究',
+    'rk.title':'組み入れ研究の順位', 'rk.pos':'順位', 'rk.sc':'スコア', 'rk.minus':'-1 の基準',
+    'rt.pos':'順位', 'rt.title':'論文', 'rt.sc':'スコア', 'rt.a':'A',
+    'mk.inc':'組み入れ', 'mk.add':'追加', 'more':(n, m) => `${n} / ${m} 件を表示`, 'more.btn':'さらに100件', 'more.all':'すべて',
+    'v.inc':'組み入れ', 'v.exc':'除外',
+    'c.I1':'満たす', 'c.I-1':'満たさない', 'c.E1':'該当せず', 'c.E-1':'該当', 'c.0':'不明', 'c.missing':'欠け', 'c.nf':'引用がタイトル・抄録に無い',
+    'mx.crit':'基準', 'mx.inc':'包含基準', 'mx.exc':'除外基準（✓＝該当せず）',
+    'q.title':'引用', 'q.hint':'基準の行を選ぶと、A の引用を表示します', 'q.noq':'引用なし', 'q.nf':'⚠ タイトル・抄録に見つからない', 'q.fromTitle':'（タイトルから）',
+    'ab.title':'TITLE', 'ab.none':'抄録なし（PubMed に抄録が登録されていない）', 'b.noab':'抄録なし'
+  },
+  en: {
+    'app.title':'PubMed SLR × Screening', 'hdr.stage':'eval-3: no human judgment (same flow as the paper)',
+    'hdr.scope':'For teaching and method validation. Searches PubMed only. Not a replacement for real first-pass screening',
+    'note':'eval-3 runs PICO → query-builder query → draft criteria from /pico-to-criteria as-is → screener-a (one) → rank by A\'s score (sum of verdicts). No adjudication and no human judgment. Only eval-3 is compared with the original paper.',
+    'cmp.title':'Comparison with the original paper (Recall@20 / @50, ranked by A\'s score)',
+    'cmp.foot':'Original values: arXiv 2406.17755 (HTML), Immunotherapy. Not checked against the npj Digital Medicine version. Candidate pool (2,000 vs 484–698), number of reviews (100 vs 3) and models (GPT-4 etc. vs Sonnet) differ.',
+    'c.rv':'Review', 'c.pop':'Population', 'c.n':'Candidates', 'c.inc':'Included in pool', 'c.orig':'Original (TrialMind, Immunotherapy)',
+    'pop.all_hits':'All hits', 'pop.original':'As in the paper (all hits + included studies the search missed)',
+    'ref':(c, a, b) => `Reference (score without ${c}; not compared with the paper): Recall@20 ${a}, @50 ${b}`,
+    'side.review':'Reviews', 'side.read':'How to read', 'side.credit':'Made by',
+    'lg.a':'Quote by screener-a', 'lg.click':'Click a paper to show its abstract and verdicts; click a criterion to highlight its quote', 'lg.e':'Exclusion criteria (E): ✓ = does not apply, ✗ = applies', 'lg.mk':'"Included" = benchmark answer, "Added" = missed by the search and added to the pool',
+    'sub':(p, n, g) => `Source review PMID ${p} · ${n} criteria (draft as-is) · generated ${g}`,
+    's.search':'Search', 's.screen':'Screening (ranked by A\'s score)', 's.extract':'Extraction', 's.extract.todo':'Added after the extractor is built (out of scope this time)',
+    'se.q':'Query (query-builder draft as-is)', 'se.n':'All hits', 'se.r':'Search recall', 'se.miss':'Included studies the search missed',
+    'rk.title':'Positions of the included studies', 'rk.pos':'Position', 'rk.sc':'Score', 'rk.minus':'Criteria at -1',
+    'rt.pos':'Pos.', 'rt.title':'Paper', 'rt.sc':'Score', 'rt.a':'A',
+    'mk.inc':'Included', 'mk.add':'Added', 'more':(n, m) => `Showing ${n} / ${m}`, 'more.btn':'100 more', 'more.all':'All',
+    'v.inc':'Include', 'v.exc':'Exclude',
+    'c.I1':'Met', 'c.I-1':'Not met', 'c.E1':'N/A', 'c.E-1':'Applies', 'c.0':'Unclear', 'c.missing':'Missing', 'c.nf':'Quote not in title or abstract',
+    'mx.crit':'Criterion', 'mx.inc':'Inclusion', 'mx.exc':'Exclusion (✓ = does not apply)',
+    'q.title':'Quotes', 'q.hint':'Select a criterion row to show A\'s quote', 'q.noq':'No quote', 'q.nf':'⚠ not found in title or abstract', 'q.fromTitle':'(from title)',
+    'ab.title':'TITLE', 'ab.none':'No abstract (none registered in PubMed)', 'b.noab':'No abstract'
+  }
+};
+const store = {raw(k, v){ try { localStorage.setItem(k, v); } catch(e){} }};
+let lang = document.documentElement.lang === 'en' ? 'en' : 'ja';
+const t = (k, ...a) => { const v = (I18N[lang] || I18N.ja)[k] ?? I18N.ja[k] ?? k; return typeof v === 'function' ? v(...a) : v; };
+let cur = 0, shown = 100;
+const openRows = new Set(), focusMap = {};
+const ROBO = (who, size = 16) => `<svg class="robo" width="${size}" height="${size}" viewBox="0 0 20 20" aria-hidden="true"><line x1="10" y1="2.6" x2="10" y2="5" stroke="var(--${who})" stroke-width="1.4"/><circle cx="10" cy="2.4" r="1.6" fill="var(--${who})"/><rect x="2.5" y="5" width="15" height="12.5" rx="3.6" fill="var(--${who})"/><rect x="5" y="7.6" width="10" height="6.2" rx="2" fill="var(--surface-raised)"/><ellipse cx="8.2" cy="10.7" rx="1" ry="1.35" fill="var(--${who})"/><ellipse cx="11.8" cy="10.7" rx="1" ry="1.35" fill="var(--${who})"/></svg>`;
+const rtitle = rv => (lang === 'en' && rv.title_en) || rv.title || ('Review ' + rv.review_pmid);
+
+// same markup as report_template.html
+function chip(side, cid, type){
+  if (!side) return '<span class="chip none">—</span>';
+  const c = side.crit[cid];
+  if (!c) return `<span class="chip none">${t('c.missing')}</span>`;
+  const p = type === 'exclusion' ? 'E' : 'I';
+  const m = c.v === 1 ? ['✓', t('c.' + p + '1'), 'pos'] : c.v === -1 ? ['✗', t('c.' + p + '-1'), 'neg'] : c.v === 0 ? ['?', t('c.0'), 'unk'] : ['!', String(c.v), 'none'];
+  const miss = (c.v === 1 || c.v === -1) && !c.span ? `<span class="w" title="${esc(t('c.nf'))}">⚠</span>` : '';
+  return `<span class="chip ${m[2]}">${m[0]} ${esc(m[1])}${miss}</span>`;
+}
+function pill(side){
+  return `<span class="pill ${side.overall}" title="score ${side.score}">${ROBO('a', 15)}A · ${side.overall === 'include' ? t('v.inc') : t('v.exc')}</span>`;
+}
+function markText(text, spans, focus, fmtSections){
+  const cuts = new Set([0, text.length]);
+  spans.forEach(x => { cuts.add(x.s); cuts.add(x.e); });
+  const pts = [...cuts].sort((a, b) => a - b);
+  let out = '';
+  for (let i = 0; i < pts.length - 1; i++){
+    const s = pts[i], e = pts[i + 1], txt = esc(text.slice(s, e));
+    const fmt = x => !fmtSections ? x : x.replace(/(^|\s)([A-Z][A-Z &\/]{2,}[A-Z]):(?=\s)/g, (m, p0, l, off) => (off > 0 || s > 0 ? '\n' : '') + `<span class="sec">${l}:</span>`);
+    const tags = spans.filter(x => x.s <= s && x.e >= e).map(x => x.tag);
+    if (!tags.length){ out += fmt(txt); continue; }
+    const cls = ['q'];
+    if (focus && tags.includes('a:' + focus)) cls.push('fa');
+    out += `<mark class="${cls.join(' ')}" title="${esc(tags.map(x => x.replace(/^a:/, 'A ')).join(', '))}">${fmt(txt)}</mark>`;
+  }
+  return out;
+}
+function abstractHTML(r, focus){
+  const sp = {title: [], abstract: []};
+  for (const [cid, c] of Object.entries(r.a.crit)) if (c.span) sp[c.src || 'abstract'].push({s:c.span[0], e:c.span[1], tag:'a:' + cid});
+  const ttl = `<div class="atitle"><span class="sec">${t('ab.title')}</span> ${markText(r.title || '', sp.title, focus, false)}</div>`;
+  const ab = r.abstract ? markText(r.abstract, sp.abstract, focus, true) : `<span class="empty">${t('ab.none')}</span>`;
+  return `<div class="abstract${focus ? ' focus' : ''}">${ttl}${ab}</div>`;
+}
+function matrixHTML(rv, r, focus){
+  let h = `<div class="mxw"><table class="mx"><thead><tr><th colspan="2">${t('mx.crit')}</th><th class="c">${ROBO('a')} A</th></tr></thead><tbody>`;
+  for (const [type, label] of [['inclusion', t('mx.inc')], ['exclusion', t('mx.exc')]]){
+    const cs = rv.criteria.filter(c => c.type === type);
+    if (!cs.length) continue;
+    h += `<tr class="grp"><td colspan="3">${label}</td></tr>`;
+    for (const c of cs) h += `<tr class="row${focus === c.id ? ' sel' : ''}" data-cid="${esc(c.id)}"><td class="cid">${esc(c.id)}</td><td class="ctext">${esc(c.text)}</td><td class="cv">${chip(r.a, c.id, c.type)}</td></tr>`;
+  }
+  return h + '</tbody></table></div>';
+}
+function quotesHTML(rv, r, focus){
+  if (!focus) return `<div class="qs"><div class="qh">${t('q.title')}</div><span class="note">${t('q.hint')}</span></div>`;
+  const cdef = rv.criteria.find(c => c.id === focus) || {text:''}, c = r.a.crit[focus];
+  let body = chip(r.a, focus, cdef.type) + ' ';
+  if (c && c.q) body += `“${esc(c.q)}”` + (c.span ? (c.src === 'title' ? ` <span class="note">${t('q.fromTitle')}</span>` : '') : ` <span class="miss">${t('q.nf')}</span>`);
+  else body += `<span class="note">${t('q.noq')}</span>`;
+  if (c && c.note) body += `<div class="note">${esc(c.note)}</div>`;
+  return `<div class="qs"><div class="qh">${esc(focus)} · ${esc(cdef.text)}</div><div class="qr"><span class="tag a">${ROBO('a', 18)}</span><div>${body}</div></div></div>`;
+}
+function metaHTML(r){
+  return [`<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(r.pmid)}/" target="_blank" rel="noopener">PMID ${esc(r.pmid)}</a>`, esc(r.journal || ''), esc(r.year || ''), `rank ${esc(r.rank)}`].filter(Boolean).join(' · ');
+}
+function bodyHTML(rv, r){
+  const key = rv.review_pmid + r.pmid;
+  if (!(key in focusMap)) focusMap[key] = (rv.criteria.find(c => r.a.crit[c.id] && r.a.crit[c.id].v === -1) || {}).id || null;
+  const focus = focusMap[key];
+  return `<div class="body" data-pmid="${esc(r.pmid)}"><div>${abstractHTML(r, focus)}</div><div class="rside">${matrixHTML(rv, r, focus)}${quotesHTML(rv, r, focus)}</div></div>`;
+}
+const marks = r => (r.included ? `<span class="mk inc">${t('mk.inc')}</span>` : '') + (r.added ? `<span class="mk add">${t('mk.add')}</span>` : '') + (!r.abstract ? `<span class="badge">${t('b.noab')}</span>` : '');
+
+function renderCmp(){
+  let h = `<table class="e3t"><thead><tr><th>${t('c.rv')}</th><th>${t('c.pop')}</th><th class="n">${t('c.n')}</th><th class="n">${t('c.inc')}</th><th class="n">Recall@20</th><th class="n">Recall@50</th></tr></thead><tbody>`;
+  for (const rv of DATA.reviews){
+    for (const pop of ['all_hits', 'original']){
+      const m = rv.eval.recall_at_k[pop];
+      h += `<tr><td>${pop === 'all_hits' ? esc(rv.review_pmid) : ''}</td><td>${t('pop.' + pop)}</td><td class="n">${m.n}</td><td class="n">${m.n_included_in_pool} / ${rv.eval.n_included}</td><td class="n">${f3(m['@20'].in_pool.recall)}</td><td class="n">${f3(m['@50'].in_pool.recall)}</td></tr>`;
+    }
+    const ref = rv.eval.reference_without;
+    if (ref) h += `<tr><td></td><td colspan="5" class="sm">${esc(t('ref', ref.criterion, f3(ref.original['@20'].in_pool.recall), f3(ref.original['@50'].in_pool.recall)))}</td></tr>`;
+  }
+  h += `<tr class="orig"><td colspan="2">${t('c.orig')}</td><td class="n">2,000</td><td class="n">—</td><td class="n">0.567</td><td class="n">0.713</td></tr>`;
+  $('#cmp').innerHTML = h + '</tbody></table>';
+}
+function renderSearch(rv){
+  const s = rv.eval.search;
+  $('#search').innerHTML = `<div class="stats"><div class="stat"><div class="k">${t('se.n')}</div><div class="v">${s.n_all}</div></div><div class="stat hl"><div class="k">${t('se.r')}</div><div class="v">${f3(s.recall_all)}<small>${s.hit_all}/${rv.eval.n_included}</small></div></div></div>
+    <div class="ph">${t('se.q')}</div><pre class="qbox">${esc(rv.query)}</pre>
+    <div class="sm">${t('se.miss')}：${s.missed.length ? s.missed.map(p => `<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(p)}/" target="_blank" rel="noopener">${esc(p)}</a>`).join('、') : '—'}</div>`;
+}
+function renderScreen(rv){
+  const ir = rv.eval.included_ranks.original;
+  $('#rk').innerHTML = `<div class="ph">${t('rk.title')}</div><div class="e3w"><table class="e3t"><thead><tr><th>PMID</th><th class="n">${t('rk.pos')}</th><th class="n">${t('rk.sc')}</th><th>${t('rk.minus')}</th></tr></thead><tbody>${ir.map(x => `<tr><td>${esc(x.pmid)}${x.added ? `<span class="mk add">${t('mk.add')}</span>` : ''}</td><td class="n">${x.position}</td><td class="n">${x.score}</td><td>${esc(x.minus.join('・') || '—')}</td></tr>`).join('')}</tbody></table></div>`;
+  const list = rv.records.slice(0, shown);
+  let h = `<div class="rtw" style="margin-top:14px"><table class="rt"><thead><tr><th>${t('rt.pos')}</th><th>${t('rt.title')}</th><th>${t('rt.sc')}</th><th>${t('rt.a')}</th></tr></thead><tbody>`;
+  for (const r of list){
+    const key = rv.review_pmid + r.pmid, open = openRows.has(key);
+    h += `<tr class="rr${open ? ' open' : ''}${r.included ? ' isinc' : ''}" data-pmid="${esc(r.pmid)}"><td class="num">${r.position}</td><td class="tt">${esc(r.title)}${marks(r)}<small>${metaHTML(r)}</small></td><td class="sc">${r.a.score}</td><td>${pill(r.a)}</td></tr>`;
+    if (open) h += `<tr><td class="rdet" colspan="4">${bodyHTML(rv, r)}</td></tr>`;
+  }
+  h += '</tbody></table></div>';
+  if (shown < rv.records.length) h += `<div class="more"><span>${t('more', shown, rv.records.length)}</span><button class="btn" data-more="100">${t('more.btn')}</button><button class="btn" data-more="all">${t('more.all')}</button></div>`;
+  $('#list').innerHTML = h;
+}
+function render(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
+  document.querySelectorAll('.lg [data-t="lg.a"]').forEach(el => { el.innerHTML = ROBO('a', 14) + ' ' + esc(t('lg.a')); });
+  $('#reviews').innerHTML = DATA.reviews.map((r, i) => `<button data-i="${i}" aria-pressed="${i === cur}"><span class="rvt">${esc(rtitle(r))}</span><span class="rvm tnum">PMID ${esc(r.review_pmid)} · ${r.records.length}</span></button>`).join('');
+  const rv = DATA.reviews[cur];
+  $('#rtitle').textContent = rtitle(rv);
+  $('#rsub').textContent = t('sub', rv.review_pmid, rv.criteria.length, DATA.generated_at);
+  renderCmp(); renderSearch(rv); renderScreen(rv);
+}
+document.querySelector('.lang').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; lang = b.dataset.lang; store.raw('slr-lang', lang); render(); });
+$('#theme').addEventListener('click', () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark'; store.raw('slr-theme', r.dataset.theme); });
+$('#reviews').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; cur = +b.dataset.i; shown = 100; render(); });
+$('#list').addEventListener('click', e => {
+  const rv = DATA.reviews[cur];
+  const more = e.target.closest('[data-more]');
+  if (more){ shown = more.dataset.more === 'all' ? rv.records.length : shown + 100; render(); return; }
+  if (e.target.closest('a')) return;
+  const row = e.target.closest('.mx tr.row');
+  if (row){ const body = row.closest('.body'), key = rv.review_pmid + body.dataset.pmid; focusMap[key] = focusMap[key] === row.dataset.cid ? null : row.dataset.cid; render(); return; }
+  const tr = e.target.closest('tr.rr');
+  if (tr){ const key = rv.review_pmid + tr.dataset.pmid; openRows.has(key) ? openRows.delete(key) : openRows.add(key); render(); }
+});
+render();
+})();
+</script>
+</body>
+</html>

@@ -152,3 +152,11 @@ O: <PICO.O>
 - 原著の引用（arXiv HTML 版、Results の "TrialMind enhances literature screening and ranking"）："A candidate set of 2,000 citations is created by combining the actual studies included in the review with additional citations retrieved during the search but not included in the review." 参照：https://arxiv.org/html/2406.17755
 - スクリーニングの置き場所は `results/eval-3/`（batches・screen・`<PMID>/candidates.json`）。hook（check_screen_output.py）と make_batches.py がパスで入力を選ぶため、パスの `results/eval-3/` で run を見分け、eval-3 は `reviews/<PMID>/eval-3/criteria.json` で検査する。検査の中身は eval-2 と同じ。eval-3 は screener-a だけなので、バッチも a の分だけ作る（`make_batches.py --run eval-3`）
 - 2026-09-30 人の決定：31190844 の I5 は直さずに全件へ進む。試走で、単群と推測できるが明記の無い抄録（27111235）の I5 は 0 だった。-1 には逐語引用が要り、0 は組み入れる側に倒すため、I5 で除外されるのは単群を明記した抄録だけになる。これを eval-3 の結果として記録する（基準は事前に決めて変えない）
+
+## 2026-09-30 eval-3 の評価と範囲（人が決定）
+
+- 抽出（requirements 2章 #1 の ⑦）は今回の範囲から外した。完成は ①〜⑥。extractor・採点・承認点6と7は行わない。準備（`bench/extraction/`、`fetch_pmc.py`、extraction_items.md）は残す
+- 原著の値は arXiv 2406.17755（HTML 版）のまま使い、npj Digital Medicine 掲載版とは照合しない。eval-3.md とレポートに「arXiv 版の値」と明記する
+- eval-3 の評価は `eval_screening.py --run eval-3`、レポートは `build_report.py --run eval-3`（`results/eval-3/report.html`。`report_template.html` の head と CSS に、`report_eval3_body.html` の本文をつなぐ。eval-1・eval-2 の report.html は触らない）。「原著と同じ作り方」の足した PMID は、候補のうち all_pmids に無いものとして数え、`results/eval-3/<PMID>/search.json` の `added_pmids` と一致することを検査する
+- Recall@k の主な値は分母を「母集団に入った組み入れ研究」とし、3本の平均と合算を並べる（原著の値が topic 内の平均か合算かは本文から読み取れないため、両方を出す）
+- tag：eval-3 の評価と docs の commit に `snap/17-eval-3`

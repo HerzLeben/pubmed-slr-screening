@@ -9,6 +9,13 @@ Reads (see docs/schema.md):
     results/screen/{a,b}/<rid>/batch_*.json
     results/adjudication/<rid>.json      (optional)
     results/human/<rid>.json             (optional)
+
+eval-3 (--run eval-3, docs/eval/eval-3.md): screener-a only, no adjudication and no human judgment.
+    python scripts/build_report.py --run eval-3        # -> results/eval-3/report.html
+Uses the <head> (CSS) and header of report_template.html and the body in report_eval3_body.html.
+Reads reviews/<rid>/eval-3/{criteria,search}.json, results/eval-3/<rid>/candidates.json,
+results/eval-3/screen/a/<rid>/batch_*.json, and the metrics from eval_screening.run_eval3.
+The results/report.html of eval-1/eval-2 is not touched.
 """
 
 from __future__ import annotations
@@ -120,13 +127,74 @@ def build_review(rid: str, reviews: Path, results: Path) -> dict:
             "records": records, "human": human, "warnings": warn}
 
 
+def build_review_eval3(rid: str, included: list[str], title: dict, reviews: Path, results: Path) -> dict:
+    from eval_screening import run_eval3
+
+    warn: list = []
+    crit_doc = load(reviews / rid / "eval-3" / "criteria.json")
+    ids = [c["id"] for c in crit_doc["criteria"]]
+    search = load(reviews / rid / "eval-3" / "search.json")
+    cands = {str(c["pmid"]): c for c in load(results / rid / "candidates.json")["records"]}
+    a = load_screener(results, "a", rid, warn)
+    ev = run_eval3(rid, included, reviews, results)
+    inc, added = {str(p) for p in included}, set(ev["added_pmids"])
+    order = sorted(cands, key=lambda p: (-score(a[p]), cands[p]["rank"]))
+    records = []
+    for i, pmid in enumerate(order, 1):
+        c = cands[pmid]
+        abstract, ttl = c.get("abstract") or "", c.get("title", "")
+        records.append({"pmid": pmid, "position": i, "rank": c.get("rank"), "title": ttl,
+                        "journal": c.get("journal"), "year": c.get("year"), "abstract": abstract,
+                        "included": pmid in inc, "added": pmid in added,
+                        "a": pack_side(a.get(pmid), ids, abstract, ttl, "a", pmid, warn)})
+    return {"review_pmid": rid, "title": title.get("ja", ""), "title_en": title.get("en"),
+            "criteria": crit_doc["criteria"], "query": search.get("query", ""), "eval": ev,
+            "records": records, "warnings": warn}
+
+
+def main_eval3(args) -> None:
+    reviews = Path(args.reviews)
+    results = Path(args.results or "results/eval-3")
+    out = Path(args.out or "results/eval-3/report.html")
+    bench = [json.loads(x) for x in Path("bench/reviews.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+    rvs = []
+    for row in sorted(bench, key=lambda r: str(r["PMID"])):
+        rid = str(row["PMID"])
+        old = reviews / rid / "criteria.json"
+        doc = load(old) if old.exists() else {}
+        rvs.append(build_review_eval3(rid, row["included_pmids"],
+                                      {"ja": doc.get("review_title", ""), "en": doc.get("review_title_en")},
+                                      reviews, results))
+    payload = {"generated_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "run": "eval-3",
+               "reviews": rvs}
+    head = TEMPLATE[: TEMPLATE.index('<p class="scope"')] + '<p class="scope" data-t="hdr.scope"></p>\n'
+    body = (Path(__file__).parent / "report_eval3_body.html").read_text(encoding="utf-8")
+    html = head + body.replace("__DATA__", json.dumps(payload, ensure_ascii=False).replace("</", "<\\/"))
+    for key, name in LOGOS.items():
+        html = html.replace(key, "data:image/png;base64," + base64.b64encode((ASSETS / name).read_bytes()).decode())
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(html, encoding="utf-8")
+    n = sum(len(r["records"]) for r in rvs)
+    w = sum(len(r["warnings"]) for r in rvs)
+    for r in rvs:
+        for x in r["warnings"]:
+            print("warning", r["review_pmid"], x, file=sys.stderr)
+    print(f"wrote {out} ({len(rvs)} reviews, {n} records, {w} warnings)")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--reviews", default="reviews")
-    ap.add_argument("--results", default="results")
-    ap.add_argument("--out", default="results/report.html")
+    ap.add_argument("--results", default=None)
+    ap.add_argument("--out", default=None)
+    ap.add_argument("--run", default=None, choices=["eval-3"], help="eval-3: A only, writes results/eval-3/report.html")
     ap.add_argument("--label", default="", help="text shown next to the title, e.g. DUMMY DATA")
     args = ap.parse_args()
+    if args.run == "eval-3":
+        main_eval3(args)
+        return
+    args.results = args.results or "results"
+    args.out = args.out or "results/report.html"
     reviews, results = Path(args.reviews), Path(args.results)
     rids = sorted(p.parent.name for p in reviews.glob("*/criteria.json")
                   if (results / p.parent.name / "candidates.json").exists())

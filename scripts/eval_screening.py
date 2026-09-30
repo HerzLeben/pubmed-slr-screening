@@ -13,8 +13,18 @@ Definitions:
   include; two screeners = agreed_include + needs_human that the human set to include
 - missed: every included study not in the two-screener final list, with the stage it was lost at
 
+eval-3 (--run eval-3, docs/eval/eval-3.md): screener-a only, draft criteria, no adjudication and no human.
+Reads reviews/<rid>/eval-3/search.json (all_pmids), results/eval-3/<rid>/candidates.json and
+results/eval-3/screen/a/<rid>/batch_*.json. Recall@k by A's score in two populations:
+- all_hits: the candidates that are in all_pmids
+- original: all_hits plus the included studies the search missed (added with fetch_pubmed.py --add-pmid),
+  the way the original paper builds its candidate set
+Also lists the rank of every included study, and for the reviews in REF_DROP the same Recall@k with one
+criterion left out of the score (reference only; not compared with the original paper).
+
 Usage:
     python scripts/eval_screening.py [--bench bench/reviews.jsonl] [--reviews reviews] [--results results]
+    python scripts/eval_screening.py --run eval-3
 """
 
 from __future__ import annotations
@@ -119,16 +129,77 @@ def run(rid: str, included: list[str], reviews: Path, results: Path) -> dict:
     }
 
 
+REF_DROP = {"31190844": "I5"}  # DECISIONS 2026-09-29 指示書19 2章: reference only
+
+
+def ranked(pool: list[str], sc: dict[str, int], rank: dict[str, int]) -> list[str]:
+    return sorted(pool, key=lambda p: (-sc[p], rank[p]))
+
+
+def at_k_block(order: list[str], inc: set[str]) -> dict:
+    in_pool = inc & set(order)
+    return {"n": len(order), "n_included_in_pool": len(in_pool),
+            **{f"@{k}": {"in_pool": recall_at(order, inc, k, len(in_pool)),
+                        "all": recall_at(order, inc, k, len(inc))} for k in KS}}
+
+
+def run_eval3(rid: str, included: list[str], reviews: Path, results: Path) -> dict:
+    inc = {str(p) for p in included}
+    search = load(reviews / rid / "eval-3" / "search.json")
+    all_ids = [str(p) for p in search["all_pmids"]]
+    cands = load(results / rid / "candidates.json")["records"]
+    rank = {str(c["pmid"]): c["rank"] for c in cands}
+    added = sorted(set(rank) - set(all_ids), key=lambda p: rank[p])
+    side = results / rid / "search.json"
+    recorded = [str(p) for p in load(side).get("added_pmids", [])] if side.exists() else []
+    a = screener(results, "a", rid)
+    missing = sorted(set(rank) - set(a), key=lambda p: rank[p])
+    if missing:
+        sys.exit(f"{rid}: screener-a の判定が無い候補 {len(missing)} 件（{missing[:5]}…）")
+    sc = {p: score(a[p]) for p in rank}
+    pools = {"all_hits": [p for p in rank if p in set(all_ids)], "original": list(rank)}
+    out: dict = {
+        "review": rid, "run": "eval-3", "n_included": len(inc),
+        "search": {"n_all": len(all_ids), "hit_all": len(inc & set(all_ids)),
+                   "recall_all": ratio(len(inc & set(all_ids)), len(inc)),
+                   "missed": sorted(inc - set(all_ids))},
+        "added_pmids": added, "added_matches_record": added == recorded or (not added and not recorded),
+        "recall_at_k": {}, "included_ranks": {},
+    }
+    for name, pool in pools.items():
+        order = ranked(pool, sc, rank)
+        out["recall_at_k"][name] = at_k_block(order, inc)
+        out["included_ranks"][name] = [{"pmid": p, "position": order.index(p) + 1, "score": sc[p],
+                                        "rank": rank[p], "overall": overall(a[p]), "added": p in added,
+                                        "minus": [c["id"] for c in a[p] if c["verdict"] == -1]}
+                                       for p in order if p in inc]
+    out["max_score"] = max(len(v) for v in a.values())
+    drop = REF_DROP.get(rid)
+    if drop:
+        sc2 = {p: sum(int(c.get("verdict", 0)) for c in a[p] if c["id"] != drop) for p in rank}
+        out["reference_without"] = {"criterion": drop, "note": "参考。原著との比較には使わない",
+                                    **{name: at_k_block(ranked(pool, sc2, rank), inc)
+                                       for name, pool in pools.items()},
+                                    "included_ranks": [{"pmid": p, "position": i + 1, "score": sc2[p]}
+                                                       for i, p in enumerate(ranked(pools["original"], sc2, rank))
+                                                       if p in inc]}
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--bench", default="bench/reviews.jsonl")
     ap.add_argument("--reviews", default="reviews")
-    ap.add_argument("--results", default="results")
+    ap.add_argument("--results", default=None)
+    ap.add_argument("--run", default=None, choices=["eval-3"], help="eval-3: screener-a, draft criteria, two populations")
     args = ap.parse_args()
+    if args.results is None:
+        args.results = "results/eval-3" if args.run == "eval-3" else "results"
+    fn = run_eval3 if args.run == "eval-3" else run
     bench = [json.loads(line) for line in Path(args.bench).read_text(encoding="utf-8").splitlines() if line.strip()]
     for row in sorted(bench, key=lambda r: r["PMID"]):
         rid = str(row["PMID"])
-        print(json.dumps(run(rid, row["included_pmids"], Path(args.reviews), Path(args.results)), ensure_ascii=False))
+        print(json.dumps(fn(rid, row["included_pmids"], Path(args.reviews), Path(args.results)), ensure_ascii=False))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 # eval-1：最初の並列実行の評価（2026-09-27）
 
+> 人が直した基準と人の判断を含むので、原著との比較には使わない。比較は [eval-3.md](eval-3.md)（2026-09-30）
+
 - 対象：TrialReviewBench の3本（31190844、33746596、37168849）。正解は `bench/reviews.jsonl` の `included_pmids`（7・9・11件）
 - 入力：`reviews/<PMID>/search.json`（`all_pmids`＝全ヒット、`pmids`＝固定した上位200件）、`results/screen/{a,b}/`（snap/08-first-parallel）、`results/adjudication/`、`results/human/`（人の判断 17件：組み入れ3・除外14）
 - 実行：`python scripts/eval_screening.py`（1行1本の JSON を出す）。数字はすべてこの出力から写した
