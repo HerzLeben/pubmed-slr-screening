@@ -177,3 +177,4 @@ O: <PICO.O>
   - 参照：https://arxiv.org/html/2406.17755
 - 全文のテキスト化（`scripts/fulltext_to_text.py`）：タイトル、抄録、`<body>` の節（見出しは `## `）、**すべての `<table-wrap>`（`<body>` の外の `<floats-group>` なども）**、`<fig>` の label と caption を入れる。参考文献と補足資料は入れない（補足資料は取りに行かず件数だけ記録）。理由：原著は全文の PDF か XML をそのまま入力にしている。PMC の XML では表の多くが `<body>` の外にあり（6本の表10枚のうち `<body>` の中は4枚）、`<body>` だけでは患者背景の表が落ちる
 - extraction-rules skill は `user-invocable: false` だけを付ける。`disable-model-invocation: true` は subagent への preload も止めるため付けられない（公式："Also prevents the skill from being preloaded into subagents"）。つまりモデルが呼ぶことは止められないが、skill に答えは書いていないので漏れは無い。参照：https://code.claude.com/docs/en/skills（frontmatter reference）
+- テキスト化の細部：数字の直後の上付きの数字は `^` を付ける（`50×10<sup>6</sup>` → `50×10^6`。付けないと用量が「106」に読める）。語の直後の上付き（引用番号）や記号の上付き（脚注の †）はそのまま。補足資料しかない節は見出しも出さない。表と図は本文のあとに文書の順でまとめて書く（`<body>` の中の表を二重に書かない）。件数は `results/fulltext/text_summary.json`
