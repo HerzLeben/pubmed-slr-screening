@@ -442,3 +442,141 @@ def test_adjudicator_other_reads_blocked(tmp_path, path):
 def test_other_agents_read_freely(tmp_path, agent):
     code, _, _ = run(READS, read_event(tmp_path, "docs/HARNESS.md", agent=agent), tmp_path)
     assert code == 0
+
+
+# ---- extractor (指示書20): output checks and reads ----------------------------------------------
+EXTRACT = REPO / ".claude" / "hooks" / "check_extract_output.py"
+X_RID, X_PMID = "888", "777"
+X_OUT = f"results/extraction/out/{X_RID}/{X_PMID}.json"
+X_JOB = f"results/extraction/jobs/{X_RID}/{X_PMID}.json"
+X_TXT = f"results/fulltext/{X_PMID}.txt"
+X_ITEMS = ["Sample size", "Median age (range)", "Follow-up"]
+X_TEXT = ("# A trial\n\n## Patients\n\nThirty‑three patients were enrolled.\n\n## Tables\n\n"
+          "Table 1 Baseline\nMedian age (range)\t60 (37–75)\n")
+
+
+@pytest.fixture
+def xproject(tmp_path):
+    (tmp_path / "scripts").mkdir()
+    shutil.copy(REPO / "scripts" / "quote_match.py", tmp_path / "scripts")
+    (tmp_path / "results" / "fulltext").mkdir(parents=True)
+    (tmp_path / X_TXT).write_text(X_TEXT, encoding="utf-8")
+    job = tmp_path / X_JOB
+    job.parent.mkdir(parents=True)
+    job.write_text(json.dumps({"review_pmid": X_RID, "pmid": X_PMID, "fulltext": X_TXT, "items": X_ITEMS,
+                               "output": X_OUT}), encoding="utf-8")
+    return tmp_path
+
+
+def x_good():
+    return {"review_pmid": X_RID, "pmid": X_PMID, "items": [
+        {"name": "Sample size", "value": "33", "quotes": ["Thirty-three patients were enrolled"]},  # plain hyphen
+        {"name": "Median age (range)", "value": "60 (37–75)", "quotes": ["Median age (range) 60 (37-75)"]},  # tab
+        {"name": "Follow-up", "value": "記載なし", "quotes": []},
+    ]}
+
+
+def test_extractor_good_output_passes(xproject):
+    code, _, err = run(EXTRACT, write_event(xproject, X_OUT, x_good(), agent="extractor"), xproject)
+    assert code == 0, err
+
+
+def _x_break(doc, how):
+    items = doc["items"]
+    if how == "missing_item":
+        items.pop()
+    elif how == "renamed_item":
+        items[0]["name"] = "Number of patients"
+    elif how == "reordered":
+        items[0], items[1] = items[1], items[0]
+    elif how == "empty_value":
+        items[0]["value"] = " "
+    elif how == "no_quote":
+        items[0]["quotes"] = []
+    elif how == "quote_with_not_found":
+        items[2]["quotes"] = ["Thirty-three patients"]
+    elif how == "paraphrased_quote":
+        items[0]["quotes"] = ["33 patients were enrolled"]
+    elif how == "stitched_quote":
+        items[0]["quotes"] = ["patients were enrolled. Median age"]
+    elif how == "wrong_pmid":
+        doc["pmid"] = "1"
+    return doc
+
+
+@pytest.mark.parametrize("how,expect", [
+    ("missing_item", "無い"),
+    ("renamed_item", "job に無い項目名"),
+    ("reordered", "job の順"),
+    ("empty_value", "value が空"),
+    ("no_quote", "quotes が無い"),
+    ("quote_with_not_found", "quotes を [] にする"),
+    ("paraphrased_quote", "逐語で無い"),
+    ("stitched_quote", "逐語で無い"),
+    ("wrong_pmid", "pmid が"),
+])
+def test_extractor_bad_output_sent_back(xproject, how, expect):
+    doc = _x_break(copy.deepcopy(x_good()), how)
+    code, _, err = run(EXTRACT, write_event(xproject, X_OUT, doc, agent="extractor"), xproject)
+    assert code == 2
+    assert expect in err
+
+
+def test_extractor_bad_json_sent_back(xproject):
+    code, _, err = run(EXTRACT, write_event(xproject, X_OUT, "{not json", agent="extractor"), xproject)
+    assert code == 2
+    assert "JSON" in err
+
+
+def test_extractor_cannot_write_elsewhere(xproject):
+    for path in ("docs/notes.md", f"results/extraction/out/{X_RID}/1.json", "results/screen/a/1/batch_01.json"):
+        code, _, err = run(EXTRACT, write_event(xproject, path, x_good(), agent="extractor"), xproject)
+        assert code == 2, path
+        assert "job の output" in err
+
+
+def test_main_session_writing_extract_output_is_checked_too(xproject):
+    doc = _x_break(copy.deepcopy(x_good()), "paraphrased_quote")
+    code, _, _ = run(EXTRACT, write_event(xproject, X_OUT, doc, agent=None), xproject)
+    assert code == 2
+    assert run(EXTRACT, write_event(xproject, "docs/notes.md", "hi", agent=None), xproject)[0] == 0
+
+
+def test_extractor_subagent_stop_reports_missing_output(xproject):
+    ev = {"hook_event_name": "SubagentStop", "agent_type": "extractor", "agent_id": "x1", "cwd": str(xproject),
+          "last_assistant_message": "終わりました"}
+    code, out, _ = run(EXTRACT, ev, xproject)
+    assert code == 0
+    assert "書かずに終わった" in json.loads(out)["systemMessage"]
+
+
+def test_extractor_subagent_stop_quiet_on_good_file(xproject):
+    (xproject / X_OUT).parent.mkdir(parents=True)
+    (xproject / X_OUT).write_text(json.dumps(x_good(), ensure_ascii=False), encoding="utf-8")
+    ev = {"hook_event_name": "SubagentStop", "agent_type": "extractor", "agent_id": "x1", "cwd": str(xproject),
+          "last_assistant_message": f"{X_OUT} に書きました"}
+    code, out, _ = run(EXTRACT, ev, xproject)
+    assert code == 0 and out.strip() == ""
+
+
+def test_extractor_reads_own_job_and_its_text(xproject):
+    assert run(READS, read_event(xproject, X_JOB, agent="extractor"), xproject)[0] == 0
+    assert run(READS, read_event(xproject, X_TXT, agent="extractor"), xproject)[0] == 0
+    assert run(READS, read_event(xproject, X_JOB, agent="extractor"), xproject)[0] == 0  # again is fine
+
+
+@pytest.mark.parametrize("path", [
+    "bench/extraction/888.jsonl", "docs/schema.md", X_OUT, "results/fulltext/1.txt",
+    f"results/extraction/jobs/{X_RID}/1.json", "reviews/888/extraction_items.md",
+])
+def test_extractor_other_reads_blocked(xproject, path):
+    assert run(READS, read_event(xproject, X_JOB, agent="extractor"), xproject)[0] == 0
+    code, _, err = run(READS, read_event(xproject, path, agent="extractor"), xproject)
+    assert code == 2, path
+    assert "入力ファイルだけ" in err
+
+
+def test_extractor_must_read_job_first(xproject):
+    code, _, err = run(READS, read_event(xproject, X_TXT, agent="extractor"), xproject)
+    assert code == 2
+    assert "先に" in err

@@ -35,8 +35,32 @@ SKIP = {"table-wrap", "fig", "supplementary-material", "ref-list", "table-wrap-g
 BLOCKS = {"p", "list", "disp-quote", "boxed-text", "def-list", "statement", "disp-formula"}
 
 
+WRAP = 1000  # the Read tool may cut very long lines; quote matching treats a line break as a space
+
+
 def clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
+
+
+def wrap(text: str, width: int = WRAP) -> str:
+    """Break a long paragraph into lines of at most `width` chars, at sentence ends (else at spaces)."""
+    if len(text) <= width:
+        return text
+    pieces: list[str] = []
+    for sent in re.split(r"(?<=[.!?])\s+", text):
+        while len(sent) > width:
+            cut = sent.rfind(" ", 0, width)
+            cut = cut if cut > 0 else width
+            pieces.append(sent[:cut])
+            sent = sent[cut:].lstrip()
+        pieces.append(sent)
+    lines: list[str] = []
+    for piece in pieces:
+        if lines and len(lines[-1]) + 1 + len(piece) <= width:
+            lines[-1] += " " + piece
+        else:
+            lines.append(piece)
+    return "\n".join(lines)
 
 
 def is_power(before: str, sup: str) -> bool:
@@ -89,7 +113,7 @@ def section_lines(el: ET.Element) -> list[str]:
         elif c.tag in BLOCKS:
             text = inline_text(c)
             if text:
-                out.append(text)
+                out.append(wrap(text))
         else:
             # anything else with text (e.g. a bare <label>) is kept as a line; containers are walked
             if len(c):
@@ -101,10 +125,16 @@ def section_lines(el: ET.Element) -> list[str]:
     return out
 
 
+def caption_text(el: ET.Element) -> str:
+    """Label and caption of a table or figure; the caption's <title> and <p> are joined with a space."""
+    label = inline_text(el.find("label")) if el.find("label") is not None else ""
+    cap = el.find("caption")
+    parts = [inline_text(c) for c in cap] if cap is not None and len(cap) else [inline_text(cap)] if cap is not None else []
+    return wrap(" ".join(x for x in [label, *parts] if x))
+
+
 def table_lines(tw: ET.Element) -> list[str]:
-    label = inline_text(tw.find("label")) if tw.find("label") is not None else ""
-    caption = inline_text(tw.find("caption")) if tw.find("caption") is not None else ""
-    out = [" ".join(x for x in (label, caption) if x) or "Table"]
+    out = [caption_text(tw) or "Table"]
     for tr in tw.iter("tr"):
         cells = [inline_text(c) for c in tr if c.tag in ("th", "td")]
         if any(cells):
@@ -116,9 +146,7 @@ def table_lines(tw: ET.Element) -> list[str]:
 
 
 def fig_lines(fig: ET.Element) -> list[str]:
-    label = inline_text(fig.find("label")) if fig.find("label") is not None else ""
-    caption = inline_text(fig.find("caption")) if fig.find("caption") is not None else ""
-    text = " ".join(x for x in (label, caption) if x)
+    text = caption_text(fig)
     return [text] if text else []
 
 

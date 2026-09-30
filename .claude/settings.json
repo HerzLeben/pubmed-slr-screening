@@ -60,6 +60,11 @@
             "type": "command",
             "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check_screen_output.py\"",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check_extract_output.py\"",
+            "timeout": 30
           }
         ]
       },
@@ -113,6 +118,16 @@
           {
             "type": "command",
             "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check_screen_output.py\"",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "extractor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check_extract_output.py\"",
             "timeout": 30
           }
         ]

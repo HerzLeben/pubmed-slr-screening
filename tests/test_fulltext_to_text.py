@@ -68,3 +68,15 @@ def test_figure_caption_and_powers():
     assert "50×10^6 cells" in text
     assert "Opening paragraph 1." in text  # a citation number after a word is not a power
     assert summary["figures"] == 1
+
+
+def test_long_paragraph_wrapped_at_sentence_ends():
+    from fulltext_to_text import wrap
+    from quote_match import find_quote
+
+    para = " ".join(f"Sentence number {i} says something about CAR-T cells." for i in range(60))
+    out = wrap(para, width=200)
+    assert all(len(line) <= 200 for line in out.splitlines())
+    assert all(line.endswith(".") for line in out.splitlines())
+    # a quote that crosses a line break still matches (quote_match folds whitespace)
+    assert find_quote(out, "about CAR-T cells. Sentence number 4 says")

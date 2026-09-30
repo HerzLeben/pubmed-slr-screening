@@ -31,6 +31,10 @@ results/screen/b/<review_pmid>/batch_<nn>.json
 results/adjudication/<review_pmid>.json
 results/human/<review_pmid>.json         # HTML からダウンロードして置く
 results/report.html                      # build_report.py の出力（1枚）
+results/fulltext/<pmid>.txt              # 抽出の入力（fulltext_to_text.py。10章）
+results/extraction/jobs/<review_pmid>/<pmid>.json   # extractor への入力（make_extraction_jobs.py。10章）
+results/extraction/out/<review_pmid>/<pmid>.json    # extractor の出力（10章）
+results/extraction/human/<review_pmid>.json         # 抽出の人の採点（レポートから保存）
 ```
 
 `<nn>` は 2桁のゼロ埋め（`batch_01.json`）。
@@ -196,3 +200,47 @@ SubagentStop（matcher `screener-a|screener-b`）では、最後のメッセー�
 - ±1 なのに引用が無い／抄録に無い（hook をすり抜けたもの）
 - adjudicator の status が規則と違う
 - needs_human に `summary` が無い
+
+## 10. 研究特性の抽出（指示書20）
+
+### 入力：job（`scripts/make_extraction_jobs.py`）
+
+```json
+{
+  "review_pmid": "33746596",
+  "pmid": "30572922",
+  "fulltext": "results/fulltext/30572922.txt",
+  "items": ["<extraction_items.md の項目名、その順>"],
+  "output": "results/extraction/out/33746596/30572922.json"
+}
+```
+
+- 対象は `bench/extraction/<review>.jsonl` の `pmid` の列のうち、`results/fulltext/status.json` が `body` のもの（7組）。jsonl の値は読まない
+- `fulltext` は `scripts/fulltext_to_text.py` が PMC の XML から作る：タイトル、抄録、本文の節（見出しは `## `）、すべての表（label、caption、行ごとにタブ区切り、脚注）、図の label と caption。参考文献と補足資料は入れない。長い段落は文の切れ目で 1,000字以下の行に分ける
+
+### 出力（extractor）
+
+```json
+{
+  "review_pmid": "33746596",
+  "pmid": "30572922",
+  "items": [
+    {"name": "<項目名>", "value": "<値>", "quotes": ["<全文の文字列>"]},
+    {"name": "<項目名>", "value": "記載なし", "quotes": []}
+  ]
+}
+```
+
+- `items` は job の `items` と同じ名前・同じ数・同じ順
+- `value`：空でない文字列。全文に根拠が無ければ `"記載なし"`
+- `quotes`：`"記載なし"` なら `[]`、それ以外は1つ以上。各引用は全文の txt に逐語で存在する（`scripts/quote_match.find_quote`。5章と同じ正規化で、改行・タブも空白1つに畳む）
+
+### hook が検査すること（`.claude/hooks/check_extract_output.py`）
+
+- PreToolUse（matcher `Write`）：`results/extraction/out/<review>/<pmid>.json` への書き込みで、上の形・パスとの一致・項目の過不足と順番・value と quotes の組み合わせ・引用の実在を検査し、不備は exit 2 で差し戻す。extractor が書けるのは job の `output` だけ
+- SubagentStop（matcher `extractor`）：最後のメッセージに書かれた出力を同じ規則で検査し直し、不備や書かずに終わったことを `systemMessage` で本体に知らせる（観察だけ）
+- `limit_reads.py`（PreToolUse Read）：extractor が読めるのは、最初に読んだ job ファイルとその `fulltext` だけ
+
+### 採点（`scripts/score_extraction.py`、`results/extraction/human/<review>.json`）
+
+指示書20 6章で足す

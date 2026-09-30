@@ -178,3 +178,13 @@ O: <PICO.O>
 - 全文のテキスト化（`scripts/fulltext_to_text.py`）：タイトル、抄録、`<body>` の節（見出しは `## `）、**すべての `<table-wrap>`（`<body>` の外の `<floats-group>` なども）**、`<fig>` の label と caption を入れる。参考文献と補足資料は入れない（補足資料は取りに行かず件数だけ記録）。理由：原著は全文の PDF か XML をそのまま入力にしている。PMC の XML では表の多くが `<body>` の外にあり（6本の表10枚のうち `<body>` の中は4枚）、`<body>` だけでは患者背景の表が落ちる
 - extraction-rules skill は `user-invocable: false` だけを付ける。`disable-model-invocation: true` は subagent への preload も止めるため付けられない（公式："Also prevents the skill from being preloaded into subagents"）。つまりモデルが呼ぶことは止められないが、skill に答えは書いていないので漏れは無い。参照：https://code.claude.com/docs/en/skills（frontmatter reference）
 - テキスト化の細部：数字の直後の上付きの数字は `^` を付ける（`50×10<sup>6</sup>` → `50×10^6`。付けないと用量が「106」に読める）。語の直後の上付き（引用番号）や記号の上付き（脚注の †）はそのまま。補足資料しかない節は見出しも出さない。表と図は本文のあとに文書の順でまとめて書く（`<body>` の中の表を二重に書かない）。件数は `results/fulltext/text_summary.json`
+- 長い段落は文の切れ目で 1,000字以下の行に分ける（2,000字を超える段落が5本にあった。Read tool で長い行が切れると、その先が extractor に届かない）。図の説明も同じ。引用の照合は改行を空白1つに畳むので、行をまたぐ引用も通る
+- extractor（`.claude/agents/extractor.md`）は screener-a と同じ書き方（`tools: Read, Write`、`model: sonnet`、`omitClaudeMd: true`、`skills: [extraction-rules]`）。job は `scripts/make_extraction_jobs.py` が作り、jsonl からは `pmid` の列だけを読む（7組・102項目）。skill・agent 定義・委任文に答えの値や答えの書き方の例は書かない（出力の例は `<値>` などの記号だけ）
+- hook：出力の検査は `check_extract_output.py`（`check_screen_output.py` とは別のファイル。PreToolUse Write で差し戻し、SubagentStop matcher `extractor` は観察だけ）。読める範囲は `limit_reads.py`。hook からは「どの job を渡された extractor か」が見えないので、**最初に読んだ job を agent_id に結び付け**（`.claude/state/extract_reads/`）、ほかの job と、その job の fulltext 以外の txt を止める
+- 委任文（7組とも同じ形。<...> だけ差し替える。本体は条件を書き足さない）：
+
+```
+抽出の job を1つ処理してください。
+
+job：results/extraction/jobs/<review>/<pmid>.json
+```
