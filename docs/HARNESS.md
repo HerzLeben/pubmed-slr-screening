@@ -126,3 +126,7 @@
 - 2026-09-30 eval-3 の評価：人の指示（「早く全部終わらしたい」）で、Cowork のセッションが `eval_screening.py --run eval-3` を実行した（`/eval` skill は使っていない。CLAUDE.md の「/eval は人だけが起動する」から外れた運用）。スクリーニングの結果・基準・検索式は変えていない。Recall@20／@50（原著と同じ作り方）は 0.143／0.429、0.667／1.000、0.636／0.909
 - 2026-09-30 Cowork のシェルでは git の作者が未設定で commit できなかった。これまでと同じ作者（HerzLeben）を `-c user.name/-c user.email` で指定した。git の一時ファイルを消すため、このリポジトリで削除の許可を人が出した
 - 2026-09-30 人の決定：抽出（⑦）は今回の範囲から外す。npj 掲載版との照合はしない。新しい tag の名前は Cowork が決める（`snap/17-eval-3`）
+- 2026-10-01 人の決定：抽出（⑦）を範囲に戻す（指示書20）。機能の追加は抽出で最後
+- 2026-10-01 指示書20 パート0〜1：作業ツリーの未 commit（`/init` で CLAUDE.md に足した3節と log.md）を先に別の commit にした。`ANTHROPIC_API_KEY` は未設定。確かめる数字（本文の文字数・表・補足資料、6本）は全部一致
+- 2026-10-01 想定と違ったこと：原著の抽出の Accuracy 0.78（Immunotherapy）は、研究デザイン・患者背景・**結果**の3種を合わせた値だった（1,334 のうち結果が285）。こちらの項目は Table 1 の列だけなので、種類別の値（design 0.95、population 0.74）も並べて注記する（DECISIONS）
+- 2026-10-01 想定と違ったこと：skill を「人もモデルも呼べない、preload だけ」にする設定は無い。`disable-model-invocation: true` は preload も止めるので、extraction-rules は `user-invocable: false` だけにした

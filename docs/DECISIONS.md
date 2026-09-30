@@ -160,3 +160,20 @@ O: <PICO.O>
 - eval-3 の評価は `eval_screening.py --run eval-3`、レポートは `build_report.py --run eval-3`（`results/eval-3/report.html`。`report_template.html` の head と CSS に、`report_eval3_body.html` の本文をつなぐ。eval-1・eval-2 の report.html は触らない）。「原著と同じ作り方」の足した PMID は、候補のうち all_pmids に無いものとして数え、`results/eval-3/<PMID>/search.json` の `added_pmids` と一致することを検査する
 - Recall@k の主な値は分母を「母集団に入った組み入れ研究」とし、3本の平均と合算を並べる（原著の値が topic 内の平均か合算かは本文から読み取れないため、両方を出す）
 - tag：eval-3 の評価と docs の commit に `snap/17-eval-3`
+
+## 2026-10-01 指示書20：研究特性の抽出（人が決定）
+
+- 2026-09-30 の「⑦ は今回の範囲外」を取り消し、⑦ を行う。範囲・対象（33746596・37168849）・全文は PMC だけ・採点のしかた（完全一致は規則、残りは人）は「2026-09-29 指示書18」のまま
+- 機能の追加は抽出で最後にする。抽出のあとで直したい所が出ても実装せず、HARNESS に「やらなかったこと」として1行書く
+- 抽出の流れには人の判断を入れない。人がするのは試走の動作確認（承認点6）と、完全一致しなかった値の採点（承認点7）だけ。項目・答え・出力を人が直さない
+- 分母は本文が取れた7組の全項目で 102（33746596 は 3組×14項目、37168849 は 4組×15項目）
+- 比べる原著の値（arXiv HTML 版、Results の study characteristics extraction。2026-10-01 に原文の HTML で逐語を確かめた）：
+  - "it achieved an accuracy of ACC=0.78 (95% confidence interval (CI) = 0.75–0.81) in the Immunotherapy topic"。ほかのトピックは 0.77・0.72・0.83（全体で 0.72–0.83）
+  - "Our dataset comprises 1,334 target data points, including 696 on study design, 353 on population features, and 285 on results." → **原著の 0.78 は研究デザイン・患者背景・結果の3種を合わせた値**。Immunotherapy の種類別は study design 0.95（0.92–0.96）、population 0.74（0.67–0.80）、results 0.42（0.36–0.49）。こちらの項目は Table 1 の列（デザインと患者背景）だけなので、eval-3.md では全体の 0.78 と並べ、種類別の値も注記する
+  - 入力："use the full content of the study documents in PDF or XML formats as inputs"。出典："each output is linked to the sources for manual inspection"（Results 冒頭の概要）、"each output can be cross-checked by the linked original sources"（抽出の節）
+  - 採点者："we enlisted three annotators who manually compared them against the data reported in the original tables"（Methods）
+  - 95% CI の出し方は本文に書かれていない（Methods・Results・図の説明を確かめた）→ こちらは Wilson の区間を使う
+  - 原著の限界の例：付録にしか無い値は取れない（"it failed to extract data outside the study's main content, such as in appendices, which were not included in the inputs"）
+  - 参照：https://arxiv.org/html/2406.17755
+- 全文のテキスト化（`scripts/fulltext_to_text.py`）：タイトル、抄録、`<body>` の節（見出しは `## `）、**すべての `<table-wrap>`（`<body>` の外の `<floats-group>` なども）**、`<fig>` の label と caption を入れる。参考文献と補足資料は入れない（補足資料は取りに行かず件数だけ記録）。理由：原著は全文の PDF か XML をそのまま入力にしている。PMC の XML では表の多くが `<body>` の外にあり（6本の表10枚のうち `<body>` の中は4枚）、`<body>` だけでは患者背景の表が落ちる
+- extraction-rules skill は `user-invocable: false` だけを付ける。`disable-model-invocation: true` は subagent への preload も止めるため付けられない（公式："Also prevents the skill from being preloaded into subagents"）。つまりモデルが呼ぶことは止められないが、skill に答えは書いていないので漏れは無い。参照：https://code.claude.com/docs/en/skills（frontmatter reference）

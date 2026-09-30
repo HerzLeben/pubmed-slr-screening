@@ -18,7 +18,7 @@
 | スクリーニング：基準づくり | `/pico-to-criteria` | skill |
 | スクリーニング：判定 | screener-a（1体。screener-b は基準を逆順で読む2体目で、eval-3 では使わない） | subagent |
 | スクリーニング：順位付け | `rules.py` の score（判定値の合計） | スクリプト |
-| 抽出 | extractor（今回の範囲外。2026-09-30 人が決定） | subagent |
+| 抽出 | extractor（`.claude/agents/extractor.md`） | subagent |
 | （原著に無い） | adjudicator・人の判断 | 原著との比較の流れ（eval-3）では使わない |
 
 ## 0. 位置づけ
@@ -107,7 +107,7 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 | `screener-a` | 1バッチ（20件）を基準ごとに {-1,0,1}＋逐語引用で判定 | Read、Write（`results/screen/a/` のみ） | sonnet | **読まない**（`omitClaudeMd: true`） | 承認済み基準、abstract のバッチだけ |
 | `screener-b` | 同上、独立に判定 | 同上（`results/screen/b/`） | **別条件**（下記） | 読まない | 同上 |
 | `adjudicator` | A と B を突き合わせ、一致は確定、不一致・引用不備は「要人判断」へ | Read、Write（`results/adjudication/`） | sonnet | 読む | A・B の出力だけ（abstract は必要時のみ） |
-| （任意）`extractor` | 研究特性の抽出（PMC OA の全文がある研究のみ） | Read、Write | sonnet | 読む | 全文と抽出項目 |
+| `extractor` | 研究特性の抽出（PMC OA の全文がある研究のみ） | Read、Write（`results/extraction/out/` のみ） | sonnet | **読まない**（`omitClaudeMd: true`） | job ファイル（項目名だけ）と全文の txt |
 
 **screener を独立にする工夫（記事の中心）**
 - 会話履歴を持たない＝互いの判定を見ない（subagent の仕様そのものが独立性を担保）
@@ -161,7 +161,7 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 - **失敗の分類**：基準の粒度不足／abstract に情報が無い／引用の捏造（hook が捕まえた数）／2体とも誤り（相関）／ベンチマークの正解側の問題
 - **記録**：`docs/EVAL.md`（第1作と同じ書式）。所要時間・トークンは比率で記事に、金額は書かない
 
-### 5.1 抽出（下書き、指示書18。extractor はまだ作らない）
+### 5.1 抽出（指示書18 で下書き、指示書20 で実装）
 
 - **対象**：33746596・37168849 の答えの研究のうち、PMC の efetch で本文（`<body>`）が取れた7組（研究は6本。30396908 は2本の両方）。全文は `scripts/fetch_pmc.py` が `results/fulltext/<PMID>.xml` に置き、`status.json` に no_pmc／pmc_no_body／body を書く。取れない13組は「全文が手に入らない」として数え、読みに行かない
 - **項目**：`reviews/<PMID>/extraction_items.md`。答えの列名をそのまま並べ、説明は付けない（原著も列名をそのまま渡している）。答えの値は載せない
