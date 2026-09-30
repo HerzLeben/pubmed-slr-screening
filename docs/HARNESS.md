@@ -130,3 +130,4 @@
 - 2026-10-01 指示書20 パート0〜1：作業ツリーの未 commit（`/init` で CLAUDE.md に足した3節と log.md）を先に別の commit にした。`ANTHROPIC_API_KEY` は未設定。確かめる数字（本文の文字数・表・補足資料、6本）は全部一致
 - 2026-10-01 想定と違ったこと：原著の抽出の Accuracy 0.78（Immunotherapy）は、研究デザイン・患者背景・**結果**の3種を合わせた値だった（1,334 のうち結果が285）。こちらの項目は Table 1 の列だけなので、種類別の値（design 0.95、population 0.74）も並べて注記する（DECISIONS）
 - 2026-10-01 想定と違ったこと：skill を「人もモデルも呼べない、preload だけ」にする設定は無い。`disable-model-invocation: true` は preload も止めるので、extraction-rules は `user-invocable: false` だけにした
+- 2026-10-01 指示書20 パート4：試走の起動で「Agent type 'extractor' not found」。セッションの途中で足した `.claude/agents/extractor.md` は読み込まれない（skill は途中でも一覧に出た。hook の設定の変更も効いていた：本体から壊れた出力を Write して check_extract_output.py が止めることを確かめた）。general-purpose での代用はしない（omitClaudeMd と skill の preload が効かない）。人が Claude Code を再起動してから試走する
