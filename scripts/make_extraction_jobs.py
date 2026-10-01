@@ -13,13 +13,15 @@ Refuses to run when a full-text .txt is missing (run scripts/fulltext_to_text.py
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import EXTRACTION_REVIEWS as REVIEWS
+from common import load, read_jsonl, write_json
+
 ROOT = Path(__file__).resolve().parent.parent
-REVIEWS = ("33746596", "37168849")
 ITEM = re.compile(r"^\d+\.\s+(.+?)\s*$")
 
 
@@ -28,11 +30,12 @@ def read_items(md: Path) -> list[str]:
 
 
 def read_pmids(jsonl: Path) -> list[str]:
-    return [str(json.loads(line)["pmid"]) for line in jsonl.read_text(encoding="utf-8").splitlines() if line.strip()]
+    """The `pmid` column only; the answer values are not kept."""
+    return [str(row["pmid"]) for row in read_jsonl(jsonl)]
 
 
 def make_jobs(root: Path, reviews=REVIEWS) -> list[dict]:
-    status = json.loads((root / "results/fulltext/status.json").read_text(encoding="utf-8"))["studies"]
+    status = load(root / "results/fulltext/status.json")["studies"]
     jobs = []
     for rid in reviews:
         items = read_items(root / "reviews" / rid / "extraction_items.md")
@@ -54,8 +57,7 @@ def main(argv: list[str] | None = None) -> int:
     jobs = make_jobs(args.root)
     for job in jobs:
         path = args.root / "results/extraction/jobs" / job["review_pmid"] / f"{job['pmid']}.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(job, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        write_json(path, job)
         print(f"{path.relative_to(args.root)}: {len(job['items'])} items")
     print(f"{len(jobs)} jobs, {sum(len(j['items']) for j in jobs)} data points")
     return 0

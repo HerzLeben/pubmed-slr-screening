@@ -1,4 +1,5 @@
-"""Screening rules shared by build_report.py, the adjudicator check and eval.
+"""Screening rules shared by adjudicate.py, build_report.py, eval_screening.py, breakdown_final.py,
+prisma_record.py and the output-check hook.
 
 See docs/schema.md. Verdicts: 1 = toward inclusion, -1 = toward exclusion,
 0 = unclear (treated as toward inclusion). This holds for exclusion criteria too.
@@ -9,6 +10,11 @@ from __future__ import annotations
 from quote_match import quote_exists
 
 VALID_VERDICTS = (-1, 0, 1)
+
+
+def id_key(cid: str) -> tuple[int, int]:
+    """Criterion ID order: I1, I2, ..., E1, E2, ... (schema section 2)."""
+    return (0 if cid.startswith("I") else 1, int(cid[1:]))
 
 
 def score(criteria: list[dict]) -> int:
@@ -52,3 +58,15 @@ def adjudicate(a: list[dict] | None, b: list[dict] | None, abstract: str, title:
     if disagree_ids(a, b):
         reasons.append("criterion_disagree")
     return f"agreed_{overall(a)}", reasons
+
+
+def ranked(pmids, scores: dict[str, int], rank: dict[str, int]) -> list[str]:
+    """Order for Recall@k: score descending, ties by the search rank ascending."""
+    return sorted(pmids, key=lambda p: (-scores[p], rank[p]))
+
+
+def final_candidates(adjudication: dict[str, dict], human: dict[str, dict]) -> set[str]:
+    """The two-screener final list (schema section 8): agreed_include + needs_human the human set to include."""
+    return {p for p, r in adjudication.items()
+            if r["status"] == "agreed_include"
+            or (r["status"] == "needs_human" and human.get(p, {}).get("decision") == "include")}

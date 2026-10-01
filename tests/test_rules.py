@@ -1,12 +1,7 @@
 """scripts/quote_match.py and scripts/rules.py (docs/schema.md sections 3, 5, 6). No network."""
 
-import sys
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-
 from quote_match import locate_quote, normalize, quote_exists
 from rules import adjudicate, disagree_ids, overall, score
 

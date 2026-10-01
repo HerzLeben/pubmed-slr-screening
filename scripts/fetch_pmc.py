@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fetch_pubmed import post
+from make_extraction_jobs import read_pmids
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "results" / "fulltext"
@@ -69,11 +70,6 @@ def fetch_one(pmid: str, out: Path) -> dict:
     return {"pmid": pmid, "pmcid": f"PMC{pmcid}", "status": classify(xml), "n_pmc_links": len(pmcids)}
 
 
-def extraction_pmids(review: str) -> list[str]:
-    path = EXTRACTION / f"{review}.jsonl"
-    return [json.loads(line)["pmid"] for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--from-extraction", nargs="*", default=[], metavar="REVIEW",
@@ -88,7 +84,7 @@ def main() -> None:
 
     wanted: dict[str, list[str]] = {}
     for review in args.from_extraction:
-        for p in extraction_pmids(review):
+        for p in read_pmids(EXTRACTION / f"{review}.jsonl"):
             wanted.setdefault(p, []).append(review)
     for p in args.pmids:
         wanted.setdefault(p, [])

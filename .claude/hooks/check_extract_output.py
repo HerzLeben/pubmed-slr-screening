@@ -20,28 +20,16 @@ Any other Write passes (exit 0). Errors inside this hook fail open with a messag
 """
 
 import json
-import os
 import re
 import sys
 from pathlib import Path
 
+from hooklib import block, project_dir, recheck_mentioned, rel, report_stop, use_scripts
+
 OUT = re.compile(r"^results/extraction/out/(\d+)/(\d+)\.json$")
 MENTION = re.compile(r"results/extraction/out/\d+/\d+\.json")
 NOT_FOUND = "記載なし"
-MAX_LINES = 40
-
-
-def project_dir(event: dict) -> Path:
-    return Path(os.environ.get("CLAUDE_PROJECT_DIR") or event.get("cwd") or ".").resolve()
-
-
-def rel(path: str, root: Path) -> str | None:
-    p = Path(path)
-    p = (root / p) if not p.is_absolute() else p
-    try:
-        return p.resolve().relative_to(root).as_posix()
-    except ValueError:
-        return None
+SCHEMA = "docs/schema.md 10章"
 
 
 def check_extract(content: str, relpath: str, root: Path) -> list[str]:
@@ -77,7 +65,7 @@ def check_extract(content: str, relpath: str, root: Path) -> list[str]:
     if not errs and got != expected:
         errs.append("items を job の順に並べる")
 
-    sys.path.insert(0, str(root / "scripts"))
+    use_scripts(root)
     from quote_match import find_quote
 
     text = txt_path.read_text(encoding="utf-8")
@@ -107,15 +95,6 @@ def check_extract(content: str, relpath: str, root: Path) -> list[str]:
     return errs
 
 
-def block(errs: list[str]) -> int:
-    if not errs:
-        return 0
-    lines = errs[:MAX_LINES] + ([f"…ほか {len(errs) - MAX_LINES} 件"] if len(errs) > MAX_LINES else [])
-    print("出力が docs/schema.md 10章に合わないので書き込みを止めた。直してもう一度 Write する:\n- "
-          + "\n- ".join(lines), file=sys.stderr)
-    return 2
-
-
 def pre_tool_use(event: dict, root: Path) -> int:
     tool_input = event.get("tool_input") or {}
     relpath = rel(tool_input.get("file_path", ""), root)
@@ -125,27 +104,15 @@ def pre_tool_use(event: dict, root: Path) -> int:
         job = root / "results" / "extraction" / "jobs" / m.group(1) / f"{m.group(2)}.json" if m else None
         if not job or not job.exists() or json.loads(job.read_text(encoding="utf-8")).get("output") != relpath:
             return block([(f"extractor が書けるのは job の output（results/extraction/out/<review>/<pmid>.json）だけ"
-                           f"（{tool_input.get('file_path')}）")])
+                           f"（{tool_input.get('file_path')}）")], SCHEMA)
     if m:
-        return block(check_extract(tool_input.get("content", ""), relpath, root))
+        return block(check_extract(tool_input.get("content", ""), relpath, root), SCHEMA)
     return 0
 
 
 def subagent_stop(event: dict, root: Path) -> int:
     paths = sorted(set(MENTION.findall(event.get("last_assistant_message") or "")))
-    problems = []
-    if not paths:
-        problems.append("最後のメッセージに出力ファイルのパスが無い（書かずに終わった可能性）")
-    for relpath in paths:
-        f = root / relpath
-        if not f.exists():
-            problems.append(f"{relpath}: ファイルが無い")
-            continue
-        problems += [f"{relpath}: {e}" for e in check_extract(f.read_text(encoding="utf-8"), relpath, root)]
-    if problems:
-        msg = "extractor の出力に不備（SubagentStop は差し戻せないので、本体が再起動すること）:\n- "
-        print(json.dumps({"systemMessage": msg + "\n- ".join(problems[:MAX_LINES])}, ensure_ascii=False))
-    return 0
+    return report_stop("extractor", recheck_mentioned(paths, root, check_extract))
 
 
 def main() -> int:

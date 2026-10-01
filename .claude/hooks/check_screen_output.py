@@ -28,36 +28,20 @@ Any other Write passes (exit 0). Errors inside this hook itself fail open with a
 """
 
 import json
-import os
 import re
 import sys
 from pathlib import Path
 
+from hooklib import block, project_dir, recheck_mentioned, rel, report_stop, use_scripts
+
 SCREEN = re.compile(r"^results/(?:(eval-3)/)?screen/([ab])/(\d+)/batch_(\d{2})\.json$")
 ADJ = re.compile(r"^results/adjudication/(\d+)\.json$")
 MENTION = re.compile(r"results/(?:eval-3/)?screen/[ab]/\d+/batch_\d{2}\.json")
-MAX_LINES = 40
-
-
-def project_dir(event: dict) -> Path:
-    return Path(os.environ.get("CLAUDE_PROJECT_DIR") or event.get("cwd") or ".").resolve()
-
-
-def rel(path: str, root: Path) -> str | None:
-    p = Path(path)
-    p = (root / p) if not p.is_absolute() else p
-    try:
-        return p.resolve().relative_to(root).as_posix()
-    except ValueError:
-        return None
+SCHEMA = "docs/schema.md"
 
 
 def load(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def id_key(cid: str) -> tuple[int, int]:
-    return (0 if cid.startswith("I") else 1, int(cid[1:]))
 
 
 def run_files(run: str | None, who: str, rid: str, nn: str, root: Path) -> tuple[Path, Path, Path]:
@@ -88,8 +72,9 @@ def check_screen(content: str, relpath: str, root: Path) -> list[str]:
     if doc.get("batch") != int(nn):
         errs.append(f"batch が {doc.get('batch')!r}（このパスは {int(nn)}）")
 
-    sys.path.insert(0, str(root / "scripts"))
+    use_scripts(root)
     from quote_match import quote_exists
+    from rules import VALID_VERDICTS, id_key
 
     batch_in, crit_path, cand_path = run_files(run, who, rid, nn, root)
     for p in (batch_in, crit_path, cand_path):
@@ -132,7 +117,7 @@ def check_screen(content: str, relpath: str, root: Path) -> list[str]:
             if not isinstance(c, dict):
                 continue
             cid, v, q = c.get("id"), c.get("verdict"), c.get("quote")
-            if isinstance(v, bool) or v not in (-1, 0, 1):
+            if isinstance(v, bool) or v not in VALID_VERDICTS:
                 errs.append(f"PMID {pmid} 基準 {cid}: verdict {v!r} は範囲外（-1/0/1 の整数）")
                 continue
             if v == 0:
@@ -182,40 +167,20 @@ def pre_tool_use(event: dict, root: Path) -> int:
         if not m or m.group(2) != letter:
             return block([(f"{agent} が書けるのは results/screen/{letter}/<review>/batch_<nn>.json"
                            f"（eval-3 は results/eval-3/screen/{letter}/<review>/batch_<nn>.json）だけ"
-                           f"（{tool_input.get('file_path')}）")])
+                           f"（{tool_input.get('file_path')}）")], SCHEMA)
     if agent == "adjudicator" and not ADJ.match(relpath or ""):
-        return block([f"adjudicator が書けるのは results/adjudication/<review>.json だけ（{tool_input.get('file_path')}）"])
+        return block([f"adjudicator が書けるのは results/adjudication/<review>.json だけ（{tool_input.get('file_path')}）"],
+                     SCHEMA)
     if relpath and SCREEN.match(relpath):
-        return block(check_screen(tool_input.get("content", ""), relpath, root))
+        return block(check_screen(tool_input.get("content", ""), relpath, root), SCHEMA)
     if relpath and ADJ.match(relpath) and agent == "adjudicator":
-        return block(check_adjudication(tool_input.get("content", ""), relpath, root))
+        return block(check_adjudication(tool_input.get("content", ""), relpath, root), SCHEMA)
     return 0
-
-
-def block(errs: list[str]) -> int:
-    if not errs:
-        return 0
-    lines = errs[:MAX_LINES] + ([f"…ほか {len(errs) - MAX_LINES} 件"] if len(errs) > MAX_LINES else [])
-    print("出力が docs/schema.md に合わないので書き込みを止めた。直してもう一度 Write する:\n- "
-          + "\n- ".join(lines), file=sys.stderr)
-    return 2
 
 
 def subagent_stop(event: dict, root: Path) -> int:
     paths = sorted(set(MENTION.findall(event.get("last_assistant_message") or "")))
-    problems = []
-    if not paths:
-        problems.append("最後のメッセージに出力ファイルのパスが無い（書かずに終わった可能性）")
-    for relpath in paths:
-        f = root / relpath
-        if not f.exists():
-            problems.append(f"{relpath}: ファイルが無い")
-            continue
-        problems += [f"{relpath}: {e}" for e in check_screen(f.read_text(encoding="utf-8"), relpath, root)]
-    if problems:
-        msg = f"{event.get('agent_type')} の出力に不備（SubagentStop は差し戻せないので、本体が再起動すること）:\n- "
-        print(json.dumps({"systemMessage": msg + "\n- ".join(problems[:MAX_LINES])}, ensure_ascii=False))
-    return 0
+    return report_stop(str(event.get("agent_type")), recheck_mentioned(paths, root, check_screen))
 
 
 def main() -> int:

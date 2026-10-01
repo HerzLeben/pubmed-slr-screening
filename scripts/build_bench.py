@@ -2,6 +2,10 @@
 
 使い方: python3 scripts/build_bench.py 33746596 31190844 37168849
 """
+
+from __future__ import annotations
+
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -11,7 +15,10 @@ RAW = ROOT / "bench" / "raw" / "TrialReviewBench-study-search-screening.jsonl"
 OUT = ROOT / "bench" / "reviews.jsonl"
 
 
-def main(pmids):
+def main(argv: list[str] | None = None) -> None:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("pmids", nargs="+", help="レビューの PMID（書いた順に bench/reviews.jsonl に並ぶ）")
+    pmids = ap.parse_args(argv).pmids
     if not RAW.exists():
         sys.exit(f"{RAW.relative_to(ROOT)} が無い。README の「データの取り方」で TrialReviewBench を bench/raw/ に置く")
     rows = {}
@@ -43,4 +50,4 @@ def main(pmids):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

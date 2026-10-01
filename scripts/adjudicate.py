@@ -15,26 +15,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+from common import load, load_adjudication, load_screener, screened_reviews, write_json
 from rules import adjudicate, disagree_ids
-
-
-def load(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def screener(results: Path, who: str, rid: str) -> dict[str, list[dict]]:
-    out: dict[str, list[dict]] = {}
-    for f in sorted((results / "screen" / who / rid).glob("batch_*.json")):
-        for rec in load(f).get("records", []):
-            out[str(rec["pmid"])] = rec.get("criteria", [])
-    return out
 
 
 def run(rid: str, results: Path) -> dict:
     cands = load(results / rid / "candidates.json")["records"]
-    a, b = screener(results, "a", rid), screener(results, "b", rid)
-    out_path = results / "adjudication" / f"{rid}.json"
-    old = {str(r["pmid"]): r for r in load(out_path)["records"]} if out_path.exists() else {}
+    a, b = load_screener(results, "a", rid), load_screener(results, "b", rid)
+    old = load_adjudication(results, rid)
     records = []
     for c in sorted(cands, key=lambda r: r.get("rank", 0)):
         pmid = str(c["pmid"])
@@ -47,9 +35,7 @@ def run(rid: str, results: Path) -> dict:
                 if prev.get(k):
                     rec[k] = prev[k]
         records.append(rec)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps({"review_pmid": rid, "records": records}, ensure_ascii=False, indent=2) + "\n",
-                        encoding="utf-8")
+    write_json(results / "adjudication" / f"{rid}.json", {"review_pmid": rid, "records": records})
     counts = {s: sum(r["status"] == s for r in records) for s in ("agreed_include", "agreed_exclude", "needs_human")}
     missing = sum(r["status"] == "needs_human" and not r.get("summary") for r in records)
     return {"review": rid, **counts, "needs_summary": missing}
@@ -62,8 +48,7 @@ def main() -> None:
     ap.add_argument("--review", help="only this review PMID")
     args = ap.parse_args()
     results = Path(args.results)
-    rids = [args.review] if args.review else sorted(
-        p.parent.name for p in Path(args.reviews).glob("*/criteria.json") if (results / p.parent.name / "candidates.json").exists())
+    rids = [args.review] if args.review else screened_reviews(Path(args.reviews), results)
     for rid in rids:
         print(json.dumps(run(rid, results), ensure_ascii=False))
 

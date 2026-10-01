@@ -13,24 +13,20 @@ with a message on stderr.
 """
 
 import json
-import os
 import sys
-from pathlib import Path
+
+from hooklib import project_dir, rel, use_scripts
 
 TARGET = "results/prisma.json"
 
 
 def main() -> int:
     event = json.load(sys.stdin)
-    root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or event.get("cwd") or ".").resolve()
-    path = Path((event.get("tool_input") or {}).get("file_path") or "")
-    path = path if path.is_absolute() else root / path
-    try:
-        if path.resolve().relative_to(root).as_posix() != TARGET:
-            return 0
-    except ValueError:
+    root = project_dir(event)
+    if rel((event.get("tool_input") or {}).get("file_path") or "", root) != TARGET:
         return 0
-    sys.path.insert(0, str(root / "scripts"))
+    path = root / TARGET
+    use_scripts(root)
     from prisma_record import check
 
     try:

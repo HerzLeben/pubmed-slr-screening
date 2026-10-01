@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Build the item set for the no-subagent trial (design.md ch.6): the top 100 candidates of one review,
 plus one of the first 50 (with an abstract) shown again later under a new ID.
 

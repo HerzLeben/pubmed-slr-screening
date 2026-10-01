@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Split one review's candidates into screener input batches (docs/schema.md section 1).
 
 For each batch the same records go to both screeners, each in its own file:

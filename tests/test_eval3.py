@@ -1,12 +1,11 @@
 """scripts/eval_screening.py --run eval-3 on a small made-up review. No network."""
 
 import json
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-
+import build_report
 import eval_screening
+import pytest
 from eval_screening import run_eval3
 
 IDS = ("I1", "I5", "E1")
@@ -62,9 +61,21 @@ def test_reference_without_a_criterion(tmp_path, monkeypatch):
 def test_missing_judgment_stops(tmp_path):
     reviews, results = make(tmp_path)
     write(results / "screen" / "a" / "r" / "batch_01.json", {"records": [{"pmid": "1", "criteria": crit(1, 1, 1)}]})
-    try:
+    with pytest.raises(SystemExit, match="判定が無い"):
         run_eval3("r", ["3"], reviews, results)
-    except SystemExit as e:
-        assert "判定が無い" in str(e)
-    else:
-        raise AssertionError("should stop")
+
+
+def test_report_lists_records_in_score_order(tmp_path):
+    reviews, results = make(tmp_path)
+    write(reviews / "r" / "eval-3" / "criteria.json", {"criteria": [{"id": i} for i in IDS]})
+    rv = build_report.build_review_eval3("r", ["3", "9"], {"ja": "題", "en": "Title"}, reviews, results)
+    assert [(r["pmid"], r["position"]) for r in rv["records"]] == [("1", 1), ("9", 2), ("2", 3), ("3", 4), ("4", 5)]
+    assert [r["pmid"] for r in rv["records"] if r["included"]] == ["9", "3"]
+    assert [r["pmid"] for r in rv["records"] if r["added"]] == ["9"]
+    assert rv["eval"]["review"] == "r" and rv["title_en"] == "Title"
+
+
+def test_report_page_gets_the_data_and_the_logos():
+    html = build_report.fill("<img src=__LOGO_MARK__><script>const DATA = __DATA__;</script>", {"x": "</script>"})
+    assert "__" not in html and 'src=data:image/png;base64,' in html
+    assert '{"x": "<\\/script>"}' in html  # "</" cannot end the script early

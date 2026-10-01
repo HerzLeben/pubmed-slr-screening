@@ -20,10 +20,11 @@ Any other agent, and the main session, passes (exit 0). Errors inside this hook 
 """
 
 import json
-import os
 import re
 import sys
 from pathlib import Path
+
+from hooklib import project_dir, rel
 
 ALLOWED = {
     "adjudicator": [
@@ -60,22 +61,13 @@ def extractor_read(relpath: str | None, event: dict, root: Path) -> str | None:
     return f"読めるのは job（{pinned}）と、その fulltext（{fulltext}）だけ"
 
 
-def rel(path: str, root: Path) -> str | None:
-    p = Path(path)
-    p = (root / p) if not p.is_absolute() else p
-    try:
-        return p.resolve().relative_to(root).as_posix()
-    except ValueError:
-        return None
-
-
 def main() -> int:
     try:
         event = json.load(sys.stdin)
         if event.get("hook_event_name") != "PreToolUse" or event.get("tool_name") != "Read":
             return 0
         agent = event.get("agent_type") or ""
-        root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or event.get("cwd") or ".").resolve()
+        root = project_dir(event)
         path = (event.get("tool_input") or {}).get("file_path", "")
         relpath = rel(path, root)
         if agent == "extractor":

@@ -4,6 +4,10 @@
 
 使い方: python3 scripts/build_extraction.py 33746596 37168849
 """
+
+from __future__ import annotations
+
+import argparse
 import csv
 import json
 import sys
@@ -27,7 +31,10 @@ def convert(src: Path, dst: Path) -> tuple[int, list[str]]:
     return len(rows), items
 
 
-def main(pmids):
+def main(argv: list[str] | None = None) -> None:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("pmids", nargs="+", help="レビューの PMID")
+    pmids = ap.parse_args(argv).pmids
     OUT.mkdir(parents=True, exist_ok=True)
     for p in pmids:
         if not (RAW / f"{p}.csv").exists():
@@ -37,4 +44,4 @@ def main(pmids):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

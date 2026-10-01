@@ -35,21 +35,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from rules import overall, score
+from common import load, load_adjudication, load_human, load_screener, read_jsonl
+from rules import final_candidates, overall, ranked, score
 
 KS = (20, 50)
-
-
-def load(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def screener(results: Path, who: str, rid: str) -> dict[str, list[dict]]:
-    out: dict[str, list[dict]] = {}
-    for f in sorted((results / "screen" / who / rid).glob("batch_*.json")):
-        for rec in load(f)["records"]:
-            out[str(rec["pmid"])] = rec["criteria"]
-    return out
 
 
 def ratio(n: int, d: int) -> float | None:
@@ -67,10 +56,10 @@ def run(rid: str, included: list[str], reviews: Path, results: Path) -> dict:
     all_ids, top = {str(p) for p in search["all_pmids"]}, {str(p) for p in search["pmids"]}
     cands = load(results / rid / "candidates.json")["records"]
     rank = {str(c["pmid"]): c["rank"] for c in cands}
-    a, b = screener(results, "a", rid), screener(results, "b", rid)
-    adj = {str(r["pmid"]): r for r in load(results / "adjudication" / f"{rid}.json")["records"]}
-    hum_path = results / "human" / f"{rid}.json"
-    human = {str(r["pmid"]): r for r in load(hum_path)["records"]} if hum_path.exists() else {}
+    a, b = load_screener(results, "a", rid), load_screener(results, "b", rid)
+    adj, human = load_adjudication(results, rid), load_human(results, rid)
+    if not adj:
+        sys.exit(f"{rid}: results/adjudication/{rid}.json が無い。先に scripts/adjudicate.py を実行する")
 
     in_pool = inc & set(rank)
     scores = {
@@ -80,7 +69,7 @@ def run(rid: str, included: list[str], reviews: Path, results: Path) -> dict:
     }
     at_k = {}
     for name, sc in scores.items():
-        order = sorted(rank, key=lambda p: (-sc[p], rank[p]))
+        order = ranked(rank, sc, rank)
         at_k[name] = {f"@{k}": {"in_pool": recall_at(order, inc, k, len(in_pool)),
                                 "all": recall_at(order, inc, k, len(inc))} for k in KS}
 
@@ -89,8 +78,7 @@ def run(rid: str, included: list[str], reviews: Path, results: Path) -> dict:
     final = {
         "a_only": {p for p in rank if overall(a[p]) == "include"},
         "b_only": {p for p in rank if overall(b[p]) == "include"},
-        "two_plus_adjudication": {p for p, r in adj.items() if r["status"] == "agreed_include"}
-        | {p for p in needs_human if human.get(p, {}).get("decision") == "include"},
+        "two_plus_adjudication": final_candidates(adj, human),
     }
     final_eval = {name: {"n": len(s), "hit": len(s & inc), "recall_all": ratio(len(s & inc), len(inc)),
                          "recall_in_pool": ratio(len(s & in_pool), len(in_pool))} for name, s in final.items()}
@@ -132,10 +120,6 @@ def run(rid: str, included: list[str], reviews: Path, results: Path) -> dict:
 REF_DROP = {"31190844": "I5"}  # DECISIONS 2026-09-29 指示書19 2章: reference only
 
 
-def ranked(pool: list[str], sc: dict[str, int], rank: dict[str, int]) -> list[str]:
-    return sorted(pool, key=lambda p: (-sc[p], rank[p]))
-
-
 def at_k_block(order: list[str], inc: set[str]) -> dict:
     in_pool = inc & set(order)
     return {"n": len(order), "n_included_in_pool": len(in_pool),
@@ -152,7 +136,7 @@ def run_eval3(rid: str, included: list[str], reviews: Path, results: Path) -> di
     added = sorted(set(rank) - set(all_ids), key=lambda p: rank[p])
     side = results / rid / "search.json"
     recorded = [str(p) for p in load(side).get("added_pmids", [])] if side.exists() else []
-    a = screener(results, "a", rid)
+    a = load_screener(results, "a", rid)
     missing = sorted(set(rank) - set(a), key=lambda p: rank[p])
     if missing:
         sys.exit(f"{rid}: screener-a の判定が無い候補 {len(missing)} 件（{missing[:5]}…）")
@@ -176,7 +160,7 @@ def run_eval3(rid: str, included: list[str], reviews: Path, results: Path) -> di
     out["max_score"] = max(len(v) for v in a.values())
     drop = REF_DROP.get(rid)
     if drop:
-        sc2 = {p: sum(int(c.get("verdict", 0)) for c in a[p] if c["id"] != drop) for p in rank}
+        sc2 = {p: score([c for c in a[p] if c["id"] != drop]) for p in rank}
         out["reference_without"] = {"criterion": drop, "note": "参考。原著との比較には使わない",
                                     **{name: at_k_block(ranked(pool, sc2, rank), inc)
                                        for name, pool in pools.items()},
@@ -198,8 +182,7 @@ def main() -> None:
     if not Path(args.results).exists():
         sys.exit(f"{args.results}/ が無い。results/ は commit されない。CLAUDE.md の「データの流れ」の順に作る")
     fn = run_eval3 if args.run == "eval-3" else run
-    bench = [json.loads(line) for line in Path(args.bench).read_text(encoding="utf-8").splitlines() if line.strip()]
-    for row in sorted(bench, key=lambda r: r["PMID"]):
+    for row in sorted(read_jsonl(Path(args.bench)), key=lambda r: r["PMID"]):
         rid = str(row["PMID"])
         print(json.dumps(fn(rid, row["included_pmids"], Path(args.reviews), Path(args.results)), ensure_ascii=False))
 

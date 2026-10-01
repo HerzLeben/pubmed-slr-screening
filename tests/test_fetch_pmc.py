@@ -1,13 +1,7 @@
-"""Status of PMC full text (no_pmc / pmc_no_body / body) and extraction jsonl in scripts/ (no network)."""
+"""Status of PMC full text (no_pmc / pmc_no_body / body) in scripts/fetch_pmc.py (no network)."""
 
-import json
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import fetch_pmc
-from build_extraction import convert
 from fetch_pmc import classify
 
 WITH_BODY = b"""<?xml version="1.0"?>
@@ -47,11 +41,3 @@ def test_fetch_one_writes_xml_only_when_linked(tmp_path, monkeypatch):
     assert fetch_pmc.fetch_one("2", tmp_path) == {"pmid": "2", "pmcid": None, "status": "no_pmc"}
     assert sorted(p.name for p in tmp_path.iterdir()) == ["1.xml"]
 
-
-def test_extraction_csv_keeps_column_names_and_values(tmp_path):
-    src = tmp_path / "r.csv"
-    src.write_text('PMID,Sample size,"Median age (range)"\n123 ,12,"55 (40-70)"\n', encoding="utf-8")
-    n, items = convert(src, tmp_path / "r.jsonl")
-    assert (n, items) == (1, ["Sample size", "Median age (range)"])
-    rec = json.loads((tmp_path / "r.jsonl").read_text(encoding="utf-8"))
-    assert rec == {"pmid": "123", "Sample size": "12", "Median age (range)": "55 (40-70)"}

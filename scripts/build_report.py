@@ -22,7 +22,6 @@ The results/report.html of eval-1/eval-2 is not touched.
 Public sample (--public, decided 2026-10-01): the same report with the abstracts and every verbatim quote
 hidden (screening quotes, quotes inside the adjudicator's summary, extraction quotes and their context).
 Titles, verdicts, scores, extracted values, answers and the human's decisions stay. It is read-only.
-    python scripts/build_report.py --public --out docs/demo/eval-2.html
     python scripts/build_report.py --run eval-3 --public --out docs/demo/eval-3.html
 """
 
@@ -37,8 +36,20 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+from common import (
+    load,
+    load_adjudication,
+    load_human,
+    load_screener,
+    read_jsonl,
+    screened_reviews,
+)
 from quote_match import locate_quote
-from rules import VALID_VERDICTS, adjudicate, disagree_ids, overall, score
+from rules import VALID_VERDICTS, adjudicate, disagree_ids, overall, ranked, score
+
+HERE = Path(__file__).parent
+LOGOS = {"__LOGO_NAV__": "hl-logo-yoko-white.png", "__LOGO_MARK__": "herzleben-logo.png",
+         "__LOGO_MARK_WHITE__": "herzleben-logo-white.png"}
 
 QUOTED = re.compile(r"「([^」]{15,})」|“([^”]{15,})”|\"([^\"]{15,})\"|‘([^’]{15,})’"
                     r"|(?<![A-Za-z])'([^']{15,}?)'(?![A-Za-z])")  # the last: single quotes, not apostrophes
@@ -82,22 +93,6 @@ def make_public(payload: dict) -> dict:
     return payload
 
 
-def load(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def load_screener(results: Path, who: str, rid: str, warn: list) -> dict[str, list[dict]]:
-    out: dict[str, list[dict]] = {}
-    for f in sorted((results / "screen" / who / rid).glob("batch_*.json")):
-        data = load(f)
-        for rec in data.get("records", []):
-            pmid = str(rec.get("pmid"))
-            if pmid in out:
-                warn.append(["dup_batch", {"who": who, "pmid": pmid, "file": f.name}])
-            out[pmid] = rec.get("criteria", [])
-    return out
-
-
 def pack_side(crit: list[dict] | None, ids: list[str], abstract: str, title: str, who: str, pmid: str, warn: list):
     if crit is None:
         return None
@@ -110,7 +105,7 @@ def pack_side(crit: list[dict] | None, ids: list[str], abstract: str, title: str
     packed = {}
     for c in crit:
         v = c.get("verdict")
-        if v not in VALID_VERDICTS:
+        if isinstance(v, bool) or v not in VALID_VERDICTS:
             warn.append(["verdict_range", {"who": who, "pmid": pmid, "cid": c.get("id"), "v": v}])
         q = c.get("quote")
         loc = locate_quote(title, abstract, q) if q else None
@@ -124,6 +119,18 @@ def pack_side(crit: list[dict] | None, ids: list[str], abstract: str, title: str
     return {"crit": packed, "overall": overall(crit), "score": score(crit)}
 
 
+def read_asset(name: str) -> str:
+    return (HERE / name).read_text(encoding="utf-8")
+
+
+def fill(html: str, payload: dict) -> str:
+    """Put the data and the logos (inlined, so the report is one file) into the page."""
+    html = html.replace("__DATA__", json.dumps(payload, ensure_ascii=False).replace("</", "<\\/"))
+    for key, name in LOGOS.items():
+        html = html.replace(key, "data:image/png;base64," + base64.b64encode((HERE / "assets" / name).read_bytes()).decode())
+    return html
+
+
 def build_review(rid: str, reviews: Path, results: Path) -> dict:
     warn: list = []
     crit_doc = load(reviews / rid / "criteria.json")
@@ -132,13 +139,11 @@ def build_review(rid: str, reviews: Path, results: Path) -> dict:
     cands = load(results / rid / "candidates.json")["records"]
     a = load_screener(results, "a", rid, warn)
     b = load_screener(results, "b", rid, warn)
-    adj_path = results / "adjudication" / f"{rid}.json"
-    adj = {str(r["pmid"]): r for r in load(adj_path)["records"]} if adj_path.exists() else {}
-    if not adj_path.exists():
+    adj = load_adjudication(results, rid)
+    if not (results / "adjudication" / f"{rid}.json").exists():
         warn.append(["no_adj", {}])
-    hum_path = results / "human" / f"{rid}.json"
-    human = {str(r["pmid"]): {"decision": r.get("decision"), "note": r.get("note", "")}
-             for r in load(hum_path)["records"]} if hum_path.exists() else {}
+    human = {p: {"decision": r.get("decision"), "note": r.get("note", "")}
+             for p, r in load_human(results, rid).items()}
 
     cand_ids = {str(c["pmid"]) for c in cands}
     for who, side in (("a", a), ("b", b)):
@@ -188,7 +193,7 @@ def build_review_eval3(rid: str, included: list[str], title: dict, reviews: Path
     a = load_screener(results, "a", rid, warn)
     ev = run_eval3(rid, included, reviews, results)
     inc, added = {str(p) for p in included}, set(ev["added_pmids"])
-    order = sorted(cands, key=lambda p: (-score(a[p]), cands[p]["rank"]))
+    order = ranked(cands, {p: score(a[p]) for p in cands}, {p: c["rank"] for p, c in cands.items()})
     records = []
     for i, pmid in enumerate(order, 1):
         c = cands[pmid]
@@ -204,7 +209,8 @@ def build_review_eval3(rid: str, included: list[str], title: dict, reviews: Path
 
 def build_extraction(root: Path) -> dict | None:
     """Items to score in the report's 抽出 section (score_extraction.py), or None before the extraction ran."""
-    from score_extraction import REFERENCE_EXCLUDE, REVIEWS, load_human, load_items
+    from score_extraction import REFERENCE_EXCLUDE, REVIEWS, load_items
+    from score_extraction import load_human as load_extraction_human
 
     if not (root / "results" / "extraction" / "out").exists():
         return None
@@ -212,10 +218,10 @@ def build_extraction(root: Path) -> dict | None:
     status = load(root / "results" / "fulltext" / "status.json")["studies"]
     breakdown = {}
     for rid in REVIEWS:
-        rows = [json.loads(x) for x in (root / "bench" / "extraction" / f"{rid}.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+        rows = read_jsonl(root / "bench" / "extraction" / f"{rid}.jsonl")
         st = {str(r["pmid"]): status.get(str(r["pmid"]), {}).get("status", "no_pmc") for r in rows}
         breakdown[rid] = {k: [p for p, v in st.items() if v == k] for k in ("body", "pmc_no_body", "no_pmc")}
-    return {"reviews": list(REVIEWS), "items": items, "human": load_human(root, items),
+    return {"reviews": list(REVIEWS), "items": items, "human": load_extraction_human(root, items),
             "reference_exclude": list(REFERENCE_EXCLUDE), "breakdown": breakdown}
 
 
@@ -225,9 +231,8 @@ def main_eval3(args) -> None:
     if not results.exists():
         sys.exit(f"{results}/ が無い。results/ は commit されない。CLAUDE.md の「データの流れ」の順に作る")
     out = Path(args.out or "results/eval-3/report.html")
-    bench = [json.loads(x) for x in Path("bench/reviews.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
     rvs = []
-    for row in sorted(bench, key=lambda r: str(r["PMID"])):
+    for row in sorted(read_jsonl(Path("bench/reviews.jsonl")), key=lambda r: str(r["PMID"])):
         rid = str(row["PMID"])
         old = reviews / rid / "criteria.json"
         doc = load(old) if old.exists() else {}
@@ -238,12 +243,10 @@ def main_eval3(args) -> None:
                "reviews": rvs, "extraction": build_extraction(Path("."))}
     if args.public:
         make_public(payload)
-    head = TEMPLATE[: TEMPLATE.index('<p class="scope"')] + '<p class="scope" data-t="hdr.scope"></p>\n'
-    body = (Path(__file__).parent / "report_eval3_body.html").read_text(encoding="utf-8")
-    body = body.replace("__EXTRACTION_METRICS_JS__", (Path(__file__).parent / "extraction_metrics.js").read_text(encoding="utf-8"))
-    html = head + body.replace("__DATA__", json.dumps(payload, ensure_ascii=False).replace("</", "<\\/"))
-    for key, name in LOGOS.items():
-        html = html.replace(key, "data:image/png;base64," + base64.b64encode((ASSETS / name).read_bytes()).decode())
+    template = read_asset("report_template.html")
+    head = template[: template.index('<p class="scope"')] + '<p class="scope" data-t="hdr.scope"></p>\n'
+    body = read_asset("report_eval3_body.html").replace("__EXTRACTION_METRICS_JS__", read_asset("extraction_metrics.js"))
+    html = fill(head + body, payload)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding="utf-8")
     n = sum(len(r["records"]) for r in rvs)
@@ -269,8 +272,7 @@ def main() -> None:
     args.results = args.results or "results"
     args.out = args.out or "results/report.html"
     reviews, results = Path(args.reviews), Path(args.results)
-    rids = sorted(p.parent.name for p in reviews.glob("*/criteria.json")
-                  if (results / p.parent.name / "candidates.json").exists())
+    rids = screened_reviews(reviews, results)
     if not rids:
         sys.exit("criteria.json と candidates.json が揃ったレビューが無い")
     payload = {
@@ -280,11 +282,7 @@ def main() -> None:
     }
     if args.public:
         make_public(payload)
-    data = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
-    html = TEMPLATE.replace("__DATA__", data)
-    for key, name in LOGOS.items():
-        b64 = base64.b64encode((ASSETS / name).read_bytes()).decode()
-        html = html.replace(key, f"data:image/png;base64,{b64}")
+    html = fill(read_asset("report_template.html"), payload)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding="utf-8")
@@ -292,11 +290,6 @@ def main() -> None:
     w = sum(len(r["warnings"]) for r in payload["reviews"])
     print(f"wrote {out} ({len(rids)} reviews, {n} records, {w} warnings)")
 
-
-TEMPLATE = (Path(__file__).parent / "report_template.html").read_text(encoding="utf-8")
-ASSETS = Path(__file__).parent / "assets"
-LOGOS = {"__LOGO_NAV__": "hl-logo-yoko-white.png", "__LOGO_MARK__": "herzleben-logo.png",
-         "__LOGO_MARK_WHITE__": "herzleben-logo-white.png"}
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fetch the top-N PubMed candidates (PMID + abstract) for a fixed query and publication-date cap.
 
 Calls NCBI E-utilities (esearch -> efetch) directly. Results are sorted by PubMed relevance.
@@ -16,8 +15,7 @@ made them match. --compare-maxdate records total_hits of the same query under ot
 
 PubMed's relevance order is not reproducible between calls, so the top-N list of one run is frozen in
 search.json (committed as reviews/<review_pmid>/search.json). --from-search rebuilds candidates.json from
-such a file without searching again: it efetches only the PMIDs not already in candidates.json (or in the
-older candidates.jsonl). With --all-hits it covers every hit: the frozen top-N keep ranks 1..N and the
+such a file without searching again: it efetches only the PMIDs not already in candidates.json. With --all-hits it covers every hit: the frozen top-N keep ranks 1..N and the
 rest of all_pmids follow in their all_pmids order (ranks N+1..), so earlier batches and judgements stay valid.
 --add-pmid appends PMIDs the search did not find after all of them (eval-3 "原著と同じ作り方": included studies
 the query missed); search.json lists them as added_pmids so the evaluation can tell the two populations apart.
@@ -295,14 +293,9 @@ def write_candidates(path: Path, review_pmid: str, pmids: list[str], records: di
 
 
 def read_candidates(out: Path) -> dict[str, dict]:
-    """Records already on disk, by PMID (rank dropped). Reads candidates.json, or the older candidates.jsonl."""
-    new, old = out / "candidates.json", out / "candidates.jsonl"
-    if new.exists():
-        rows = json.loads(new.read_text(encoding="utf-8"))["records"]
-    elif old.exists():
-        rows = [json.loads(line) for line in old.read_text(encoding="utf-8").splitlines()]
-    else:
-        rows = []
+    """Records already in <out>/candidates.json, by PMID (rank dropped)."""
+    path = out / "candidates.json"
+    rows = json.loads(path.read_text(encoding="utf-8"))["records"] if path.exists() else []
     records = {}
     for rec in rows:
         rec = dict(rec)
@@ -327,8 +320,7 @@ def candidate_pmids(meta: dict, all_hits: bool) -> list[str]:
 def rebuild_from_search(search_path: Path, out_dir: str, all_hits: bool = False,
                         add_pmids: list[str] | None = None) -> None:
     """Re-create candidates.json for a frozen search.json without searching again (relevance order is
-    not reproducible). Records already in <out_dir>/<review>/candidates.json (or the older
-    candidates.jsonl) are kept; only the PMIDs missing from it are fetched. all_hits: see candidate_pmids.
+    not reproducible). Records already in <out_dir>/<review>/candidates.json are kept; only the PMIDs missing from it are fetched. all_hits: see candidate_pmids.
     add_pmids: appended after every searched PMID, in the given order (those already found are skipped)."""
     meta = json.loads(search_path.read_text(encoding="utf-8"))
     pmids = candidate_pmids(meta, all_hits)

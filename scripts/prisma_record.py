@@ -26,13 +26,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from eval_screening import load, screener
+from common import load, load_adjudication, load_human, load_screener, write_json
 
 COUNTS = ("identified", "duplicates_removed", "after_duplicates", "not_screened", "screened", "excluded",
           "awaiting_human", "to_full_text")
@@ -48,10 +47,9 @@ def record(rid: str, reviews: Path, results: Path) -> dict:
     search = load(reviews / rid / "search.json")
     order = [c["id"] for c in load(reviews / rid / "criteria.json")["criteria"]]
     screened = [str(c["pmid"]) for c in load(results / rid / "candidates.json")["records"]]
-    a, b = screener(results, "a", rid), screener(results, "b", rid)
-    adj = {str(r["pmid"]): r["status"] for r in load(results / "adjudication" / f"{rid}.json")["records"]}
-    hum_path = results / "human" / f"{rid}.json"
-    human = {str(r["pmid"]): r.get("decision") for r in load(hum_path)["records"]} if hum_path.exists() else {}
+    a, b = load_screener(results, "a", rid), load_screener(results, "b", rid)
+    adj = {p: r["status"] for p, r in load_adjudication(results, rid).items()}
+    human = {p: r.get("decision") for p, r in load_human(results, rid).items()}
 
     all_pmids = [str(p) for p in search["all_pmids"]]
     identified = search["total_hits"]
@@ -165,7 +163,7 @@ def main() -> None:
     if errs:
         sys.exit("prisma counts do not add up:\n" + "\n".join(errs))
     out = Path(args.out) if args.out else results / "prisma.json"
-    out.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    write_json(out, doc)
     for r in doc["reviews"]:
         print(f"{r['review_pmid']}: identified {r['identified']}, duplicates {r['duplicates_removed']}, "
               f"not screened {r['not_screened']}, screened {r['screened']}, excluded {r['excluded']} "

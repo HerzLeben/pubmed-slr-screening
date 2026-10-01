@@ -1,16 +1,11 @@
 """Date handling, PMID paging, record parsing and rebuild in scripts/fetch_pubmed.py (no network)."""
 
 import json
-import sys
 import xml.etree.ElementTree as ET
 from datetime import date
-from pathlib import Path
-
-import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import fetch_pubmed
+import pytest
 from fetch_pubmed import (
     ESEARCH_LIMIT,
     collect_pmids,
@@ -152,8 +147,7 @@ def test_parse_records_article_and_books():
     }
 
 
-@pytest.mark.parametrize("legacy", [False, True])
-def test_rebuild_fetches_only_missing(tmp_path, monkeypatch, legacy):
+def test_rebuild_fetches_only_missing(tmp_path, monkeypatch):
     frozen = {"review_pmid": "999", "maxdate": "2021/02/18", "pmids": ["3", "1", "2"], "all_pmids": ["1", "2", "3", "4"]}
     search_path = tmp_path / "frozen.json"
     search_path.write_text(json.dumps(frozen))
@@ -161,10 +155,7 @@ def test_rebuild_fetches_only_missing(tmp_path, monkeypatch, legacy):
     out.mkdir(parents=True)
     kept = {"pmid": "1", "title": "kept", "abstract": "a", "year": "2020", "pubdate": "2020", "epubdate": "",
             "pubdate_vs_cap": "within", "epubdate_vs_cap": "none"}
-    if legacy:  # the older one-record-per-line file
-        (out / "candidates.jsonl").write_text(json.dumps({"rank": 2, **kept}) + "\n")
-    else:
-        (out / "candidates.json").write_text(json.dumps({"review_pmid": "999", "records": [{"rank": 2, **kept}]}))
+    (out / "candidates.json").write_text(json.dumps({"review_pmid": "999", "records": [{"rank": 2, **kept}]}))
 
     asked = []
 

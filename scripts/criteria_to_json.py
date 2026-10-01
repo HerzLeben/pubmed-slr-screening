@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Write reviews/<pmid>/criteria.json from the approved criteria.md (docs/schema.md section 2).
 
 criteria.md is the source of truth; criteria.json is its machine-readable copy. The text of every
@@ -13,11 +12,31 @@ Example:
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rules import id_key
 
 ROW = re.compile(r"^\|\s*([IE]\d+)\s*\|\s*(.+?)\s*\|\s*[^|]*\|\s*$")  # | id | question | source |
 NOTE = re.compile(r"^\|\s*([IE]\d+)\s*\|\s*(.+?)\s*\|\s*$")  # | id | note |  (in the 判定の補足 section)
 NOTE_SECTION = "## 判定の補足"
+
+
+def build_criteria(rows: list[tuple[str, str]], notes: dict[str, str]) -> list[dict]:
+    """Criteria from (id, text) rows plus a note per id, checked and in ID order (schema: I1, I2, ..., E1, ...)."""
+    ids = [cid for cid, _ in rows]
+    if len(ids) != len(set(ids)) or not ids:
+        raise ValueError(f"criteria ids missing or duplicated: {ids}")
+    if set(notes) - set(ids):
+        raise ValueError(f"notes for unknown criteria: {sorted(set(notes) - set(ids))}")
+    criteria = []
+    for cid, text in sorted(rows, key=lambda r: id_key(r[0])):
+        c = {"id": cid, "type": "inclusion" if cid[0] == "I" else "exclusion", "text": text}
+        if cid in notes:
+            c["note"] = notes[cid]
+        criteria.append(c)
+    return criteria
 
 
 def parse(md: str) -> dict:
@@ -25,7 +44,7 @@ def parse(md: str) -> dict:
     if not status or not status.group(1).startswith("承認済み"):
         raise ValueError("criteria.md is not approved (状態：承認済み)")
     title_en = re.search(r"^元レビュー：(.+?)（", md, re.MULTILINE)
-    criteria, notes, in_notes = [], {}, False
+    rows, notes, in_notes = [], {}, False
     for line in md.splitlines():
         if line.startswith("## "):
             in_notes = line.startswith(NOTE_SECTION)
@@ -33,19 +52,8 @@ def parse(md: str) -> dict:
         if m and in_notes:
             notes.setdefault(m.group(1), []).append(m.group(2))
         elif m:
-            cid, text = m.groups()
-            criteria.append({"id": cid, "type": "inclusion" if cid[0] == "I" else "exclusion", "text": text})
-    ids = [c["id"] for c in criteria]
-    if len(ids) != len(set(ids)) or not ids:
-        raise ValueError(f"criteria ids missing or duplicated: {ids}")
-    if set(notes) - set(ids):
-        raise ValueError(f"notes for unknown criteria: {sorted(set(notes) - set(ids))}")
-    for c in criteria:
-        if c["id"] in notes:
-            c["note"] = " ".join(notes[c["id"]])
-    # schema: I1, I2, ..., E1, ... in ID order
-    criteria.sort(key=lambda c: (c["id"][0] != "I", int(c["id"][1:])))
-    doc = {"criteria": criteria}
+            rows.append(m.groups())
+    doc = {"criteria": build_criteria(rows, {cid: " ".join(n) for cid, n in notes.items()})}
     if title_en:  # criteria.md names the review by its original (English) title only
         doc["review_title"] = doc["review_title_en"] = title_en.group(1).strip()
     return doc

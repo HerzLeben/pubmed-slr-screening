@@ -1,13 +1,8 @@
 """Extraction jobs (scripts/make_extraction_jobs.py): names only, never the answer values (no network)."""
 
 import json
-import sys
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-
 from make_extraction_jobs import make_jobs, read_items
 
 ITEMS_MD = """# 抽出の項目（1）

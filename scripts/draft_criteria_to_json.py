@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Write reviews/<pmid>/eval-3/criteria.json from the unapproved draft reviews/<pmid>/criteria_draft.md (eval-3).
 
 eval-3 uses the LLM's criteria draft as it is (指示書19 2章). The criterion rows of the inclusion and
@@ -15,7 +14,7 @@ import argparse
 import json
 from pathlib import Path
 
-from criteria_to_json import ROW
+from criteria_to_json import ROW, build_criteria
 
 DRAFT_NOTES = {
     "33746596": {
@@ -36,23 +35,9 @@ STOP_SECTION = "## 人に決めてほしい点"
 
 
 def parse_draft(md: str, rid: str) -> dict:
-    criteria = []
-    for line in md.split(STOP_SECTION)[0].splitlines():
-        m = ROW.match(line)
-        if m:
-            cid, text = m.groups()
-            criteria.append({"id": cid, "type": "inclusion" if cid[0] == "I" else "exclusion", "text": text})
-    ids = [c["id"] for c in criteria]
-    if len(ids) != len(set(ids)) or not ids:
-        raise ValueError(f"criteria ids missing or duplicated: {ids}")
-    notes = DRAFT_NOTES.get(rid, {})
-    if set(notes) - set(ids):
-        raise ValueError(f"notes for unknown criteria: {sorted(set(notes) - set(ids))}")
-    for c in criteria:
-        if c["id"] in notes:
-            c["note"] = notes[c["id"]]
-    criteria.sort(key=lambda c: (c["id"][0] != "I", int(c["id"][1:])))
-    return {"review_pmid": rid, "source": "criteria_draft.md", "criteria": criteria}
+    rows = [m.groups() for line in md.split(STOP_SECTION)[0].splitlines() if (m := ROW.match(line))]
+    return {"review_pmid": rid, "source": "criteria_draft.md",
+            "criteria": build_criteria(rows, DRAFT_NOTES.get(rid, {}))}
 
 
 def main() -> None:

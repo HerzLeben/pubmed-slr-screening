@@ -7,11 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from redact_log import drop_harness_entries, from_harness, redact
+
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "scripts"))
-
-from redact_log import redact
-
 HOOK = REPO / ".claude" / "hooks" / "log_prompt.py"
 
 SAMPLE = """前の行
@@ -63,3 +61,37 @@ def test_hook_writes_nothing_without_redactor(tmp_path):
     assert r.returncode == 0 and r.stdout == ""
     log = tmp_path / "docs" / "prompts" / "log.md"
     assert not log.exists() or "someone" not in log.read_text(encoding="utf-8")
+
+
+NOTICE = "<task-notification>\n<task-id>x</task-id>\n<status>completed</status>\n</task-notification>"
+HANDBACK = '<agent-message from="abc">\nreport\n</agent-message>'
+
+
+def test_from_harness():
+    assert from_harness(NOTICE) and from_harness(HANDBACK) and from_harness("\n" + NOTICE)
+    assert not from_harness("進めて") and not from_harness("見て: <task-notification> は何？")
+
+
+def test_drop_harness_entries_keeps_the_human_ones():
+    log = ("最初の指示\n"
+           "\n---\n\n## 2026-09-27T17:35:08+09:00\n\n進めて\n"
+           f"\n---\n\n## 2026-09-27T17:36:00+09:00\n\n{NOTICE}\n"
+           f"\n---\n\n## 2026-09-27T17:37:00+09:00\n\n{HANDBACK}\n"
+           "\n---\n\n## 2026-09-27T17:38:00+09:00\n\n続けて\n")
+    out, n = drop_harness_entries(log)
+    assert n == 2
+    assert out == ("最初の指示\n"
+                   "\n---\n\n## 2026-09-27T17:35:08+09:00\n\n進めて\n"
+                   "\n---\n\n## 2026-09-27T17:38:00+09:00\n\n続けて\n")
+    assert drop_harness_entries(out) == (out, 0)
+
+
+def test_hook_skips_harness_prompts(tmp_path):
+    (tmp_path / "scripts").mkdir()
+    shutil.copy(REPO / "scripts" / "redact_log.py", tmp_path / "scripts" / "redact_log.py")
+    for prompt in (NOTICE, HANDBACK):
+        r = subprocess.run([sys.executable, str(HOOK)], input=json.dumps({"prompt": prompt, "cwd": str(tmp_path)}),
+                           capture_output=True, text=True, env={**os.environ, "CLAUDE_PROJECT_DIR": str(tmp_path)},
+                           check=False)
+        assert r.returncode == 0 and r.stdout == ""
+    assert not (tmp_path / "docs" / "prompts" / "log.md").exists()

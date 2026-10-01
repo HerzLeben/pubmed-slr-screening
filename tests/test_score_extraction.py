@@ -3,13 +3,11 @@
 import json
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
-sys.path.insert(0, str(SCRIPTS))
 
 from score_extraction import (
     auto_score,

@@ -4,14 +4,13 @@ import json
 import sys
 from pathlib import Path
 
+import build_report
 import pytest
+from criteria_to_json import parse
+from draft_criteria_to_json import parse_draft
+from make_batches import batch_docs
 
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "scripts"))
-
-import build_report
-from criteria_to_json import parse
-from make_batches import batch_docs
 
 MD = """# 適格基準 — PMID 999
 
@@ -62,6 +61,34 @@ def test_repo_criteria_json_matches_md():
         assert on_disk == {"review_pmid": d.parent.name, **parse(d.read_text(encoding="utf-8"))}, d
 
 
+
+DRAFT = """# 適格基準の案
+## 包含基準
+| ID | 問い | 出典 |
+|---|---|---|
+| I2 | 二つ目か | I |
+| I1 | 一つ目か | P |
+| E1 | 二次文献か | PICO 外 |
+
+## 人に決めてほしい点
+| I9 | ここは基準ではない | - |
+"""
+
+
+def test_draft_criteria_stop_at_the_questions_section():
+    doc = parse_draft(DRAFT, "999")
+    assert doc["source"] == "criteria_draft.md"
+    assert [c["id"] for c in doc["criteria"]] == ["I1", "I2", "E1"]
+    assert not any("note" in c for c in doc["criteria"])
+
+
+def test_repo_eval3_criteria_json_matches_draft():
+    """reviews/<rid>/eval-3/criteria.json is the draft as it was, plus DRAFT_NOTES (eval-3)."""
+    for d in sorted((REPO / "reviews").glob("*/criteria_draft.md")):
+        on_disk = json.loads((d.parent / "eval-3" / "criteria.json").read_text(encoding="utf-8"))
+        assert on_disk == parse_draft(d.read_text(encoding="utf-8"), d.parent.name), d
+
+
 CRIT = [{"id": "I1"}, {"id": "I2"}, {"id": "E1"}]
 
 
@@ -80,7 +107,6 @@ def test_batches_split_and_order():
     assert len(docs[4][2]["records"]) == 5
 
 
-
 def test_batches_eval3_screener_a_only():
     cands = [{"pmid": str(n), "rank": n, "title": f"t{n}", "abstract": f"a{n}"} for n in range(1, 26)]
     docs = batch_docs("999", CRIT, cands, 20, "results/eval-3", ("a",))
@@ -88,6 +114,7 @@ def test_batches_eval3_screener_a_only():
     assert docs[0][2]["criteria_order"] == ["I1", "I2", "E1"]
     assert docs[1][2]["output"] == "results/eval-3/screen/a/999/batch_02.json"
     assert [r["pmid"] for r in docs[1][2]["records"]] == [str(n) for n in range(21, 26)]
+
 
 def test_report_marks_title_quotes(tmp_path):
     rid = "999"
@@ -111,6 +138,13 @@ def test_report_marks_title_quotes(tmp_path):
     start, end = side["E1"]["span"]
     assert cand["title"][start:end] == "A review of CAR-T therapy"
     assert not [w for w in rv["warnings"] if w[0].startswith("quote")]
+
+
+def test_report_warns_on_a_bool_verdict():
+    """True is not 1: the report flags it the same way as the output-check hook refuses it."""
+    warn = []
+    build_report.pack_side([{"id": "I1", "verdict": True, "quote": None}], ["I1"], "", "", "a", "1", warn)
+    assert ["verdict_range", {"who": "a", "pmid": "1", "cid": "I1", "v": True}] in warn
 
 
 def test_report_shows_scope_notice(tmp_path):

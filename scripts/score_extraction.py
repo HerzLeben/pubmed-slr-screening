@@ -25,10 +25,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+from common import EXTRACTION_REVIEWS as REVIEWS
+from common import load, read_jsonl
 from quote_match import find_quote
 
-NOT_FOUND = "記載なし"
-REVIEWS = ("33746596", "37168849")
 EXPECTED_TOTAL = 102
 # the answer looks wrong (in vitro study, no patients; 2026-10-01 human). Main values keep all 102 items
 REFERENCE_EXCLUDE = ("37168849/33495835",)
@@ -62,18 +62,14 @@ def quote_contexts(text: str, quotes: list[str], width: int = CONTEXT) -> list[d
 def load_items(root: Path, reviews=REVIEWS, with_context: bool = False) -> list[dict]:
     items = []
     for rid in reviews:
-        answers = {}
-        for line in (root / "bench" / "extraction" / f"{rid}.jsonl").read_text(encoding="utf-8").splitlines():
-            if line.strip():
-                row = json.loads(line)
-                answers[str(row["pmid"])] = row
+        answers = {str(row["pmid"]): row for row in read_jsonl(root / "bench" / "extraction" / f"{rid}.jsonl")}
         for job_path in sorted((root / "results" / "extraction" / "jobs" / rid).glob("*.json")):
-            job = json.loads(job_path.read_text(encoding="utf-8"))
+            job = load(job_path)
             pmid = str(job["pmid"])
             out_path = root / job["output"]
             if not out_path.exists():
                 sys.exit(f"出力が無い: {job['output']}")
-            out = {it["name"]: it for it in json.loads(out_path.read_text(encoding="utf-8"))["items"]}
+            out = {it["name"]: it for it in load(out_path)["items"]}
             if pmid not in answers:
                 sys.exit(f"答えに PMID {pmid} が無い: bench/extraction/{rid}.jsonl")
             text = (root / job["fulltext"]).read_text(encoding="utf-8") if with_context else ""
@@ -98,7 +94,7 @@ def load_human(root: Path, items: list[dict], reviews=REVIEWS) -> dict[str, dict
         path = root / "results" / "extraction" / "human" / f"{rid}.json"
         if not path.exists():
             continue
-        doc = json.loads(path.read_text(encoding="utf-8"))
+        doc = load(path)
         if str(doc.get("review_pmid")) != rid:
             sys.exit(f"{path}: review_pmid が {doc.get('review_pmid')!r}")
         got = {}

@@ -54,10 +54,16 @@ def good_output(who="a"):
     }
 
 
+def copy_scripts(root):
+    """The modules of scripts/ that the hooks import (the one definition of the rules)."""
+    (root / "scripts").mkdir()
+    for name in ("quote_match.py", "rules.py"):
+        shutil.copy(REPO / "scripts" / name, root / "scripts")
+
+
 @pytest.fixture
 def project(tmp_path):
-    (tmp_path / "scripts").mkdir()
-    shutil.copy(REPO / "scripts" / "quote_match.py", tmp_path / "scripts")
+    copy_scripts(tmp_path)
     (tmp_path / "reviews" / RID).mkdir(parents=True)
     (tmp_path / "reviews" / RID / "criteria.json").write_text(json.dumps({"review_pmid": RID, "criteria": CRITERIA}))
     (tmp_path / "results" / RID).mkdir(parents=True)
@@ -123,8 +129,7 @@ def ids_of(path):
 
 @pytest.fixture
 def e3_project(tmp_path):
-    (tmp_path / "scripts").mkdir()
-    shutil.copy(REPO / "scripts" / "quote_match.py", tmp_path / "scripts")
+    copy_scripts(tmp_path)
     for sub in ("", "eval-3"):
         d = tmp_path / "reviews" / E3_RID / sub
         d.mkdir(parents=True, exist_ok=True)
@@ -457,8 +462,7 @@ X_TEXT = ("# A trial\n\n## Patients\n\nThirty‑three patients were enrolled.\n\
 
 @pytest.fixture
 def xproject(tmp_path):
-    (tmp_path / "scripts").mkdir()
-    shutil.copy(REPO / "scripts" / "quote_match.py", tmp_path / "scripts")
+    copy_scripts(tmp_path)
     (tmp_path / "results" / "fulltext").mkdir(parents=True)
     (tmp_path / X_TXT).write_text(X_TEXT, encoding="utf-8")
     job = tmp_path / X_JOB

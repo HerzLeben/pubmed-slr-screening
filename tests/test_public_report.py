@@ -1,10 +1,6 @@
 """Public sample of the report (build_report.py --public): abstracts and verbatim quotes are hidden. No network."""
 
 import json
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from build_report import hide_quoted, make_public
 

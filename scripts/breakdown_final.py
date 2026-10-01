@@ -25,8 +25,8 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from eval_screening import load, screener
-from rules import score
+from common import load, load_adjudication, load_human, load_screener, read_jsonl
+from rules import final_candidates, score
 
 # (label, predicate on the list of publication types); the first match wins
 PUBTYPE_ORDER = [
@@ -60,12 +60,11 @@ def group(a: list[dict], b: list[dict], has_abstract: bool) -> str:
 def run(rid: str, included: list[str], results: Path) -> dict:
     inc = {str(p) for p in included}
     cands = {str(c["pmid"]): c for c in load(results / rid / "candidates.json")["records"]}
-    a, b = screener(results, "a", rid), screener(results, "b", rid)
-    adj = {str(r["pmid"]): r for r in load(results / "adjudication" / f"{rid}.json")["records"]}
-    hum_path = results / "human" / f"{rid}.json"
-    human = {str(r["pmid"]): r for r in load(hum_path)["records"]} if hum_path.exists() else {}
-    final = sorted(p for p, r in adj.items() if r["status"] == "agreed_include"
-                   or (r["status"] == "needs_human" and human.get(p, {}).get("decision") == "include"))
+    a, b = load_screener(results, "a", rid), load_screener(results, "b", rid)
+    adj = load_adjudication(results, rid)
+    if not adj:
+        sys.exit(f"{rid}: results/adjudication/{rid}.json が無い。先に scripts/adjudicate.py を実行する")
+    final = sorted(final_candidates(adj, load_human(results, rid)))
 
     groups: Counter = Counter()
     groups_inc: Counter = Counter()
@@ -84,7 +83,7 @@ def run(rid: str, included: list[str], results: Path) -> dict:
             groups_inc[g] += 1
             group_inc_pmids.setdefault(g, []).append(p)
         zeros = {x["id"] for x in a[p] + b[p] if x["verdict"] == 0}
-        zero_by.update(zeros)
+        zero_by.update(sorted(zeros))  # sorted: ties in most_common() keep a fixed order
         if zeros:
             combos["+".join(sorted(zeros))] += 1
         scores[p] = score(a[p]) + score(b[p])
@@ -140,8 +139,7 @@ def main() -> None:
     ap.add_argument("--results", default="results")
     ap.add_argument("--json", action="store_true", help="print one JSON object per review instead of tables")
     args = ap.parse_args()
-    bench = [json.loads(line) for line in Path(args.bench).read_text(encoding="utf-8").splitlines() if line.strip()]
-    for row in sorted(bench, key=lambda r: r["PMID"]):
+    for row in sorted(read_jsonl(Path(args.bench)), key=lambda r: r["PMID"]):
         r = run(str(row["PMID"]), row["included_pmids"], Path(args.results))
         print(json.dumps(r, ensure_ascii=False) if args.json else table(r) + "\n")
 
