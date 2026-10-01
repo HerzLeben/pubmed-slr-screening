@@ -195,6 +195,8 @@ def main() -> None:
     args = ap.parse_args()
     if args.results is None:
         args.results = "results/eval-3" if args.run == "eval-3" else "results"
+    if not Path(args.results).exists():
+        sys.exit(f"{args.results}/ が無い。results/ は commit されない。CLAUDE.md の「データの流れ」の順に作る")
     fn = run_eval3 if args.run == "eval-3" else run
     bench = [json.loads(line) for line in Path(args.bench).read_text(encoding="utf-8").splitlines() if line.strip()]
     for row in sorted(bench, key=lambda r: r["PMID"]):

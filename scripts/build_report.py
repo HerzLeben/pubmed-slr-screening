@@ -174,6 +174,8 @@ def build_extraction(root: Path) -> dict | None:
 def main_eval3(args) -> None:
     reviews = Path(args.reviews)
     results = Path(args.results or "results/eval-3")
+    if not results.exists():
+        sys.exit(f"{results}/ が無い。results/ は commit されない。CLAUDE.md の「データの流れ」の順に作る")
     out = Path(args.out or "results/eval-3/report.html")
     bench = [json.loads(x) for x in Path("bench/reviews.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
     rvs = []

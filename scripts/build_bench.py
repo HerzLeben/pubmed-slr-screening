@@ -12,6 +12,8 @@ OUT = ROOT / "bench" / "reviews.jsonl"
 
 
 def main(pmids):
+    if not RAW.exists():
+        sys.exit(f"{RAW.relative_to(ROOT)} が無い。README の「データの取り方」で TrialReviewBench を bench/raw/ に置く")
     rows = {}
     for line in RAW.open(encoding="utf-8"):
         r = json.loads(line)

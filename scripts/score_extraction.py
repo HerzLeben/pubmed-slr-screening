@@ -168,6 +168,8 @@ def main() -> None:
     ap.add_argument("--out", default="results/extraction/score.json")
     args = ap.parse_args()
     root = Path(args.root)
+    if not (root / "results" / "extraction" / "jobs").exists():
+        sys.exit("results/extraction/jobs/ が無い。results/ は commit されない。CLAUDE.md の「データの流れ」の順に作る（抽出は docs/schema.md 10章）")
     items = load_items(root)
     if len(items) != EXPECTED_TOTAL:
         sys.exit(f"分母が {len(items)}（{EXPECTED_TOTAL} のはず）")

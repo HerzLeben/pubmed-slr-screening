@@ -30,6 +30,8 @@ def convert(src: Path, dst: Path) -> tuple[int, list[str]]:
 def main(pmids):
     OUT.mkdir(parents=True, exist_ok=True)
     for p in pmids:
+        if not (RAW / f"{p}.csv").exists():
+            sys.exit(f"{(RAW / f'{p}.csv').relative_to(ROOT)} が無い。README の「データの取り方」で TrialReviewBench を bench/raw/ に置く")
         n, items = convert(RAW / f"{p}.csv", OUT / f"{p}.jsonl")
         print(f"{p}\trows={n}\titems={len(items)}")
 
