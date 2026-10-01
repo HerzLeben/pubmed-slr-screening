@@ -16,6 +16,8 @@
 .more{margin:10px 0 0;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--ink-muted)}
 .e3sec{margin:0 0 6px;font-size:15px}
 .sm{font-size:11.5px;color:var(--ink-muted);margin:6px 0 0}
+.pages{margin:4px 0 18px}
+#reviews button[hidden]{display:none}
 .xrules{margin:0 0 12px;padding:10px 14px 10px 30px;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);background:var(--surface-raised);font-size:12.5px;color:var(--ink-secondary)}
 .xrules li{margin:2px 0}
 .xrules .xh{margin:0 0 4px -16px;font-weight:600;color:var(--ink)}
@@ -60,6 +62,7 @@
 </aside>
 <main><div class="wrap">
   <p class="e3note" id="pubnote" hidden></p>
+  <div class="pg" data-page="overview">
   <section class="pipe" aria-label="pipeline">
     <h3><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h3l2-4 2 8 2-4h3"/></svg><span data-t="pipe.title"></span></h3>
     <svg class="scene" viewBox="0 0 760 190" role="img" aria-labelledby="pipeDesc3">
@@ -152,10 +155,17 @@
     <div class="e3w" id="cmp"></div>
     <p class="sm" data-t="cmp.foot"></p>
   </section>
+  </div>
+  <nav class="pages" id="pages">
+    <a href="#/overview" data-pg="overview"><span class="num">1</span><span data-t="pg.overview"></span></a>
+    <a href="#/list" data-pg="list"><span class="num">2</span><span data-t="pg.list"></span></a>
+    <a href="#/extract" data-pg="extract"><span class="num">3</span><span data-t="pg.extract"></span></a>
+  </nav>
   <div class="rhead">
     <h2 class="rh"><span id="rtitle"></span></h2>
     <div class="sub tnum" id="rsub"></div>
   </div>
+  <div class="pg" data-page="overview">
   <section class="panel">
     <h3 class="e3sec" data-t="s.search"></h3>
     <div id="search"></div>
@@ -163,12 +173,21 @@
   <section class="panel">
     <h3 class="e3sec" data-t="s.screen"></h3>
     <div id="rk"></div>
+    <p class="sm"><a href="#/list" data-t="rk.more"></a></p>
+  </section>
+  </div>
+  <div class="pg" data-page="list">
+  <section class="panel">
+    <h3 class="e3sec" data-t="s.list"></h3>
     <div id="list"></div>
   </section>
+  </div>
+  <div class="pg" data-page="extract">
   <section class="panel">
     <h3 class="e3sec" data-t="s.extract"></h3>
     <div id="xt"></div>
   </section>
+  </div>
 </div></main>
 </div>
 <div class="toast" id="toast"></div>
@@ -197,7 +216,7 @@ const I18N = {
     'side.review':'対象のレビュー', 'side.read':'読み方', 'side.credit':'制作',
     'lg.a':'screener の引用', 'lg.click':'論文の行を押すと、抄録と基準ごとの判定を表示。基準の行を押すと、その引用だけをハイライト', 'lg.e':'除外基準（E）は ✓＝該当せず／✗＝該当', 'lg.mk':'「組み入れ」＝ベンチマークの答え、「追加」＝検索で拾えず候補に足した研究',
     'sub':(p, n, g) => `元レビュー PMID ${p} · 基準 ${n} 個（案のまま）· 生成 ${g}`,
-    's.search':'検索', 's.screen':'スクリーニング（A のスコア順）', 's.extract':'抽出', 's.extract.todo':'このレビューは抽出の対象ではない（抽出は 33746596・37168849 の2本）',
+    's.search':'検索', 's.screen':'スクリーニング（スコア順）', 's.list':'論文の一覧（スコア順）', 'pg.overview':'概要', 'pg.list':'論文の一覧', 'pg.extract':'抽出', 'rk.more':'すべての論文の判定は「論文の一覧」へ →', 's.extract':'抽出', 's.extract.todo':'このレビューは抽出の対象ではない（抽出は 33746596・37168849 の2本）',
     'x.rules.h':'採点の基準（2026-10-01 に人が決めた。採点の途中で変えない）',
     'x.rules':['意味が同じなら正解（表記、単位の書き方、語順の違いは問わない）','答えより詳しいだけなら正解。答えの一部が欠けていれば不正解','答えが分類（地域など）で、抽出が元の値の場合、その値から分類が一意に決まれば正解','「記載なし」は、答えも記載が無いことを表していれば正解、値があれば不正解'],
     'x.auto':'前後の空白と大文字・小文字だけそろえて完全一致したものだけ、規則で正解にしてある。「記載なし」を含め、残りはすべて人が採点する',
@@ -212,7 +231,7 @@ const I18N = {
     'x.bd':'取れなかったもの（答えの組のうち）', 'x.bd.ans':'答えの組', 'x.bd.body':'本文あり（抽出した）', 'x.bd.nobody':'PMC あり・本文なし', 'x.bd.nopmc':'PMC 無し', 'x.bd.nr':'記載なし（項目）', 'x.bd.nrw':'そのうち不正解', 'x.bd.foot':'本文が取れなかった組は抽出していない（分母 102 に入らない）。記載なしの理由別の内訳はリポジトリの評価の文書（docs/eval/）',
     'se.q':'検索式（query-builder の案のまま）', 'se.n':'全ヒット', 'se.r':'検索 Recall', 'se.miss':'検索で拾えなかった組み入れ研究',
     'rk.title':'組み入れ研究の順位', 'rk.pos':'順位', 'rk.sc':'スコア', 'rk.minus':'-1 の基準',
-    'rt.pos':'順位', 'rt.title':'論文', 'rt.sc':'スコア', 'rt.a':'A',
+    'rt.pos':'順位', 'rt.title':'論文', 'rt.sc':'スコア', 'rt.a':'判定',
     'mk.inc':'組み入れ', 'mk.add':'追加', 'more':(n, m) => `${n} / ${m} 件を表示`, 'more.btn':'さらに100件', 'more.all':'すべて',
     'v.inc':'組み入れ', 'v.exc':'除外',
     'c.I1':'満たす', 'c.I-1':'満たさない', 'c.E1':'該当せず', 'c.E-1':'該当', 'c.0':'不明', 'c.missing':'欠け', 'c.nf':'引用がタイトル・抄録に無い',
@@ -234,7 +253,7 @@ const I18N = {
     'side.review':'Reviews', 'side.read':'How to read', 'side.credit':'Made by',
     'lg.a':'Quote by screener', 'lg.click':'Click a paper to show its abstract and verdicts; click a criterion to highlight its quote', 'lg.e':'Exclusion criteria (E): ✓ = does not apply, ✗ = applies', 'lg.mk':'"Included" = benchmark answer, "Added" = missed by the search and added to the pool',
     'sub':(p, n, g) => `Source review PMID ${p} · ${n} criteria (draft as-is) · generated ${g}`,
-    's.search':'Search', 's.screen':'Screening (ranked by A\'s score)', 's.extract':'Extraction', 's.extract.todo':'Extraction covers only 33746596 and 37168849',
+    's.search':'Search', 's.screen':'Screening (ranked by score)', 's.list':'All papers (ranked by score)', 'pg.overview':'Overview', 'pg.list':'Papers', 'pg.extract':'Extraction', 'rk.more':'Verdicts for every paper are under Papers →', 's.extract':'Extraction', 's.extract.todo':'Extraction covers only 33746596 and 37168849',
     'x.rules.h':'Scoring rules (decided by the human on 2026-10-01; not changed while scoring)',
     'x.rules':['Correct if the meaning is the same (spelling, unit notation and word order do not matter)','Correct if only more detailed than the answer; wrong if part of the answer is missing','If the answer is a category (e.g. region) and the extraction is the raw value, correct when that value fixes the category uniquely','"記載なし" (not reported) is correct when the answer also says it is not reported, wrong when the answer has a value'],
     'x.auto':'Only exact matches after trimming and lower-casing are scored correct by rule. Everything else, "記載なし" included, is scored by the human',
@@ -249,7 +268,7 @@ const I18N = {
     'x.bd':'What could not be extracted (of the answer studies)', 'x.bd.ans':'Answer studies', 'x.bd.body':'Body text (extracted)', 'x.bd.nobody':'In PMC, no body', 'x.bd.nopmc':'Not in PMC', 'x.bd.nr':'記載なし (items)', 'x.bd.nrw':'of which wrong', 'x.bd.foot':'Studies without a body text were not extracted (not in the 102). Reasons for 記載なし are in the evaluation notes in the repository (docs/eval/)',
     'se.q':'Query (query-builder draft as-is)', 'se.n':'All hits', 'se.r':'Search recall', 'se.miss':'Included studies the search missed',
     'rk.title':'Positions of the included studies', 'rk.pos':'Position', 'rk.sc':'Score', 'rk.minus':'Criteria at -1',
-    'rt.pos':'Pos.', 'rt.title':'Paper', 'rt.sc':'Score', 'rt.a':'A',
+    'rt.pos':'Pos.', 'rt.title':'Paper', 'rt.sc':'Score', 'rt.a':'Verdict',
     'mk.inc':'Included', 'mk.add':'Added', 'more':(n, m) => `Showing ${n} / ${m}`, 'more.btn':'100 more', 'more.all':'All',
     'v.inc':'Include', 'v.exc':'Exclude',
     'c.I1':'Met', 'c.I-1':'Not met', 'c.E1':'N/A', 'c.E-1':'Applies', 'c.0':'Unclear', 'c.missing':'Missing', 'c.nf':'Quote not in title or abstract',
@@ -266,7 +285,9 @@ const store = {
 };
 let lang = document.documentElement.lang === 'en' ? 'en' : 'ja';
 const t = (k, ...a) => { const v = (I18N[lang] || I18N.ja)[k] ?? I18N.ja[k] ?? k; return typeof v === 'function' ? v(...a) : v; };
-let cur = 0, shown = 100;
+let cur = 0, shown = 100, page = 'overview';
+const PAGES = ['overview', 'list', 'extract'];
+function route(){ const m = location.hash.match(/^#\/(\w+)/); page = m && PAGES.includes(m[1]) ? m[1] : 'overview'; render(); window.scrollTo(0, 0); }
 const openRows = new Set(), focusMap = {};
 const ROBO = (who, size = 16) => `<svg class="robo" width="${size}" height="${size}" viewBox="0 0 20 20" aria-hidden="true"><line x1="10" y1="2.6" x2="10" y2="5" stroke="var(--${who})" stroke-width="1.4"/><circle cx="10" cy="2.4" r="1.6" fill="var(--${who})"/><rect x="2.5" y="5" width="15" height="12.5" rx="3.6" fill="var(--${who})"/><rect x="5" y="7.6" width="10" height="6.2" rx="2" fill="var(--surface-raised)"/><ellipse cx="8.2" cy="10.7" rx="1" ry="1.35" fill="var(--${who})"/><ellipse cx="11.8" cy="10.7" rx="1" ry="1.35" fill="var(--${who})"/></svg>`;
 const rtitle = rv => (lang === 'en' && rv.title_en) || rv.title || ('Review ' + rv.review_pmid);
@@ -282,7 +303,7 @@ function chip(side, cid, type){
   return `<span class="chip ${m[2]}">${m[0]} ${esc(m[1])}${miss}</span>`;
 }
 function pill(side){
-  return `<span class="pill ${side.overall}" title="score ${side.score}">${ROBO('a', 15)}A · ${side.overall === 'include' ? t('v.inc') : t('v.exc')}</span>`;
+  return `<span class="pill ${side.overall}" title="score ${side.score}">${ROBO('a', 15)}${side.overall === 'include' ? t('v.inc') : t('v.exc')}</span>`;
 }
 function markText(text, spans, focus, fmtSections){
   const cuts = new Set([0, text.length]);
@@ -514,7 +535,11 @@ function render(){
   document.querySelectorAll('.scope').forEach(el => { el.hidden = PUB; });  // public sample: no scope line under the header (2026-10-01)
   document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
   document.querySelectorAll('.lg [data-t="lg.a"]').forEach(el => { el.innerHTML = ROBO('a', 14) + ' ' + esc(t('lg.a')); });
-  $('#reviews').innerHTML = DATA.reviews.map((r, i) => `<button data-i="${i}" aria-pressed="${i === cur}"><span class="rvt">${esc(rtitle(r))}</span><span class="rvm tnum">PMID ${esc(r.review_pmid)} · ${r.records.length}</span></button>`).join('');
+  const xr = page === 'extract' && DATA.extraction ? DATA.extraction.reviews : null;
+  if (xr && !xr.includes(DATA.reviews[cur].review_pmid)) cur = DATA.reviews.findIndex(r => xr.includes(r.review_pmid));
+  document.querySelectorAll('.pg').forEach(el => { el.hidden = el.dataset.page !== page; });
+  document.querySelectorAll('#pages a').forEach(a => a.setAttribute('aria-current', a.dataset.pg === page ? 'page' : 'false'));
+  $('#reviews').innerHTML = DATA.reviews.map((r, i) => `<button data-i="${i}" aria-pressed="${i === cur}"${xr && !xr.includes(r.review_pmid) ? ' hidden' : ''}><span class="rvt">${esc(rtitle(r))}</span><span class="rvm tnum">PMID ${esc(r.review_pmid)} · ${r.records.length}</span></button>`).join('');
   const rv = DATA.reviews[cur];
   $('#rtitle').textContent = rtitle(rv);
   $('#rsub').textContent = t('sub', rv.review_pmid, rv.criteria.length, DATA.generated_at);
@@ -545,8 +570,9 @@ $('#xt').addEventListener('click', e => {
   if (a.dataset.xa === 'save') xsave();
   if (a.dataset.xa === 'redir'){ IDB.put('dir', undefined).catch(() => {}); xDirName = null; render(); }
 });
+window.addEventListener('hashchange', route);
 $('#xt').addEventListener('change', e => { if (e.target.dataset.xa === 'only'){ xOnly = e.target.checked; render(); } });
-render();
+route();
 })();
 </script>
 </body>
