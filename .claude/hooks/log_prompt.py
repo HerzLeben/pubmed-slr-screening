@@ -3,6 +3,8 @@
 
 Prints nothing and always exits 0. On UserPromptSubmit, plain-text stdout is added to
 Claude's context and exit 2 rejects the prompt, so this hook must stay silent and never block.
+Personal and local information (paths, e-mail, IDE selections) is removed with scripts/redact_log.py
+before writing (指示書21). If that import fails, nothing is written rather than an unredacted entry.
 Spec: https://code.claude.com/docs/en/hooks (checked 2026-09-27)
 """
 
@@ -19,6 +21,10 @@ def main() -> None:
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or "."
     log_path = Path(project_dir) / "docs" / "prompts" / "log.md"
     log_path.parent.mkdir(parents=True, exist_ok=True)
+    sys.path.insert(0, str(Path(project_dir) / "scripts"))
+    from redact_log import redact
+
+    prompt = redact(prompt)[0]
 
     stamp = datetime.now().astimezone().isoformat(timespec="seconds")
     entry = f"\n---\n\n## {stamp}\n\n{prompt.rstrip()}\n"

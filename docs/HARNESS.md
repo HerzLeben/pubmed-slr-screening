@@ -139,3 +139,6 @@
 - 2026-10-01 やらなかったこと：全文のテキスト（fulltext_to_text.py）に著者の所属を入れていないので、37168849 × 34034795 の Location が「記載なし」になった。直さない（機能の追加は抽出で最後のため）
 - 2026-10-01 指示書20 パート6 の 6.3：人が96件を採点して画面から保存（File System Access で results/extraction/human/ に直接書けた）。保存したファイルからの値と画面の JS の値は全項目一致。Accuracy 0.735（0.642–0.811）。不正解27のうち記載なし11（計算が要る3、答えの No が本文に無い3、補足資料にあるとみられる2、所属を入れていない2、図の画像だけ1）
 - 2026-10-01 想定と違ったこと：同じ論文 30396908 で、33746596 の job では Country を「記載なし」にし、37168849 の job では施設名（Dana-Farber/Harvard Cancer Center）を Location に答えた。項目名の違いで推論のしかたが変わった
+- 2026-10-01 指示書21 1章：`git ls-files` と `git log --all -p` で、秘密情報・抄録や全文の本文・TrialReviewBench の生の CSV・results/ は見つからなかった（`AbstractText` はコードとテストの作り物の XML だけ）。`.env` は「IDE で開いた」記録が log.md に1行あるだけで中身は無い。docs/samples/ の引用は69件、最長137字（1文）
+- 2026-10-01 指示書21 2章：個人の情報は追跡ファイルでは log.md だけ（今の版で ide 4、drive 1、tmp 299、repo 228。履歴の32版で ide 84、drive 20、tmp 4,210、repo 3,021）。`scripts/redact_log.py` で今の log.md を直し、`log_prompt.py` にも同じ置き換えを入れた（redact_log が読めなければ書かない）。git filter-repo は .venv に入れた（requirements には足さない）
+- 2026-10-01 想定と違ったこと：commit の author・committer のメールアドレス（41 commit すべて）が会社のアドレスだった。指示書21 の範囲外なので、履歴を書き換える前に人に確かめる
