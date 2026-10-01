@@ -63,7 +63,7 @@
   <section class="pipe" aria-label="pipeline">
     <h3><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h3l2-4 2 8 2-4h3"/></svg><span data-t="pipe.title"></span></h3>
     <svg class="scene" viewBox="0 0 760 190" role="img" aria-labelledby="pipeDesc3">
-      <desc id="pipeDesc3">From the PICO, query-builder writes a PubMed query, screener-a judges every hit against the draft criteria, papers are ranked by score, extractor reads the full texts, and a human scores the extracted values.</desc>
+      <desc id="pipeDesc3">From the PICO, query-builder writes a PubMed query, screener judges every hit against the draft criteria, papers are ranked by score, extractor reads the full texts, and a human scores the extracted values.</desc>
       <path class="flow" d="M100 80 L 140 80"/>
       <path class="flow" d="M222 80 L 262 80"/>
       <path class="flow" d="M372 80 L 410 80"/>
@@ -106,7 +106,7 @@
         <line class="ln" x1="321" y1="61" x2="349" y2="61"/><line class="ln" x1="321" y1="70" x2="345" y2="70"/><line class="ln" x1="321" y1="79" x2="349" y2="79"/><line class="ln" x1="321" y1="88" x2="341" y2="88"/>
         <rect class="scan" x="317" y="56" width="36" height="8" rx="2" fill="var(--a-soft)"/>
         <g class="pop" style="animation-delay:0.3s"><rect x="292" y="22" width="20" height="15" rx="4" fill="var(--accent-soft)"/><text x="302" y="33" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--accent)">✓</text></g><g class="pop" style="animation-delay:0.9s"><rect x="316" y="22" width="20" height="15" rx="4" fill="var(--accent-soft)"/><text x="326" y="33" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--accent)">✓</text></g><g class="pop" style="animation-delay:1.5s"><rect x="340" y="22" width="20" height="15" rx="4" fill="var(--surface-sunken)"/><text x="350" y="33" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink-secondary)">?</text></g>
-        <text class="lbl" x="318" y="146" text-anchor="middle">screener-a</text>
+        <text class="lbl" x="318" y="146" text-anchor="middle">screener</text>
         <text class="cap" x="318" y="161" text-anchor="middle" data-t="pipe.sa"></text>
       </g>
       <g>
@@ -188,14 +188,14 @@ const I18N = {
     'app.title':'PubMed SLR × Screening', 'hdr.stage':'eval-3：人の判断なし（原著と同じ流れ）',
     'pipe.title':'流れ（原著と同じ。人は判断しない）', 'pipe.pico':'レビューの問い', 'pipe.qb':'PubMed の検索式', 'pipe.sa':'基準の案で 1/0/-1', 'pipe.rank':'スコアで順位', 'pipe.rankc':'Recall@20・@50', 'pipe.ex':'全文から値と引用', 'pipe.you':'人', 'pipe.youc':'抽出を採点',
     'hdr.scope':'教育と手法の検証用。PubMed だけを検索する。業務の一次スクリーニングの代わりには使わない',
-    'note':'eval-3 は、PICO → query-builder の検索式 → /pico-to-criteria の基準の案のまま → screener-a（1体）→ A のスコア（判定値の合計）で順位、の流れで、人は判断していない。裁定・人の判断は無い。原著との比較はこの eval-3 だけで行う。',
+    'note':'eval-3 は、PICO → query-builder の検索式 → /pico-to-criteria の基準の案のまま → screener（1体）→ スコア（判定値の合計）で順位、の流れで、人は判断していない。裁定・人の判断は無い。原著との比較はこの eval-3 だけで行う。',
     'cmp.title':'原著との比較（Recall@20・@50、A のスコア順）',
     'cmp.foot':'原著の値は arXiv 2406.17755（HTML 版）の Immunotherapy。npj Digital Medicine 掲載版との照合はしていない。候補の母集団（原著 2,000件、こちら 484〜698件）、レビューの数（100本と3本）、モデル（GPT-4 など と Sonnet）が違う。',
     'c.rv':'レビュー', 'c.pop':'母集団', 'c.n':'候補', 'c.inc':'母集団内の組み入れ', 'c.orig':'原著（TrialMind、Immunotherapy）',
     'pop.all_hits':'全ヒット', 'pop.original':'原著と同じ作り方（全ヒット＋検索で拾えなかった組み入れ研究）',
     'ref':(c, a, b) => `参考（${c} を外した合計で順位。原著との比較には使わない）：Recall@20 ${a}、@50 ${b}`,
     'side.review':'対象のレビュー', 'side.read':'読み方', 'side.credit':'制作',
-    'lg.a':'screener-a の引用', 'lg.click':'論文の行を押すと、抄録と基準ごとの判定を表示。基準の行を押すと、その引用だけをハイライト', 'lg.e':'除外基準（E）は ✓＝該当せず／✗＝該当', 'lg.mk':'「組み入れ」＝ベンチマークの答え、「追加」＝検索で拾えず候補に足した研究',
+    'lg.a':'screener の引用', 'lg.click':'論文の行を押すと、抄録と基準ごとの判定を表示。基準の行を押すと、その引用だけをハイライト', 'lg.e':'除外基準（E）は ✓＝該当せず／✗＝該当', 'lg.mk':'「組み入れ」＝ベンチマークの答え、「追加」＝検索で拾えず候補に足した研究',
     'sub':(p, n, g) => `元レビュー PMID ${p} · 基準 ${n} 個（案のまま）· 生成 ${g}`,
     's.search':'検索', 's.screen':'スクリーニング（A のスコア順）', 's.extract':'抽出', 's.extract.todo':'このレビューは抽出の対象ではない（抽出は 33746596・37168849 の2本）',
     'x.rules.h':'採点の基準（2026-10-01 に人が決めた。採点の途中で変えない）',
@@ -225,14 +225,14 @@ const I18N = {
     'app.title':'PubMed SLR × Screening', 'hdr.stage':'eval-3: no human judgment (same flow as the paper)',
     'pipe.title':'Flow (as in the paper; no human judgment)', 'pipe.pico':'The review question', 'pipe.qb':'PubMed query', 'pipe.sa':'1/0/-1 on draft criteria', 'pipe.rank':'Rank by score', 'pipe.rankc':'Recall@20 / @50', 'pipe.ex':'Values + quotes from full text', 'pipe.you':'Human', 'pipe.youc':'Scores the extraction',
     'hdr.scope':'For teaching and method validation. Searches PubMed only. Not a replacement for real first-pass screening',
-    'note':'eval-3 runs PICO → query-builder query → draft criteria from /pico-to-criteria as-is → screener-a (one) → rank by A\'s score (sum of verdicts). No adjudication and no human judgment. Only eval-3 is compared with the original paper.',
+    'note':'eval-3 runs PICO → query-builder query → draft criteria from /pico-to-criteria as-is → screener (one) → rank by score (sum of verdicts). No adjudication and no human judgment. Only eval-3 is compared with the original paper.',
     'cmp.title':'Comparison with the original paper (Recall@20 / @50, ranked by A\'s score)',
     'cmp.foot':'Original values: arXiv 2406.17755 (HTML), Immunotherapy. Not checked against the npj Digital Medicine version. Candidate pool (2,000 vs 484–698), number of reviews (100 vs 3) and models (GPT-4 etc. vs Sonnet) differ.',
     'c.rv':'Review', 'c.pop':'Population', 'c.n':'Candidates', 'c.inc':'Included in pool', 'c.orig':'Original (TrialMind, Immunotherapy)',
     'pop.all_hits':'All hits', 'pop.original':'As in the paper (all hits + included studies the search missed)',
     'ref':(c, a, b) => `Reference (score without ${c}; not compared with the paper): Recall@20 ${a}, @50 ${b}`,
     'side.review':'Reviews', 'side.read':'How to read', 'side.credit':'Made by',
-    'lg.a':'Quote by screener-a', 'lg.click':'Click a paper to show its abstract and verdicts; click a criterion to highlight its quote', 'lg.e':'Exclusion criteria (E): ✓ = does not apply, ✗ = applies', 'lg.mk':'"Included" = benchmark answer, "Added" = missed by the search and added to the pool',
+    'lg.a':'Quote by screener', 'lg.click':'Click a paper to show its abstract and verdicts; click a criterion to highlight its quote', 'lg.e':'Exclusion criteria (E): ✓ = does not apply, ✗ = applies', 'lg.mk':'"Included" = benchmark answer, "Added" = missed by the search and added to the pool',
     'sub':(p, n, g) => `Source review PMID ${p} · ${n} criteria (draft as-is) · generated ${g}`,
     's.search':'Search', 's.screen':'Screening (ranked by A\'s score)', 's.extract':'Extraction', 's.extract.todo':'Extraction covers only 33746596 and 37168849',
     'x.rules.h':'Scoring rules (decided by the human on 2026-10-01; not changed while scoring)',
