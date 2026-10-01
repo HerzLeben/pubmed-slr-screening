@@ -195,3 +195,10 @@ job：results/extraction/jobs/<review>/<pmid>.json
 - **2026-10-01 人が決定（採点の前）：規則で決めるのは完全一致の正解だけにする。**「記載なし」は答えに値があっても規則で不正解にせず、すべて人の採点に回す（17件）。理由：答えが "not reported" / "Not available" のもの（33746596×30396908 の BCMA positivity、37168849 の 33495835 の Prior Therapies、34034795 の Manufacturing time と Transduction Mechanism）は基準①で正解になる。表記の一覧で拾う規則は作らない（答えを見たあとで規則を作ることになるため）。採点の基準④を「記載なしは、答えも記載が無いことを表していれば正解、値があれば不正解」に直した。これで規則で正解6、人の採点96（上の「記載なしで不正解17、人の採点79」は取り消し）
 - **2026-10-01 人が決定：37168849 × 33495835 の答えは直さず、そのまま採点する。** この論文は in vitro で患者がいないのに、答えには年齢・性別があり、Study Design が Clinical Trial、Costimulatory Domain が薬剤名（Cytarabine & Decitabine…）になっている。eval-3.md に「答えの不備の疑い」として書き、この組を除いた Accuracy を参考値として並べる（主な値は102項目のまま。`score_extraction.REFERENCE_EXCLUDE`）
 - 抽出の評価（6.3）：保存された `results/extraction/human/*.json`（96件）を `score_extraction.py` で読み、レポートに埋め込んだ JS（`extraction_metrics.js`）の値と全項目が一致することを確かめた。Accuracy は全体 0.735（95% CI 0.642–0.811、75/102）、33746596 0.786、37168849 0.700。33495835 を除く参考 0.759。CI は Wilson（原著は出し方を書いていない。上の行）
+
+## 2026-10-01 指示書21（公開の準備）
+
+- 人が決定（Wataru）：GitHub で公開する（連載の読者が辿るため。業務の道具の配布ではない）。位置づけは「教育と手法の検証用」のまま。コードは MIT（著作権者 HerzLeben Inc.、2026）、`bench/` の整形済みファイルは TrialReviewBench（Apache-2.0）から作ったので NOTICE に出典。`snap/*` の tag は残す。`docs/prompts/log.md` は個人の情報とローカルの情報を消して公開する（2026-10-01、AskUserQuestion で確認）
+- 履歴の書き換え（理由：log.md の過去の版に、メールアドレス入りの Google Drive のパス、ホームのパス、作業ファイルのパス、IDE で `.env` を開いた記録が残っていた）：`git filter-repo --file-info-callback` で **全履歴の `docs/prompts/log.md` だけ** に `scripts/redact_log.py` の置き換えを掛けた。ほかのファイルは対象外（規則を書いた redact_log.py 自身とテストの作り物の文字列を壊さないため。ほかのファイルの履歴に個人の情報が無いことは確かめた）
+- 人が決定：commit の author・committer のアドレス（43 commit すべて会社のアドレス）も、同じ書き換えで mailmap により `254887246+HerzLeben@users.noreply.github.com` に差し替えた。これからの commit も同じ（`git config user.email`）
+- 書き換えは auto mode の安全チェックで止められたので、人がターミナルで打った。前に `~/dev/pubmed-slr-screening.backup-20261001` に `git clone --mirror` で残した

@@ -142,3 +142,5 @@
 - 2026-10-01 指示書21 1章：`git ls-files` と `git log --all -p` で、秘密情報・抄録や全文の本文・TrialReviewBench の生の CSV・results/ は見つからなかった（`AbstractText` はコードとテストの作り物の XML だけ）。`.env` は「IDE で開いた」記録が log.md に1行あるだけで中身は無い。docs/samples/ の引用は69件、最長137字（1文）
 - 2026-10-01 指示書21 2章：個人の情報は追跡ファイルでは log.md だけ（今の版で ide 4、drive 1、tmp 299、repo 228。履歴の32版で ide 84、drive 20、tmp 4,210、repo 3,021）。`scripts/redact_log.py` で今の log.md を直し、`log_prompt.py` にも同じ置き換えを入れた（redact_log が読めなければ書かない）。git filter-repo は .venv に入れた（requirements には足さない）
 - 2026-10-01 想定と違ったこと：commit の author・committer のメールアドレス（41 commit すべて）が会社のアドレスだった。指示書21 の範囲外なので、履歴を書き換える前に人に確かめる
+- 2026-10-01 指示書21 2章：履歴を書き換えた（人が git filter-repo を打った。Claude Code からの実行は auto mode の安全チェックで止まった）。log.md の過去の32版で ide 84、drive 20、tmp 4,210、repo 3,021 を置き換え、43 commit のアドレスを noreply に差し替えた。書き換えのあとで `git log --all -p` に個人の情報・秘密情報が無いこと（残りは redact_log.py の規則の説明とテストの作り物だけ）、tag 20本（snap/* 19本と eval-3-pre）がそろうこと、pytest 185件が通ることを確かめた
+- 2026-10-01 **commit の hash がすべて変わった。** 記事の出典コメントにある hash は、公開後に新しい hash に直す。古い hash と新しい hash の対応は `.git/filter-repo/commit-map`（push されない。バックアップは ~/dev/pubmed-slr-screening.backup-20261001）
