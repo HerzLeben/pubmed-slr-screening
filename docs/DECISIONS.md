@@ -202,3 +202,4 @@ job：results/extraction/jobs/<review>/<pmid>.json
 - 履歴の書き換え（理由：log.md の過去の版に、メールアドレス入りの Google Drive のパス、ホームのパス、作業ファイルのパス、IDE で `.env` を開いた記録が残っていた）：`git filter-repo --file-info-callback` で **全履歴の `docs/prompts/log.md` だけ** に `scripts/redact_log.py` の置き換えを掛けた。ほかのファイルは対象外（規則を書いた redact_log.py 自身とテストの作り物の文字列を壊さないため。ほかのファイルの履歴に個人の情報が無いことは確かめた）
 - 人が決定：commit の author・committer のアドレス（43 commit すべて会社のアドレス）も、同じ書き換えで mailmap により `254887246+HerzLeben@users.noreply.github.com` に差し替えた。これからの commit も同じ（`git config user.email`）
 - 書き換えは auto mode の安全チェックで止められたので、人がターミナルで打った。前に `~/dev/pubmed-slr-screening.backup-20261001` に `git clone --mirror` で残した
+- 2026-10-01 4章の確認と README の手順：取得の URL は Hugging Face の resolve/main（記録した revision は 6dfc322）。清潔な clone で bench/ が再現できることを確かめた

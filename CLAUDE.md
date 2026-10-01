@@ -36,7 +36,7 @@ requirements と design が食い違ったら requirements を優先する。ど
 - モデルはすべて Sonnet
 
 ## 記録の規則
-- 節目で commit し tag を付ける：`snap/02-benchmark`、`snap/03-criteria-draft`（人が直す前）、`snap/04-criteria-approved`、`snap/05-query-approved`、`snap/06-no-subagent`、`snap/07-agents-v1`、`snap/08-first-parallel`、`snap/09-hook`、`snap/10-eval-1`、`snap/11-eval-2`、`snap/12-eval-2-notes`、`snap/13-prisma-eval`、`snap/14-positioning`、`snap/15-extraction-items`、`snap/16-eval-3-screened`、`snap/17-eval-3`、`snap/18-extraction`、`snap/19-extraction-eval`
+- 節目で commit し tag を付ける：`snap/02-benchmark`、`snap/03-criteria-draft`（人が直す前）、`snap/04-criteria-approved`、`snap/05-query-approved`、`snap/06-no-subagent`、`snap/07-agents-v1`、`snap/08-first-parallel`、`snap/09-hook`、`snap/10-eval-1`、`snap/11-eval-2`、`snap/12-eval-2-notes`、`snap/13-prisma-eval`、`snap/14-positioning`、`snap/15-extraction-items`、`snap/16-eval-3-screened`、`snap/17-eval-3`、`snap/18-extraction`、`snap/19-extraction-eval`、`snap/20-public`
 - 想定と違ったこと・詰まった点・人が決めたことは、その場で `docs/HARNESS.md` に日付つき1行
 - 設計を変えたら `docs/DECISIONS.md` に1〜3行
 - `docs/prompts/log.md`（hook が記録した指示文）は、フェーズごとの commit に含める
