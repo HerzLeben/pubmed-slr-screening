@@ -243,4 +243,19 @@ SubagentStop（matcher `screener-a|screener-b`）では、最後のメッセー�
 
 ### 採点（`scripts/score_extraction.py`、`results/extraction/human/<review>.json`）
 
-指示書20 6章で足す
+- 分母：`results/extraction/jobs/` の全組 × job の項目（102）。答えは `bench/extraction/<review>.jsonl`、値は `results/extraction/out/`
+- 規則：前後の空白と大文字・小文字だけそろえて完全一致 → 正解。`"記載なし"` で答えに値がある → 不正解。それ以外は人が採点する
+- 人の採点は eval-3 のレポート（`build_report.py --run eval-3` の「抽出」の節）で付け、そこから保存する。規則で決まった項目は書かない（書いてあれば `score_extraction.py` が止まる）
+
+```json
+{
+  "review_pmid": "<review>",
+  "saved_at": "<ISO 8601>",
+  "records": [
+    {"pmid": "<pmid>", "item": "<項目名>", "correct": true}
+  ]
+}
+```
+
+- Accuracy＝正解 ÷ 採点済み。95% CI は Wilson（z＝1.96）。全体・レビューごと・組ごと。計算は `score_extraction.metrics()` と `scripts/extraction_metrics.js`（レポートに埋め込む）の2か所にあり、`tests/test_score_extraction.py` が同じ結果になることを node で確かめる
+- `score_extraction.py` は結果を `results/extraction/score.json` に書く

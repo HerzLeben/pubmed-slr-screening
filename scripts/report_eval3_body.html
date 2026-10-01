@@ -16,6 +16,27 @@
 .more{margin:10px 0 0;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--ink-muted)}
 .e3sec{margin:0 0 6px;font-size:15px}
 .sm{font-size:11.5px;color:var(--ink-muted);margin:6px 0 0}
+.xrules{margin:0 0 12px;padding:10px 14px 10px 30px;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);background:var(--surface-raised);font-size:12.5px;color:var(--ink-secondary)}
+.xrules li{margin:2px 0}
+.xrules .xh{margin:0 0 4px -16px;font-weight:600;color:var(--ink)}
+.xbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
+.xbar label{font-size:12.5px;color:var(--ink-secondary);display:inline-flex;gap:6px;align-items:center}
+.e3t tr.lvl0 td{font-weight:600;background:var(--surface-sunken)}
+.e3t tr.lvl2 td:first-child{padding-left:22px}
+.xp{margin:18px 0 6px;font-size:13.5px}
+.xi td{font-size:12.5px}
+.xi td.nm{width:18%;font-weight:600}
+.xi td.ans{width:18%}
+.xi td.sc{width:150px;white-space:nowrap}
+.xi tr.todo td{background:var(--accent-soft)}
+.xv{font-weight:600;margin-bottom:4px}
+.xq{font-family:ui-monospace,Menlo,monospace;font-size:11px;white-space:pre-wrap;word-break:break-word;color:var(--ink-muted);background:var(--surface-sunken);border-radius:6px;padding:6px 8px;margin:4px 0 0}
+.xq mark{background:var(--accent-soft);color:var(--ink);font-weight:600;border-radius:2px}
+.xq.nf{color:var(--danger)}
+.xb{display:inline-block;font-size:11px;font-weight:600;border-radius:4px;padding:2px 7px}
+.xb.ok{background:var(--accent-soft);color:var(--accent)}
+.xb.ng{background:var(--danger-soft);color:var(--danger)}
+.xi .seg button{padding:4px 10px;font-size:12px}
 </style>
 <div class="shell">
 <aside class="side">
@@ -59,11 +80,15 @@
   </section>
   <section class="panel">
     <h3 class="e3sec" data-t="s.extract"></h3>
-    <p class="sm" data-t="s.extract.todo"></p>
+    <div id="xt"></div>
   </section>
 </div></main>
 </div>
+<div class="toast" id="toast"></div>
 <script type="application/json" id="data">__DATA__</script>
+<script>
+__EXTRACTION_METRICS_JS__
+</script>
 <script>
 (() => {
 const DATA = JSON.parse(document.getElementById('data').textContent);
@@ -83,7 +108,18 @@ const I18N = {
     'side.review':'対象のレビュー', 'side.read':'読み方', 'side.credit':'制作',
     'lg.a':'screener-a の引用', 'lg.click':'論文の行を押すと、抄録と基準ごとの判定を表示。基準の行を押すと、その引用だけをハイライト', 'lg.e':'除外基準（E）は ✓＝該当せず／✗＝該当', 'lg.mk':'「組み入れ」＝ベンチマークの答え、「追加」＝検索で拾えず候補に足した研究',
     'sub':(p, n, g) => `元レビュー PMID ${p} · 基準 ${n} 個（案のまま）· 生成 ${g}`,
-    's.search':'検索', 's.screen':'スクリーニング（A のスコア順）', 's.extract':'抽出', 's.extract.todo':'extractor を作ったあとで足す（今回の範囲外）',
+    's.search':'検索', 's.screen':'スクリーニング（A のスコア順）', 's.extract':'抽出', 's.extract.todo':'このレビューは抽出の対象ではない（抽出は 33746596・37168849 の2本）',
+    'x.rules.h':'採点の基準（2026-10-01 に人が決めた。採点の途中で変えない）',
+    'x.rules':['意味が同じなら正解（表記、単位の書き方、語順の違いは問わない）','答えより詳しいだけなら正解。答えの一部が欠けていれば不正解','答えが分類（地域など）で、抽出が元の値の場合、その値から分類が一意に決まれば正解','「記載なし」は、答えに値があれば不正解（規則で決まる）'],
+    'x.auto':'前後の空白と大文字・小文字だけそろえて完全一致したものは、規則で正解にしてある',
+    'x.acc':'Accuracy（採点済みのうち正解の割合、95% CI は Wilson）', 'x.lvl':'範囲', 'x.items':'項目', 'x.rc':'規則で正解', 'x.rw':'記載なし', 'x.hc':'人：正解', 'x.hw':'人：不正解', 'x.pend':'残り', 'x.accc':'Accuracy (95% CI)',
+    'x.all':'全体', 'x.orig':'原著（arXiv 版）：Immunotherapy 0.78（95% CI 0.75–0.81）、トピック全体 0.72–0.83。種類別では研究デザイン 0.95、患者背景 0.74（原著は結果の項目も含む。分母 1,334、採点者3人）',
+    'x.save':'採点を保存', 'x.redir':'保存先のフォルダを選び直す', 'x.only':'未採点だけ表示',
+    'x.dir':n => `保存先：${n}`, 'x.nodir':'最初の保存でフォルダを選ぶ（results/extraction/human/）',
+    'x.notHuman':n => `選んだフォルダは「${n}」です。results/extraction/human/ ではありません。このまま保存しますか？`,
+    'x.saved':(n, d) => `人の採点 ${n} 件を ${d}/ に保存しました`, 'x.dl':'このブラウザではフォルダに直接書けないため、ダウンロードしました → results/extraction/human/ に置いてください',
+    'x.ans':'答え', 'x.val':'抽出した値と引用（全文の前後つき）', 'x.sc':'採点', 'x.ok':'正解', 'x.ng':'不正解',
+    'x.autoOk':'規則で正解', 'x.autoNg':'記載なし＝不正解', 'x.nf':'⚠ 全文に見つからない', 'x.pair':p => `PMID ${p}`, 'x.done':'このレビューは採点が済んでいる',
     'se.q':'検索式（query-builder の案のまま）', 'se.n':'全ヒット', 'se.r':'検索 Recall', 'se.miss':'検索で拾えなかった組み入れ研究',
     'rk.title':'組み入れ研究の順位', 'rk.pos':'順位', 'rk.sc':'スコア', 'rk.minus':'-1 の基準',
     'rt.pos':'順位', 'rt.title':'論文', 'rt.sc':'スコア', 'rt.a':'A',
@@ -106,7 +142,18 @@ const I18N = {
     'side.review':'Reviews', 'side.read':'How to read', 'side.credit':'Made by',
     'lg.a':'Quote by screener-a', 'lg.click':'Click a paper to show its abstract and verdicts; click a criterion to highlight its quote', 'lg.e':'Exclusion criteria (E): ✓ = does not apply, ✗ = applies', 'lg.mk':'"Included" = benchmark answer, "Added" = missed by the search and added to the pool',
     'sub':(p, n, g) => `Source review PMID ${p} · ${n} criteria (draft as-is) · generated ${g}`,
-    's.search':'Search', 's.screen':'Screening (ranked by A\'s score)', 's.extract':'Extraction', 's.extract.todo':'Added after the extractor is built (out of scope this time)',
+    's.search':'Search', 's.screen':'Screening (ranked by A\'s score)', 's.extract':'Extraction', 's.extract.todo':'Extraction covers only 33746596 and 37168849',
+    'x.rules.h':'Scoring rules (decided by the human on 2026-10-01; not changed while scoring)',
+    'x.rules':['Correct if the meaning is the same (spelling, unit notation and word order do not matter)','Correct if only more detailed than the answer; wrong if part of the answer is missing','If the answer is a category (e.g. region) and the extraction is the raw value, correct when that value fixes the category uniquely','"記載なし" (not reported) is wrong when the answer has a value (decided by rule)'],
+    'x.auto':'Exact matches after trimming and lower-casing are already scored correct by rule',
+    'x.acc':'Accuracy (share correct among scored; 95% CI by Wilson)', 'x.lvl':'Scope', 'x.items':'Items', 'x.rc':'Rule: correct', 'x.rw':'Not reported', 'x.hc':'Human: correct', 'x.hw':'Human: wrong', 'x.pend':'Left', 'x.accc':'Accuracy (95% CI)',
+    'x.all':'Overall', 'x.orig':'Original (arXiv): Immunotherapy 0.78 (95% CI 0.75–0.81), all topics 0.72–0.83. By type: design 0.95, population 0.74 (the paper also includes result items; 1,334 data points, 3 annotators)',
+    'x.save':'Save scores', 'x.redir':'Choose the folder again', 'x.only':'Only unscored',
+    'x.dir':n => `Folder: ${n}`, 'x.nodir':'The first save asks for the folder (results/extraction/human/)',
+    'x.notHuman':n => `The chosen folder is "${n}", not results/extraction/human/. Save anyway?`,
+    'x.saved':(n, d) => `Saved ${n} human score(s) to ${d}/`, 'x.dl':'This browser cannot write to a folder, so the files were downloaded → put them in results/extraction/human/',
+    'x.ans':'Answer', 'x.val':'Extracted value and quotes (with surrounding text)', 'x.sc':'Score', 'x.ok':'Correct', 'x.ng':'Wrong',
+    'x.autoOk':'Correct by rule', 'x.autoNg':'Not reported = wrong', 'x.nf':'⚠ not found in the full text', 'x.pair':p => `PMID ${p}`, 'x.done':'All items of this review are scored',
     'se.q':'Query (query-builder draft as-is)', 'se.n':'All hits', 'se.r':'Search recall', 'se.miss':'Included studies the search missed',
     'rk.title':'Positions of the included studies', 'rk.pos':'Position', 'rk.sc':'Score', 'rk.minus':'Criteria at -1',
     'rt.pos':'Pos.', 'rt.title':'Paper', 'rt.sc':'Score', 'rt.a':'A',
@@ -118,7 +165,11 @@ const I18N = {
     'ab.title':'TITLE', 'ab.none':'No abstract (none registered in PubMed)', 'b.noab':'No abstract'
   }
 };
-const store = {raw(k, v){ try { localStorage.setItem(k, v); } catch(e){} }};
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+  raw(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+};
 let lang = document.documentElement.lang === 'en' ? 'en' : 'ja';
 const t = (k, ...a) => { const v = (I18N[lang] || I18N.ja)[k] ?? I18N.ja[k] ?? k; return typeof v === 'function' ? v(...a) : v; };
 let cur = 0, shown = 100;
@@ -225,6 +276,126 @@ function renderScreen(rv){
   if (shown < rv.records.length) h += `<div class="more"><span>${t('more', shown, rv.records.length)}</span><button class="btn" data-more="100">${t('more.btn')}</button><button class="btn" data-more="all">${t('more.all')}</button></div>`;
   $('#list').innerHTML = h;
 }
+
+// ---- 抽出の採点（指示書20 6.2）. Draft in localStorage like eval-2; saved to results/extraction/human/<review>.json ----
+const X = DATA.extraction;
+const xmem = {};
+let xOnly = false, xDirName = null;
+const xkey = it => it.pmid + '\t' + it.name;
+function xhuman(){
+  const out = {};
+  for (const rid of (X ? X.reviews : [])){
+    if (!xmem[rid]){
+      const m = Object.assign({}, X.human[rid] || {}, store.get('slr-extract-human-' + rid) || {});
+      for (const k of Object.keys(m)) if (m[k] !== true && m[k] !== false) delete m[k];
+      xmem[rid] = m;
+    }
+    out[rid] = xmem[rid];
+  }
+  return out;
+}
+function xset(rid, key, val){
+  xhuman();
+  if (val === null) delete xmem[rid][key]; else xmem[rid][key] = val;
+  const draft = store.get('slr-extract-human-' + rid) || {};
+  draft[key] = val;   // null = cleared (overrides a saved score)
+  store.set('slr-extract-human-' + rid, draft);
+}
+const pct = m => m.accuracy == null ? '—' : `${f3(m.accuracy)} <span class="sm">(${f3(m.ci_low)}–${f3(m.ci_high)})</span>`;
+function xrow(cls, label, m){
+  return `<tr class="${cls}"><td>${label}</td><td class="n">${m.total}</td><td class="n">${m.rule_correct}</td><td class="n">${m.rule_wrong}</td><td class="n">${m.human_correct}</td><td class="n">${m.human_wrong}</td><td class="n">${m.pending}</td><td class="n">${pct(m)}</td></tr>`;
+}
+function xquotes(it){
+  if (!it.ctx.length) return '';
+  return it.ctx.map(c => c.nf ? `<div class="xq nf">“${esc(c.q)}” ${t('x.nf')}</div>`
+    : `<div class="xq">${esc(c.before)}<mark>${esc(c.match)}</mark>${esc(c.after)}</div>`).join('');
+}
+function xscore(it, h){
+  if (it.auto === 'correct') return `<span class="xb ok">${t('x.autoOk')}</span>`;
+  if (it.auto === 'wrong') return `<span class="xb ng">${t('x.autoNg')}</span>`;
+  const v = h[xkey(it)];
+  return `<div class="seg" data-k="${esc(xkey(it))}"><button class="inc ${v === true ? 'on' : ''}" data-x="1">${t('x.ok')}</button><button class="exc ${v === false ? 'on' : ''}" data-x="0">${t('x.ng')}</button></div>`;
+}
+function renderX(rv){
+  const el = $('#xt');
+  if (!X || !X.reviews.includes(rv.review_pmid)){ el.innerHTML = `<p class="sm">${t('s.extract.todo')}</p>`; return; }
+  const H = xhuman(), M = extractionMetrics(X.items, H);
+  let h = `<div class="xrules"><div class="xh">${t('x.rules.h')}</div><ol>${t('x.rules').map(x => `<li>${esc(x)}</li>`).join('')}</ol><div class="sm">${t('x.auto')}</div></div>`;
+  h += `<div class="stats"><div class="stat hl"><div class="k">${t('x.all')} Accuracy</div><div class="v">${M.overall.accuracy == null ? '—' : f3(M.overall.accuracy)}<small>${M.overall.correct}/${M.overall.scored}</small></div></div>`
+    + `<div class="stat"><div class="k">95% CI</div><div class="v">${M.overall.accuracy == null ? '—' : f3(M.overall.ci_low) + '–' + f3(M.overall.ci_high)}</div></div>`
+    + `<div class="stat"><div class="k">${t('x.pend')}</div><div class="v">${M.overall.pending}<small>/ ${M.overall.total}</small></div></div></div>`;
+  h += `<div class="ph" style="margin-top:12px">${t('x.acc')}</div><div class="e3w"><table class="e3t"><thead><tr><th>${t('x.lvl')}</th><th class="n">${t('x.items')}</th><th class="n">${t('x.rc')}</th><th class="n">${t('x.rw')}</th><th class="n">${t('x.hc')}</th><th class="n">${t('x.hw')}</th><th class="n">${t('x.pend')}</th><th class="n">${t('x.accc')}</th></tr></thead><tbody>`;
+  h += xrow('lvl0', t('x.all'), M.overall);
+  for (const rid of X.reviews){
+    h += xrow('lvl1', 'Review ' + esc(rid), M.by_review[rid]);
+    for (const [pk, m] of Object.entries(M.by_pair)) if (pk.startsWith(rid + '/')) h += xrow('lvl2', 'PMID ' + esc(pk.split('/')[1]), m);
+  }
+  h += `</tbody></table></div><p class="sm">${t('x.orig')}</p>`;
+  h += `<div class="xbar"><button class="btn primary" data-xa="save">${t('x.save')}</button><button class="btn" data-xa="redir">${t('x.redir')}</button><label><input type="checkbox" data-xa="only" ${xOnly ? 'checked' : ''}> ${t('x.only')}</label><span class="sm">${xDirName ? esc(t('x.dir', xDirName)) : t('x.nodir')}</span></div>`;
+  const its = X.items.filter(it => it.review === rv.review_pmid);
+  const shownIts = its.filter(it => !xOnly || (it.auto === null && H[rv.review_pmid][xkey(it)] === undefined));
+  if (!shownIts.length) h += `<p class="sm">${t('x.done')}</p>`;
+  let lastPmid = null;
+  for (const it of shownIts){
+    if (it.pmid !== lastPmid){
+      if (lastPmid !== null) h += '</tbody></table></div>';
+      h += `<h4 class="xp"><a href="https://pubmed.ncbi.nlm.nih.gov/${esc(it.pmid)}/" target="_blank" rel="noopener">${t('x.pair', esc(it.pmid))}</a></h4><div class="e3w"><table class="e3t xi"><thead><tr><th>${t('x.items')}</th><th>${t('x.ans')}</th><th>${t('x.val')}</th><th>${t('x.sc')}</th></tr></thead><tbody>`;
+      lastPmid = it.pmid;
+    }
+    const todo = it.auto === null && H[rv.review_pmid][xkey(it)] === undefined;
+    h += `<tr class="${todo ? 'todo' : ''}"><td class="nm">${esc(it.name)}</td><td class="ans">${esc(it.answer)}</td><td><div class="xv">${esc(it.value)}</div>${xquotes(it)}</td><td class="sc">${xscore(it, H[rv.review_pmid])}</td></tr>`;
+  }
+  if (lastPmid !== null) h += '</tbody></table></div>';
+  el.innerHTML = h;
+}
+function toast(msg){ const el = $('#toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3200); }
+function download(name, text, type){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function isoLocal(){
+  const d = new Date(), z = -d.getTimezoneOffset(), p = n => String(Math.floor(Math.abs(n))).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${z >= 0 ? '+' : '-'}${p(z / 60)}:${p(z % 60)}`;
+}
+// the chosen folder handle is kept in IndexedDB so the folder is picked only once
+const IDB = {
+  open(){ return new Promise((res, rej) => { const r = indexedDB.open('slr-extract', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async get(k){ const db = await this.open(); return new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); },
+  async put(k, v){ const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); v === undefined ? tx.objectStore('kv').delete(k) : tx.objectStore('kv').put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); }
+};
+function xdocs(){
+  const H = xhuman(), at = isoLocal();
+  return X.reviews.map(rid => ({review_pmid: rid, saved_at: at, records: X.items
+    .filter(it => it.review === rid && it.auto === null && (H[rid][xkey(it)] === true || H[rid][xkey(it)] === false))
+    .map(it => ({pmid: it.pmid, item: it.name, correct: H[rid][xkey(it)]}))}));
+}
+async function xsave(){
+  const docs = xdocs(), n = docs.reduce((a, d) => a + d.records.length, 0);
+  if (window.showDirectoryPicker){
+    try {
+      let dir = null;
+      try { dir = await IDB.get('dir'); } catch(e){}
+      if (dir && (await dir.queryPermission({mode:'readwrite'})) !== 'granted' && (await dir.requestPermission({mode:'readwrite'})) !== 'granted') dir = null;
+      if (!dir){
+        dir = await window.showDirectoryPicker({id:'slr-extract-human', mode:'readwrite'});
+        if (dir.name !== 'human' && !confirm(t('x.notHuman', dir.name))) return;
+        try { await IDB.put('dir', dir); } catch(e){}
+      }
+      for (const d of docs){
+        const w = await (await dir.getFileHandle(d.review_pmid + '.json', {create:true})).createWritable();
+        await w.write(JSON.stringify(d, null, 2) + '\n'); await w.close();
+      }
+      xDirName = dir.name; render(); toast(t('x.saved', n, dir.name)); return;
+    } catch(e){
+      if (e && e.name === 'AbortError') return;
+      console.warn('File System Access failed, falling back to download', e);
+    }
+  }
+  for (const d of docs) download(d.review_pmid + '.json', JSON.stringify(d, null, 2) + '\n', 'application/json');
+  toast(t('x.dl'));
+}
 function render(){
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
@@ -234,7 +405,7 @@ function render(){
   const rv = DATA.reviews[cur];
   $('#rtitle').textContent = rtitle(rv);
   $('#rsub').textContent = t('sub', rv.review_pmid, rv.criteria.length, DATA.generated_at);
-  renderCmp(); renderSearch(rv); renderScreen(rv);
+  renderCmp(); renderSearch(rv); renderScreen(rv); renderX(rv);
 }
 document.querySelector('.lang').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; lang = b.dataset.lang; store.raw('slr-lang', lang); render(); });
 $('#theme').addEventListener('click', () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark'; store.raw('slr-theme', r.dataset.theme); });
@@ -249,6 +420,19 @@ $('#list').addEventListener('click', e => {
   const tr = e.target.closest('tr.rr');
   if (tr){ const key = rv.review_pmid + tr.dataset.pmid; openRows.has(key) ? openRows.delete(key) : openRows.add(key); render(); }
 });
+$('#xt').addEventListener('click', e => {
+  const rv = DATA.reviews[cur];
+  const b = e.target.closest('[data-x]');
+  if (b){
+    const k = b.closest('.seg').dataset.k, val = b.dataset.x === '1', curv = xhuman()[rv.review_pmid][k];
+    const y = window.scrollY; xset(rv.review_pmid, k, curv === val ? null : val); render(); window.scrollTo(0, y); return;
+  }
+  const a = e.target.closest('[data-xa]');
+  if (!a) return;
+  if (a.dataset.xa === 'save') xsave();
+  if (a.dataset.xa === 'redir'){ IDB.put('dir', undefined).catch(() => {}); xDirName = null; render(); }
+});
+$('#xt').addEventListener('change', e => { if (e.target.dataset.xa === 'only'){ xOnly = e.target.checked; render(); } });
 render();
 })();
 </script>

@@ -8760,3 +8760,15 @@ file://<repo>/results/report.html
 </result>
 <usage><subagent_tokens>28565</subagent_tokens><tool_uses>5</tool_uses><duration_ms>30271</duration_ms></usage>
 </task-notification>
+
+---
+
+## 2026-10-01T09:00:39+09:00
+
+<task-notification>
+<task-id>bgr27rcgk</task-id>
+<tool-use-id>toolu_01RQ5e1JkVZtyAQGgchcCKvB</tool-use-id>
+<output-file><tmp>/6f96a04d-8f60-42ac-ad2c-e1a2704e2523/tasks/bgr27rcgk.output</output-file>
+<status>failed</status>
+<summary>Background command "Test File System Access API availability on file:// in headless Chrome" failed with exit code 144</summary>
+</task-notification>

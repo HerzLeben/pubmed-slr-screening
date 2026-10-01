@@ -188,3 +188,7 @@ O: <PICO.O>
 
 job：results/extraction/jobs/<review>/<pmid>.json
 ```
+- 採点の基準（2026-10-01 人が決定。採点の途中で変えない。レポートの画面の上にも表示する）：①意味が同じなら正解（表記、単位の書き方、語順の違いは問わない）②答えより詳しいだけなら正解。答えの一部が欠けていれば不正解 ③答えが分類（地域など）で、抽出が元の値の場合、その値から分類が一意に決まれば正解 ④「記載なし」は、答えに値があれば不正解（規則で決まる）
+- 規則での採点（`scripts/score_extraction.py`）：前後の空白と大文字・小文字だけそろえた完全一致 → 正解、「記載なし」で答えに値がある → 不正解、残りは人。102項目のうち規則で正解6、記載なしで不正解17、人の採点79
+- 人の採点の画面は eval-3 のレポートの「抽出」の節に置く（人が決定）。Accuracy は採点のたびに画面で数え直す。計算は `extraction_metrics.js` 1つをレポートに埋め込み、Python 側（`score_extraction.metrics`）と同じ結果になることを node のテストで確かめる。引用は全文の前後160字と一緒に出す（原著の "linked to the sources for manual inspection"）
+- 保存は Chrome の File System Access API（`showDirectoryPicker`）で `results/extraction/human/<review>.json` に直接書く。選んだフォルダの handle は IndexedDB に残し、2回目からは選ばない。使えないブラウザでは eval-2 と同じダウンロードに落とす。下書きは localStorage（`slr-extract-human-<review>`）。file:// で `isSecureContext` が true、`showDirectoryPicker` が関数であることは headless Chrome 154 で確かめた（フォルダを選ぶ操作は人のクリックが要るので、最初の保存で人が確かめる）。参照：https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker

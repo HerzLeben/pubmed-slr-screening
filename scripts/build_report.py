@@ -15,6 +15,8 @@ eval-3 (--run eval-3, docs/eval/eval-3.md): screener-a only, no adjudication and
 Uses the <head> (CSS) and header of report_template.html and the body in report_eval3_body.html.
 Reads reviews/<rid>/eval-3/{criteria,search}.json, results/eval-3/<rid>/candidates.json,
 results/eval-3/screen/a/<rid>/batch_*.json, and the metrics from eval_screening.run_eval3.
+The 抽出 section (the human scores the extraction there) uses score_extraction.load_items/load_human and
+inlines extraction_metrics.js; it saves results/extraction/human/<review>.json.
 The results/report.html of eval-1/eval-2 is not touched.
 """
 
@@ -152,6 +154,16 @@ def build_review_eval3(rid: str, included: list[str], title: dict, reviews: Path
             "records": records, "warnings": warn}
 
 
+def build_extraction(root: Path) -> dict | None:
+    """Items to score in the report's 抽出 section (score_extraction.py), or None before the extraction ran."""
+    from score_extraction import REVIEWS, load_human, load_items
+
+    if not (root / "results" / "extraction" / "out").exists():
+        return None
+    items = load_items(root, with_context=True)
+    return {"reviews": list(REVIEWS), "items": items, "human": load_human(root, items)}
+
+
 def main_eval3(args) -> None:
     reviews = Path(args.reviews)
     results = Path(args.results or "results/eval-3")
@@ -166,9 +178,10 @@ def main_eval3(args) -> None:
                                       {"ja": doc.get("review_title", ""), "en": doc.get("review_title_en")},
                                       reviews, results))
     payload = {"generated_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "run": "eval-3",
-               "reviews": rvs}
+               "reviews": rvs, "extraction": build_extraction(Path("."))}
     head = TEMPLATE[: TEMPLATE.index('<p class="scope"')] + '<p class="scope" data-t="hdr.scope"></p>\n'
     body = (Path(__file__).parent / "report_eval3_body.html").read_text(encoding="utf-8")
+    body = body.replace("__EXTRACTION_METRICS_JS__", (Path(__file__).parent / "extraction_metrics.js").read_text(encoding="utf-8"))
     html = head + body.replace("__DATA__", json.dumps(payload, ensure_ascii=False).replace("</", "<\\/"))
     for key, name in LOGOS.items():
         html = html.replace(key, "data:image/png;base64," + base64.b64encode((ASSETS / name).read_bytes()).decode())
