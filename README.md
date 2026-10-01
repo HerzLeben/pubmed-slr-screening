@@ -57,6 +57,7 @@ flowchart LR
 
 - [Claude Code](https://code.claude.com/)。Pro か Max のサブスクリプションで動かす前提。**`ANTHROPIC_API_KEY` は設定しない**（設定すると API の従量課金になる）
 - Python 3 と `.venv`
+- （任意）Node.js：テストの1件が `scripts/extraction_metrics.js`（レポートの Accuracy の計算）を Python 側と突き合わせる。無ければその1件は skip
 - 公式の PubMed コネクタ（Claude Code の中で）：`/plugin marketplace add anthropics/life-sciences` → `/plugin install pubmed@life-sciences` → 再起動 → `/mcp` で確認
 - NCBI の API key は任意。使うなら環境変数 `NCBI_API_KEY`・`NCBI_EMAIL`（`.env` に書いてもよい。`.env` は commit しない）
 
@@ -106,7 +107,7 @@ curl -L -o bench/raw/TrialReviewBench-data-extraction/37168849.csv https://huggi
 2. [`docs/requirements.md`](docs/requirements.md)：人が決めた要件と理由
 3. [`docs/design.md`](docs/design.md)：どう作るか
 4. [`docs/DECISIONS.md`](docs/DECISIONS.md)・[`docs/HARNESS.md`](docs/HARNESS.md)：途中で決めたこと、想定と違ったこと
-5. [`docs/prompts/log.md`](docs/prompts/log.md)：人が出した指示の記録（hook が記録。個人の情報とローカルのパスは消してある）
+5. [`docs/prompts/log.md`](docs/prompts/log.md)：人が出した指示の記録（hook が記録。個人の情報とローカルのパスは消してある。Claude Code が送る通知と subagent の報告は含めない）
 
 節目の状態は `snap/*` の tag で辿れる：`snap/02-benchmark`、`snap/03-criteria-draft`（人が直す前）、`snap/04-criteria-approved`、`snap/05-query-approved`、`snap/06-no-subagent`、`snap/07-agents-v1`、`snap/08-first-parallel`、`snap/09-hook`、`snap/10-eval-1`、`snap/11-eval-2`、`snap/12-eval-2-notes`、`snap/13-prisma-eval`、`snap/14-positioning`、`snap/15-extraction-items`、`snap/16-eval-3-screened`、`snap/17-eval-3`、`snap/18-extraction`、`snap/19-extraction-eval`、`snap/20-public`
 

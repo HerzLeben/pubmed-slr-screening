@@ -1,4 +1,5 @@
 .env
+.env.*
 results/
 bench/raw/
 .venv/

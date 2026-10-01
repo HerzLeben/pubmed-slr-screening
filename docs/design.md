@@ -1,9 +1,11 @@
 # アプリ設計書 — 第2作：系統的文献レビュー × スクリーニング（TrialMind の再実装）（2026-09-27 v0.2）
 
-> **v0.2（2026-09-27）**：要件を確定（`slr-kit/requirements.md`。リポジトリでは `docs/requirements.md`）。主な変更：PubMed は**自作 MCP をやめ、Anthropic 公式の PubMed コネクタ＋一括取得スクリプト**／対象は血液がん3本（33746596・31190844・37168849）／screener-b は基準の逆順／モデルは全て Sonnet／成果物は HTML レポート／抽出はしない。**本書と requirements が食い違う箇所は requirements が正**
+> **v0.2（2026-09-27）**：要件を確定（`docs/requirements.md`）。主な変更：PubMed は**自作 MCP をやめ、Anthropic 公式の PubMed コネクタ＋一括取得スクリプト**／対象は血液がん3本（33746596・31190844・37168849）／screener-b は基準の逆順／モデルは全て Sonnet／成果物は HTML レポート／抽出はしない（2026-10-01 に範囲へ戻した。5.1節）。**本書と requirements が食い違う箇所は requirements が正**
 
-> **上位方針**：`00_連載の土台_agentic-coding.md` を先に読むこと。この連載の目的は agentic coding の解説で、アプリはそのための題材である。食い違いがあれば土台の文書を優先する。
-> 題材の決定経緯と論拠は `00_アプリラインナップ_20260921.md` 末尾の追補。
+> **2026-10-01 整理**：3章の allow、4章の表（subagent・skill・hook）、7章の構成を実装に合わせて直した。0章の「自分の貢献」と5章の評価の計画は当初の案のまま残している。実際の評価は `docs/eval/`、途中の決定は `docs/DECISIONS.md` を見る。
+
+> **上位方針**：連載の土台の文書（`00_連載の土台_agentic-coding.md`、リポジトリの外）が先。この連載の目的は agentic coding の解説で、アプリはそのための題材である。食い違いがあれば土台の文書を優先する。
+> 題材の決定経緯と論拠は `00_アプリラインナップ_20260921.md`（リポジトリの外）末尾の追補。
 > 用語は英語のまま書く（`temperature`、subagent、few-shot、prompt caching など）。コードコメント・docs も同じ。
 
 ---
@@ -82,7 +84,7 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 ## 3. 権限と停止条件
 
 - `.claude/settings.json`
-  - allow：`pytest`、`ruff`、`git status/diff/log`、MCP の読み取り系（`mcp__pubmed__search`、`mcp__pubmed__fetch`）
+  - allow：`pytest`、`ruff`、`git status/diff/log`、公式 PubMed コネクタの読み取り系（`mcp__plugin_pubmed_PubMed__*`。名前は HARNESS の接続確認で確かめた）
   - ask：評価の全件実行（`claude -p` を含むスクリプト）、`git push`、ベンチマークの再ダウンロード
   - deny：`.env`・鍵の読み取り、`results/` の外への screener の書き込み（agent 定義の `tools` と permission rule の両方で）
 - **フェーズの区切り（承認点）**
@@ -105,14 +107,14 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 |---|---|---|---|---|---|
 | `query-builder` | PICO → Boolean query、予備検索で改良（原著の検索段） | PubMed MCP のみ | sonnet | 読む | PICO、予備検索の結果 |
 | `screener-a` | 1バッチ（20件）を基準ごとに {-1,0,1}＋逐語引用で判定 | Read、Write（`results/screen/a/` のみ） | sonnet | **読まない**（`omitClaudeMd: true`） | 承認済み基準、abstract のバッチだけ |
-| `screener-b` | 同上、独立に判定 | 同上（`results/screen/b/`） | **別条件**（下記） | 読まない | 同上 |
-| `adjudicator` | A と B を突き合わせ、一致は確定、不一致・引用不備は「要人判断」へ | Read、Write（`results/adjudication/`） | sonnet | 読む | A・B の出力だけ（abstract は必要時のみ） |
+| `screener-b` | 同上、独立に判定。基準を逆順で読む | 同上（`results/screen/b/`） | sonnet | 読まない | 同上 |
+| `adjudicator` | status は `scripts/adjudicate.py` が規則で決める。adjudicator は needs_human に割れた理由の summary を書くだけ | Read、Write（`results/adjudication/`） | sonnet | **読まない**（DECISIONS） | 自分の入力ファイルだけ（`limit_reads.py` で制限） |
 | `extractor` | 研究特性の抽出（PMC OA の全文がある研究のみ） | Read、Write（`results/extraction/out/` のみ） | sonnet | **読まない**（`omitClaudeMd: true`） | job ファイル（項目名だけ）と全文の txt |
 
 **screener を独立にする工夫（記事の中心）**
 - 会話履歴を持たない＝互いの判定を見ない（subagent の仕様そのものが独立性を担保）
 - `omitClaudeMd: true`：orchestrator 向けのルール（フェーズ、評価の手順）を screener に混ぜない。判定規則は agent 定義と preload skill だけに置く
-- **同じモデル・同じ指示の2体は誤りが相関する**。B の条件を変える候補を実験で比べる：(a) 別モデル、(b) 基準の提示順を逆にする、(c) 同条件（ばらつきだけ）。一致度（Cohen's kappa）と感度で選ぶ
+- **同じモデル・同じ指示の2体は誤りが相関する**。B の条件の候補は (a) 別モデル、(b) 基準の提示順を逆にする、(c) 同条件（ばらつきだけ）で、(b) に決めた（2026-09-27、requirements）
 - 渡すのは abstract と基準だけ。スコアや他の研究の判定は渡さない
 
 ### skill（`.claude/skills/<name>/SKILL.md`）
@@ -121,9 +123,9 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 |---|---|---|
 | `pico-to-criteria` | 人と Claude | PICO から適格基準を起こす。基準は「1つの判定で答えられる粒度」、除外基準は明示、**人の承認で止まる** |
 | `screening-rules` | screener に preload（`skills` 欄） | 判定手順：基準ごとに {-1,0,1}、必ず逐語引用、abstract に無い情報は 0（推測で ±1 にしない）、出力 JSON の形 |
+| `extraction-rules` | extractor に preload | 抽出の規則：項目ごとに値と全文からの逐語引用、見つからなければ「記載なし」、出力 JSON の形 |
 | `prisma-record` | 人と Claude | 検索件数 → 重複除去 → スクリーニング除外（理由別）→ 組み入れ、を `results/prisma.json` に記録 |
 | `eval` | 人だけ（`disable-model-invocation: true`） | 第1作の型を再利用：何を測るか先に書く → 実行 → 前回と比較 → 失敗の分類 → 記録 |
-| `benchmark-prep` | 人と Claude | TrialReviewBench の整形（列の統一、PMID の正規化、行数の突き合わせ） |
 
 ### hook
 
@@ -133,22 +135,25 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 | `SubagentStop`（matcher：`screener-a\|screener-b`） | screener の出力 | 書かれたファイルを同じ規則で検査し直し、不備を `systemMessage` で本体に知らせる（観察だけ。書かずに終わった screener を見つける） |
 | `PostToolUse`（Write、`results/prisma.json`） | PRISMA | 各段の件数の和が合うか（除外理由の合計＝除外件数） |
 | `SubagentStart` / `SubagentStop`（matcher なし） | subagent 起動 | 同時に動く subagent を6体までにする（`.claude/hooks/agent_gate.py`。SubagentStart は exit 2 で起動を止められる）。Claude Code 自体の上限 `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=6` も settings.json の env で掛ける |
-| `PostToolUse`（Edit/Write、`*.py`） | コード | `ruff`、`pytest`（第1作の構成を流用） |
-| `UserPromptSubmit` | 人が送った指示 | `docs/prompts/log.md` に時刻つきで自動追記（記録用。stdout は出さず exit 0。stdout を出すと Claude の context に入る）。第1作で指示文が残らなかった反省から |
+| `PreToolUse`（matcher：`Read`） | adjudicator・extractor の読み込み | 自分の入力ファイルだけを読ませる（`limit_reads.py`。subagent の `tools` は道具の名前だけでパスを絞れないため） |
+| `PreToolUse`（`Write`）／`SubagentStop`（`extractor`） | extractor の出力 | 項目の名前と順、逐語引用が全文にあるか（`check_extract_output.py`。screener の検査と同じ作り） |
+| `UserPromptSubmit` | 人が送った指示 | `docs/prompts/log.md` に時刻つきで自動追記（記録用。stdout は出さず exit 0。stdout を出すと Claude の context に入る）。第1作で指示文が残らなかった反省から。個人の情報は消し、Claude Code が送る通知（task-notification・subagent の報告）は書かない |
+
+ruff・pytest を回す hook は置かなかった（テストは人の指示と commit の前に回す）。hook の共通部分は `.claude/hooks/hooklib.py`、規則（`quote_match.py`・`rules.py`）は scripts/ のものを import する。
 
 ### MCP
 
 - **Anthropic 公式の PubMed コネクタ**（`https://pubmed.mcp.claude.com/mcp`、Claude Code では `/plugin marketplace add anthropics/life-sciences` → `/plugin install pubmed@life-sciences`）。検索、書誌・抄録、PMC 全文、関連論文、引用からの PMID 特定、ID 変換。無料、NCBI の制限はサーバー側で順守
 - 使うのは query-builder だけ（screener には渡さない）
 - 1回の検索で返る件数・長い検索式の扱いなどの制限は、接続確認で試して HARNESS に記録（第三者の記事に「上位15件程度」「長い式で失敗」の報告あり、未確認）
-- 候補200件と抄録の一括取得は `scripts/fetch_pubmed.py`（E-utilities の esearch / efetch を直接呼ぶ。API key は環境変数）。再現性のため、検索式・検索期間・取得日時・件数を `results/<PMID>/search.json` に残す
+- 候補200件と抄録の一括取得は `scripts/fetch_pubmed.py`（E-utilities の esearch / efetch を直接呼ぶ。API key は環境変数）。再現性のため、検索式・検索期間・取得日時・件数を `search.json` に残す（relevance 順は再現しないので、上位リストは `reviews/<PMID>/search.json` に固定して commit する）
 - 自作しない理由：保守・アクセス制限を公式に任せられる、読者はプラグイン1つで再現できる、自作は第3作の主役
 
 ---
 
 ## 5. 評価設計
 
-- **データ**：TrialReviewBench。全100本は課金が重いので、**1トピック（免疫療法）から 5〜10 本**に絞る（どれを使うかは人が決める）。補助に SYNERGY（CC0）の医学系レビュー1〜2本
+- **データ**：TrialReviewBench。全100本は課金が重いので絞る。当初案は「1トピック（免疫療法）から 5〜10 本、補助に SYNERGY」、実際は血液がんの3本（requirements）
 - **指標**
 
 | 段 | 原著と同じ指標 | 追加する業務の指標 |
@@ -159,7 +164,7 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 
 - **比較**：(1) 1体（原著相当）vs 2体＋裁定、(2) screener-b の条件 (a)(b)(c)、(3) 原著の数値との並記（「追試」とは書かない。データの取得時期・モデルが違う）
 - **失敗の分類**：基準の粒度不足／abstract に情報が無い／引用の捏造（hook が捕まえた数）／2体とも誤り（相関）／ベンチマークの正解側の問題
-- **記録**：`docs/EVAL.md`（第1作と同じ書式）。所要時間・トークンは比率で記事に、金額は書かない
+- **記録**：`docs/eval/eval-1.md`〜`eval-3.md`。所要時間・トークンは比率で記事に、金額は書かない
 
 ### 5.1 抽出（指示書18 で下書き、指示書20 で実装）
 
@@ -183,30 +188,27 @@ TrialReviewBench：がん治療の SR 100本（免疫療法／放射線・化学
 
 ---
 
-## 7. リポジトリ構成（案）
+## 7. リポジトリ構成
 
 ```
-trialmind-slr-claude-code/
-├── CLAUDE.md                     # orchestrator 向け：フェーズ、承認点、やらないこと、用語
+pubmed-slr-screening/
+├── CLAUDE.md                     # orchestrator 向け：フェーズ、承認点、やらないこと、データの流れ
 ├── .claude/
-│   ├── settings.json             # 権限、hooks、subagent の上限（env）
-│   ├── agents/                   # query-builder / screener-a / screener-b / adjudicator
-│   ├── skills/                   # pico-to-criteria / screening-rules / prisma-record / eval / benchmark-prep
-│   └── hooks/                    # check_screen_output.py / check_prisma.py / agent_gate.py
-├── .mcp.json                     # pubmed MCP
-├── mcp/pubmed/                   # 自作 MCP（esearch / efetch）
-├── bench/                        # 整形スクリプト（データ本体は gitignore、取得手順は README）
-├── reviews/<review_id>/          # pico.md、criteria.md（承認済み）
-├── results/                      # screen/a、screen/b、adjudication、prisma.json（gitignore、サンプルのみ同梱）
-├── eval/                         # 評価スクリプト、指標
-├── docs/                         # design.md、DECISIONS.md、EVAL.md、HARNESS.md
-├── NOTICE                        # TrialMind（MIT）、TrialReviewBench（Apache-2.0）の帰属表示
+│   ├── settings.json             # 権限、hooks、subagent の上限（env）、PubMed プラグイン
+│   ├── agents/                   # query-builder / screener-a / screener-b / adjudicator / extractor
+│   ├── skills/                   # pico-to-criteria / screening-rules / extraction-rules / prisma-record / eval
+│   └── hooks/                    # log_prompt / check_screen_output / check_extract_output / limit_reads /
+│                                 # check_prisma / agent_gate（共通部分は hooklib.py）
+├── bench/                        # 整形済みの答え（reviews.jsonl、extraction/）。raw/ は gitignore
+├── reviews/<PMID>/               # criteria.md（承認済み）と .json、query.md、search.json（固定した上位リスト）、
+│                                 # extraction_items.md、eval-3/（基準の案のまま）
+├── scripts/                      # 取得・バッチ・裁定・PRISMA・レポート・評価。規則は rules.py と quote_match.py
+├── tests/                        # pytest（ネットワーク不要）
+├── results/                      # 抄録・判定・裁定・人の判断・全文・抽出（gitignore）
+├── docs/                         # requirements、design、schema、DECISIONS、HARNESS、eval/、samples/、demo/、prompts/
+├── LICENSE、NOTICE               # MIT、TrialReviewBench（Apache-2.0）の帰属表示
 └── README.md
 ```
-
-名前はデータ名×手法名の原則に合わせて最終決定（例：`pubmed-slr-screening`）。
-
----
 
 ## 8. Part 構成（案）
 
@@ -227,7 +229,7 @@ trialmind-slr-claude-code/
 
 第1作は後から撮り直した画面が多く、「実際に貼った指示文」が手元に残っていなかった（Part3 で指示文を引用できなかった）。第2作は**作りながら残す**。
 
-**2026-09-26 改訂：録画を回しっぱなしにする方式に変更。** 詳細は `12_撮影と記録_第2作_20260925.md`。
+**2026-09-26 改訂：録画を回しっぱなしにする方式に変更。** 詳細は `12_撮影と記録_第2作_20260925.md`（リポジトリの外）。
 
 - 人：作業中は VS Code のウィンドウを録画しっぱなし（保存先はローカルの `~/Movies/slr-rec/`、Drive に置かない）
 - hook：`UserPromptSubmit` で指示文を `docs/prompts/log.md` に自動記録
@@ -236,13 +238,13 @@ trialmind-slr-claude-code/
 
 ## 10. 未決事項
 
-1. ~~範囲~~ → 検索＋スクリーニングまで（2026-09-27）
-2. TrialReviewBench のどのレビュー（5〜10本）を使うか。`study-search-screening.jsonl` に候補集合（非組み入れ研究）が含まれるかを確認してから決める
+1. ~~範囲~~ → 検索＋スクリーニングまで（2026-09-27）。抽出は 2026-10-01 に範囲へ戻した
+2. ~~TrialReviewBench のどのレビューを使うか~~ → 血液がんの3本（2026-09-27）
 3. ~~screener-b の条件~~ → 基準の逆順（2026-09-27）
 4. ~~自作 MCP か既製か~~ → 公式コネクタ＋スクリプトに決定（2026-09-27）
 5. （解決 2026-09-27）subagent 起動のツール名は `Agent`（v2.1.63 で Task から改名）。同時起動の上限は SubagentStart の hook と env で掛けた。SubagentStop の exit 2 は受け付けられないと公式ドキュメントで確認し、差し戻しは PreToolUse（Write）に移した
 6. 原著著者への連絡タイミング
-7. リポジトリ名
+7. ~~リポジトリ名~~ → `pubmed-slr-screening`
 
 ## 参考文献
 

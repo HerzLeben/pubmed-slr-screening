@@ -210,3 +210,9 @@ job：results/extraction/jobs/<review>/<pmid>.json
 - eval-2（`results/report.html`、人が入る流れ）と eval-3（`results/eval-3/report.html`、原著との比較）の2つを、抄録の本文とすべての逐語引用（スクリーニングの引用、抽出の引用と前後の文）を伏せて GitHub Pages で公開する。タイトル・雑誌・年・PMID（PubMed へのリンク）、基準ごとの判定、スコア、抽出した短い値と答え、人の判断と採点は残す
 - 作り方：`build_report.py --public` で、データを作ったあとに伏せる（判定・検査は伏せる前の抄録で行う）。出力は `docs/demo/`。見本の画面は読むだけ（人の判断・採点の操作と保存は出さない）
 - 2026-10-01 人が決定（続き）：Pages の見本は eval-3 だけにする（`docs/demo/eval-2.html` は消し、`docs/index.html` は eval-3 へ移動するだけ）。eval-3 の画面の上に、eval-2 と同じロボットのアニメーションで eval-3 の流れ（PICO → query-builder → screener-a → スコアで順位 → extractor → 人が採点）を足す。見本では、ヘッダーの下の「教育と手法の検証用…」の1行を出さない（位置づけは README にある）
+
+## 2026-10-01 コードとファイルの整理（人の指示）
+
+- `results/` の読み込みを `scripts/common.py` に、最終候補・順位・基準の ID 順を `scripts/rules.py` にまとめた。hook の共通部分は `.claude/hooks/hooklib.py`。出力は変えていない（手元の results/ で前後を突き合わせた）
+- `docs/prompts/log.md` には人の指示だけを残す。Claude Code が送る task-notification と subagent の報告は `log_prompt.py` が書かず、既存のログからも `redact_log.py` で外した
+- 消したもの：`docs/HANDOFF-cowork.md`（Cowork への引き継ぎ。最新の tag と残りの作業が古く、中身は eval-3.md などの正本の要約だけ）、`fetch_pubmed.py` の旧形式 `candidates.jsonl` の読み込み（すべての results に candidates.json がある）。`make_no_subagent_set.py` は commit 済みの見本 `docs/samples/no-subagent-31190844.jsonl` の作り方なので残す

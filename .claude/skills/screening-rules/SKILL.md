@@ -1,6 +1,7 @@
 ---
 name: screening-rules
 description: SLR のタイトル・抄録スクリーニングの判定規則（基準ごとに 1/0/-1、逐語引用、出力 JSON の形）。screener-a・screener-b に preload する。正本は docs/schema.md 3章・5章
+user-invocable: false
 ---
 
 # タイトル・抄録スクリーニングの判定規則

@@ -47,11 +47,12 @@ requirements と design が食い違ったら requirements を優先する。ど
 - 環境：`.venv`（`requirements.txt` は python-dotenv だけ、`requirements-dev.txt` は ruff・pytest）。設定ファイル（pyproject 等）は無い
 - テスト：`python3 -m pytest -q`（ネットワーク不要）。1つだけ：`python3 -m pytest tests/test_rules.py -q`、`-k <名前>` で絞る
 - lint：`ruff check .`
-- テストは `sys.path` に `scripts/` を足して import する（パッケージ化していない）。hook のテストは `tests/test_hooks.py`
+- テストは `sys.path` に `scripts/` を足して import する（パッケージ化していない。`tests/conftest.py` で1回だけ足す）。hook のテストは `tests/test_hooks.py`
+- `tests/test_score_extraction.py` の1件は `node` で `scripts/extraction_metrics.js` を動かす（node が無ければ skip）
 
 ## データの流れ（どのスクリプトが何を読み書きするか。ファイルの形の正本は `docs/schema.md`）
 レビューは PMID で呼ぶ（31190844、33746596、37168849）。`reviews/<rid>/` は commit する、`results/` は gitignore。
-1. `scripts/build_bench.py` → `bench/reviews.jsonl`（答えの `included_pmids`。screener・PRISMA は読まない）
+1. `scripts/build_bench.py` → `bench/reviews.jsonl`（答えの `included_pmids`。screener・PRISMA は読まない）、`scripts/build_extraction.py` → `bench/extraction/<rid>.jsonl`（抽出の答え）
 2. `/pico-to-criteria` → `reviews/<rid>/criteria.md`（人が承認）→ `scripts/criteria_to_json.py` → `criteria.json`
 3. `scripts/fetch_pubmed.py` → `results/<rid>/{search,candidates}.json`。PubMed の relevance 順は再現しないので、上位リストは `reviews/<rid>/search.json` に固定し、`--from-search` で candidates を作り直す。`--all-hits` で全ヒットに広げる
 4. `scripts/make_batches.py` → `results/batches/<rid>/{a,b}/batch_<nn>.json`（a は基準の正順、b は逆順）。既に判定済みのバッチと中身が変わるなら書かずに止まる
@@ -59,13 +60,15 @@ requirements と design が食い違ったら requirements を優先する。ど
 6. `scripts/adjudicate.py` が status を規則で決める → adjudicator（subagent）は needs_human の `summary` を書くだけ
 7. 人の判断：HTML レポートから `results/human/<rid>.json` を保存
 8. `scripts/prisma_record.py` → `results/prisma.json`、`scripts/build_report.py` → `results/report.html`、`scripts/eval_screening.py`（評価。`/eval` は人だけが起動）
-9. 抽出（⑦、`docs/schema.md` 10章）：`scripts/fulltext_to_text.py`（`results/fulltext/<pmid>.xml` → `.txt`）→ `scripts/make_extraction_jobs.py` → `results/extraction/jobs/<rid>/<pmid>.json` → extractor（subagent）→ `results/extraction/out/<rid>/<pmid>.json` → 人が eval-3 のレポートで採点 → `results/extraction/human/<rid>.json` → `scripts/score_extraction.py` → `results/extraction/score.json`。Accuracy の計算は `score_extraction.metrics()` と `scripts/extraction_metrics.js`（レポートに埋め込む）で同じにする
-- 判定の集計（`score`・`overall`）は `scripts/rules.py`、引用の照合は `scripts/quote_match.py` に1つだけ定義し、hook・adjudicate・report・eval が共有する。規則を変えるならここと `docs/schema.md` を一緒に直す
+9. 抽出（⑦、`docs/schema.md` 10章）：`scripts/fetch_pmc.py`（PMC の全文 → `results/fulltext/<pmid>.xml` と `status.json`）→ `scripts/fulltext_to_text.py`（`results/fulltext/<pmid>.xml` → `.txt`）→ `scripts/make_extraction_jobs.py` → `results/extraction/jobs/<rid>/<pmid>.json` → extractor（subagent）→ `results/extraction/out/<rid>/<pmid>.json` → 人が eval-3 のレポートで採点 → `results/extraction/human/<rid>.json` → `scripts/score_extraction.py` → `results/extraction/score.json`。Accuracy の計算は `score_extraction.metrics()` と `scripts/extraction_metrics.js`（レポートに埋め込む）で同じにする
+- 判定の集計（`score`・`overall`・裁定・最終候補・順位）は `scripts/rules.py`、引用の照合は `scripts/quote_match.py` に1つだけ定義し、hook・adjudicate・report・eval・PRISMA が共有する。規則を変えるならここと `docs/schema.md` を一緒に直す
+- `results/` の読み込み（screener の判定、adjudication、人の判断、jsonl）は `scripts/common.py` にまとめてある
 - eval-3 は別の系：`--run eval-3` で `reviews/<rid>/eval-3/`（未承認の `criteria_draft.md` から `draft_criteria_to_json.py`）と `results/eval-3/` を使い、screener-a だけ・adjudication と人の判断なし（`docs/eval/eval-3.md`）
 
 ## hook（`.claude/settings.json`、`.claude/hooks/`）
-- `log_prompt.py`（UserPromptSubmit）：指示文を `docs/prompts/log.md` に追記。何も出力せず止めない
-- `check_screen_output.py`（PreToolUse Write と SubagentStop）：screener・adjudicator の出力の形と逐語引用を検査し、exit 2 で差し戻す
+- 共通部分（`project_dir`・`rel`・差し戻しのメッセージ・SubagentStop の報告）は `hooklib.py`（hook ではない）
+- `log_prompt.py`（UserPromptSubmit）：人の指示文を `docs/prompts/log.md` に追記（個人の情報を消し、task-notification・subagent の報告は書かない）。何も出力せず止めない
+- `check_screen_output.py`（PreToolUse Write と SubagentStop `screener-a|screener-b`）：screener・adjudicator の出力の形と逐語引用を検査し、exit 2 で差し戻す（SubagentStop は観察だけ）
 - `limit_reads.py`（PreToolUse Read）：adjudicator が読めるのは自分の入力ファイルだけ（extractor は下の行）
 - `agent_gate.py`（SubagentStart/Stop）：同時起動を6に制限（`.claude/state/running/` の marker）
 - `check_extract_output.py`（PreToolUse Write と SubagentStop `extractor`）：extractor の出力の形・項目の順・逐語引用を検査し、exit 2 で差し戻す（SubagentStop は観察だけ）。`limit_reads.py` は extractor にも効き、自分の job とその全文の txt だけ読める

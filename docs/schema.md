@@ -2,9 +2,9 @@
 
 > v2（2026-09-27 夜）：subagent を使わない試走の結果を受け、引用の照合を変更（Unicode の正規化をする、引用元をタイトルと抄録の両方にする）。E1 の定義を3章に追記。
 
-screener・adjudicator・人の判断・HTML レポートが共有する「形」の正本。
-指示7で作る `screening-rules` skill、出力を検査する hook（`.claude/hooks/check_screen_output.py`）、`scripts/build_report.py` はこの文書に合わせる。
-リポジトリでは `docs/schema.md` に置く想定。
+screener・adjudicator・extractor・人の判断・HTML レポートが共有する「形」の正本。
+`screening-rules`・`extraction-rules` skill、出力を検査する hook（`.claude/hooks/check_screen_output.py`・`check_extract_output.py`）、
+`scripts/` の各スクリプトはこの文書に合わせる。規則のコードは `scripts/rules.py`（集計・裁定・最終候補）と `scripts/quote_match.py`（引用の照合）に1つだけ置く。
 
 ## 0. 決定事項（2026-09-27、Wataru 承認）
 
@@ -23,7 +23,8 @@ screener・adjudicator・人の判断・HTML レポートが共有する「形�
 ```
 reviews/<review_pmid>/criteria.md        # 人が承認した基準（人が読む）
 reviews/<review_pmid>/criteria.json      # 同じ内容の機械用（screener・hook・レポートが読む）
-results/<review_pmid>/search.json        # 検索式・期間・取得日時・件数（既存の設計どおり）
+reviews/<review_pmid>/search.json        # 検索式・期間・件数と、固定した上位リスト（commit する。fetch_pubmed.py --from-search が読む）
+results/<review_pmid>/search.json        # その回の検索の記録（fetch_pubmed.py の出力）
 results/<review_pmid>/candidates.json    # 候補と抄録（fetch_pubmed.py の出力）
 results/batches/<review_pmid>/<a|b>/batch_<nn>.json  # screener への入力（scripts/make_batches.py。candidates の写しと、読む順に並べた基準）
 results/screen/a/<review_pmid>/batch_<nn>.json
@@ -31,11 +32,16 @@ results/screen/b/<review_pmid>/batch_<nn>.json
 results/adjudication/<review_pmid>.json
 results/human/<review_pmid>.json         # HTML からダウンロードして置く
 results/report.html                      # build_report.py の出力（1枚）
+results/prisma.json                      # prisma_record.py の出力（7章）
+results/fulltext/<pmid>.xml              # PMC の全文（fetch_pmc.py）。status.json に no_pmc／pmc_no_body／body
 results/fulltext/<pmid>.txt              # 抽出の入力（fulltext_to_text.py。10章）
 results/extraction/jobs/<review_pmid>/<pmid>.json   # extractor への入力（make_extraction_jobs.py。10章）
 results/extraction/out/<review_pmid>/<pmid>.json    # extractor の出力（10章）
 results/extraction/human/<review_pmid>.json         # 抽出の人の採点（レポートから保存）
+results/extraction/score.json                       # score_extraction.py の出力（Accuracy）
 ```
+
+eval-3（`docs/eval/eval-3.md`）は別の系で、同じ形のファイルを次の場所に置く：基準は `reviews/<review_pmid>/eval-3/criteria.json`（未承認の案から `draft_criteria_to_json.py`）、検索は `reviews/<review_pmid>/eval-3/search.json`、候補・バッチ・判定・レポートは `results/eval-3/` の下（`<review_pmid>/candidates.json`、`batches/`、`screen/a/`、`report.html`）。adjudication と人の判断は無い。
 
 `<nn>` は 2桁のゼロ埋め（`batch_01.json`）。
 
