@@ -156,12 +156,13 @@ def build_review_eval3(rid: str, included: list[str], title: dict, reviews: Path
 
 def build_extraction(root: Path) -> dict | None:
     """Items to score in the report's 抽出 section (score_extraction.py), or None before the extraction ran."""
-    from score_extraction import REVIEWS, load_human, load_items
+    from score_extraction import REFERENCE_EXCLUDE, REVIEWS, load_human, load_items
 
     if not (root / "results" / "extraction" / "out").exists():
         return None
     items = load_items(root, with_context=True)
-    return {"reviews": list(REVIEWS), "items": items, "human": load_human(root, items)}
+    return {"reviews": list(REVIEWS), "items": items, "human": load_human(root, items),
+            "reference_exclude": list(REFERENCE_EXCLUDE)}
 
 
 def main_eval3(args) -> None:

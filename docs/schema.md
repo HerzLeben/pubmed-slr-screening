@@ -244,7 +244,8 @@ SubagentStop（matcher `screener-a|screener-b`）では、最後のメッセー�
 ### 採点（`scripts/score_extraction.py`、`results/extraction/human/<review>.json`）
 
 - 分母：`results/extraction/jobs/` の全組 × job の項目（102）。答えは `bench/extraction/<review>.jsonl`、値は `results/extraction/out/`
-- 規則：前後の空白と大文字・小文字だけそろえて完全一致 → 正解。`"記載なし"` で答えに値がある → 不正解。それ以外は人が採点する
+- 規則：前後の空白と大文字・小文字だけそろえて完全一致 → 正解。それ以外は `"記載なし"` も含めて人が採点する（2026-10-01 人が決定）
+- 参考値：`REFERENCE_EXCLUDE`（37168849/33495835、答えの不備の疑い）を除いた Accuracy も `score.json` の `reference_without` とレポートに並べる。主な値は 102項目のまま
 - 人の採点は eval-3 のレポート（`build_report.py --run eval-3` の「抽出」の節）で付け、そこから保存する。規則で決まった項目は書かない（書いてあれば `score_extraction.py` が止まる）
 
 ```json

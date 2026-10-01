@@ -8772,3 +8772,15 @@ file://<repo>/results/report.html
 <status>failed</status>
 <summary>Background command "Test File System Access API availability on file:// in headless Chrome" failed with exit code 144</summary>
 </task-notification>
+
+---
+
+## 2026-10-01T09:15:15+09:00
+
+<pasted_content id="439e">
+採点の前に2点。どちらも人の決定（2026-10-01）として DECISIONS に書いてから進める。
+
+1. 規則での採点を直す：規則で決めるのは完全一致の正解だけにする。「記載なし」は、答えに値があっても規則で不正解にせず、すべて人の採点に回す（17件）。理由：答えが "not reported" / "Not available" のもの（30396908×33746596 の BCMA positivity、33495835 の Prior Therapies、34034795 の Manufacturing time と Transduction Mechanism）は、採点の基準1で正解になるため。表記の一覧で拾う規則は作らない（答えを見たあとで規則を作ることになるため）。採点の基準4 を「記載なしは、答えも記載が無いことを表していれば正解、値があれば不正解」に直す。score_extraction.py・画面・テストを直し、採点に回る件数を報告して止まる。
+2. 33495835 × 37168849：答えは直さず、そのまま採点する。eval-3.md の抽出の章に「答えの不備の疑い」として、この論文が in vitro で患者がいないこと、答えの年齢・性別・Study Design、Costimulatory Domain の答えが薬剤名であることを書く。この組を除いた Accuracy を参考値として並べる（主な値は 102項目のまま）。
+3. HARNESS の「やらなかったこと」に1行：全文のテキストに著者の所属を入れていないので、34034795 の Location が記載なしになった。直さない。
+</pasted_content id="439e">

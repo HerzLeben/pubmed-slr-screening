@@ -9,10 +9,10 @@ Reads (docs/schema.md 10章):
     bench/extraction/<review>.jsonl                     the answers
     results/extraction/human/<review>.json              the human's scores (optional; saved from the eval-3 report)
 
-Rule (decided in 指示書20 6.1):
+Rule (指示書20 6.1, changed by the human on 2026-10-01):
     exact match after trimming and lower-casing  -> correct (by rule)
-    "記載なし" while the answer has a value         -> wrong (by rule)
-    anything else                                  -> scored by the human in the report
+    anything else, "記載なし" included             -> scored by the human in the report
+The Accuracy without the pairs in REFERENCE_EXCLUDE is also given, as a reference only.
 The Accuracy and its 95% CI (Wilson) are the same calculation as scripts/extraction_metrics.js.
 """
 
@@ -30,6 +30,8 @@ from quote_match import find_quote
 NOT_FOUND = "記載なし"
 REVIEWS = ("33746596", "37168849")
 EXPECTED_TOTAL = 102
+# the answer looks wrong (in vitro study, no patients; 2026-10-01 human). Main values keep all 102 items
+REFERENCE_EXCLUDE = ("37168849/33495835",)
 Z = 1.959963984540054
 CONTEXT = 160
 
@@ -39,11 +41,8 @@ def norm(s) -> str:
 
 
 def auto_score(answer: str, value: str) -> str | None:
-    if norm(value) == norm(answer):
-        return "correct"
-    if str(value).strip() == NOT_FOUND and str(answer).strip():
-        return "wrong"
-    return None
+    """"correct" for an exact match, else None (the human scores it; "記載なし" too)."""
+    return "correct" if norm(value) == norm(answer) else None
 
 
 def quote_contexts(text: str, quotes: list[str], width: int = CONTEXT) -> list[dict]:
@@ -127,7 +126,7 @@ def wilson(k: int, n: int) -> tuple[float | None, float | None]:
 def metrics(items: list[dict], human: dict) -> dict:
     """Same as extractionMetrics() in extraction_metrics.js."""
     def blank():
-        return {"total": 0, "scored": 0, "correct": 0, "pending": 0, "rule_correct": 0, "rule_wrong": 0,
+        return {"total": 0, "scored": 0, "correct": 0, "pending": 0, "rule_correct": 0,
                 "human_correct": 0, "human_wrong": 0}
 
     out = {"overall": blank(), "by_review": {}, "by_pair": {}}
@@ -142,9 +141,6 @@ def metrics(items: list[dict], human: dict) -> dict:
                 m["scored"] += 1
                 m["correct"] += 1
                 m["rule_correct"] += 1
-            elif it["auto"] == "wrong":
-                m["scored"] += 1
-                m["rule_wrong"] += 1
             elif h is True:
                 m["scored"] += 1
                 m["correct"] += 1
@@ -163,7 +159,7 @@ def metrics(items: list[dict], human: dict) -> dict:
 def fmt(m: dict) -> str:
     acc = "—" if m["accuracy"] is None else f"{m['accuracy']:.3f} (95% CI {m['ci_low']:.3f}–{m['ci_high']:.3f})"
     return (f"{acc}  correct {m['correct']}/{m['scored']}, pending {m['pending']} "
-            f"[rule ✓{m['rule_correct']} ✗{m['rule_wrong']}, human ✓{m['human_correct']} ✗{m['human_wrong']}]")
+            f"[rule ✓{m['rule_correct']}, human ✓{m['human_correct']} ✗{m['human_wrong']}]")
 
 
 def main() -> None:
@@ -177,11 +173,16 @@ def main() -> None:
         sys.exit(f"分母が {len(items)}（{EXPECTED_TOTAL} のはず）")
     human = load_human(root, items)
     m = metrics(items, human)
+    ref = metrics([it for it in items if f"{it['review']}/{it['pmid']}" not in REFERENCE_EXCLUDE], human)
+    m["reference_without"] = {"pairs": list(REFERENCE_EXCLUDE), "overall": ref["overall"], "by_review": ref["by_review"]}
     print("overall  ", fmt(m["overall"]))
     for k, v in m["by_review"].items():
         print("review   ", k, fmt(v))
     for k, v in m["by_pair"].items():
         print("pair     ", k, fmt(v))
+    print("reference without", ", ".join(REFERENCE_EXCLUDE), fmt(ref["overall"]))
+    for k, v in ref["by_review"].items():
+        print("reference review ", k, fmt(v))
     out = root / args.out
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(m, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

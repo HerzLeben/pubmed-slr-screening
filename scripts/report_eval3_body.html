@@ -110,16 +110,16 @@ const I18N = {
     'sub':(p, n, g) => `元レビュー PMID ${p} · 基準 ${n} 個（案のまま）· 生成 ${g}`,
     's.search':'検索', 's.screen':'スクリーニング（A のスコア順）', 's.extract':'抽出', 's.extract.todo':'このレビューは抽出の対象ではない（抽出は 33746596・37168849 の2本）',
     'x.rules.h':'採点の基準（2026-10-01 に人が決めた。採点の途中で変えない）',
-    'x.rules':['意味が同じなら正解（表記、単位の書き方、語順の違いは問わない）','答えより詳しいだけなら正解。答えの一部が欠けていれば不正解','答えが分類（地域など）で、抽出が元の値の場合、その値から分類が一意に決まれば正解','「記載なし」は、答えに値があれば不正解（規則で決まる）'],
-    'x.auto':'前後の空白と大文字・小文字だけそろえて完全一致したものは、規則で正解にしてある',
-    'x.acc':'Accuracy（採点済みのうち正解の割合、95% CI は Wilson）', 'x.lvl':'範囲', 'x.items':'項目', 'x.rc':'規則で正解', 'x.rw':'記載なし', 'x.hc':'人：正解', 'x.hw':'人：不正解', 'x.pend':'残り', 'x.accc':'Accuracy (95% CI)',
+    'x.rules':['意味が同じなら正解（表記、単位の書き方、語順の違いは問わない）','答えより詳しいだけなら正解。答えの一部が欠けていれば不正解','答えが分類（地域など）で、抽出が元の値の場合、その値から分類が一意に決まれば正解','「記載なし」は、答えも記載が無いことを表していれば正解、値があれば不正解'],
+    'x.auto':'前後の空白と大文字・小文字だけそろえて完全一致したものだけ、規則で正解にしてある。「記載なし」を含め、残りはすべて人が採点する',
+    'x.acc':'Accuracy（採点済みのうち正解の割合、95% CI は Wilson）', 'x.lvl':'範囲', 'x.items':'項目', 'x.rc':'規則で正解', 'x.hc':'人：正解', 'x.hw':'人：不正解', 'x.pend':'残り', 'x.accc':'Accuracy (95% CI)',
     'x.all':'全体', 'x.orig':'原著（arXiv 版）：Immunotherapy 0.78（95% CI 0.75–0.81）、トピック全体 0.72–0.83。種類別では研究デザイン 0.95、患者背景 0.74（原著は結果の項目も含む。分母 1,334、採点者3人）',
     'x.save':'採点を保存', 'x.redir':'保存先のフォルダを選び直す', 'x.only':'未採点だけ表示',
     'x.dir':n => `保存先：${n}`, 'x.nodir':'最初の保存でフォルダを選ぶ（results/extraction/human/）',
     'x.notHuman':n => `選んだフォルダは「${n}」です。results/extraction/human/ ではありません。このまま保存しますか？`,
     'x.saved':(n, d) => `人の採点 ${n} 件を ${d}/ に保存しました`, 'x.dl':'このブラウザではフォルダに直接書けないため、ダウンロードしました → results/extraction/human/ に置いてください',
     'x.ans':'答え', 'x.val':'抽出した値と引用（全文の前後つき）', 'x.sc':'採点', 'x.ok':'正解', 'x.ng':'不正解',
-    'x.autoOk':'規則で正解', 'x.autoNg':'記載なし＝不正解', 'x.nf':'⚠ 全文に見つからない', 'x.pair':p => `PMID ${p}`, 'x.done':'このレビューは採点が済んでいる',
+    'x.autoOk':'規則で正解', 'x.ref':p => `参考：${p} を除く（答えの不備の疑い。主な値は全項目）`, 'x.nf':'⚠ 全文に見つからない', 'x.pair':p => `PMID ${p}`, 'x.done':'このレビューは採点が済んでいる',
     'se.q':'検索式（query-builder の案のまま）', 'se.n':'全ヒット', 'se.r':'検索 Recall', 'se.miss':'検索で拾えなかった組み入れ研究',
     'rk.title':'組み入れ研究の順位', 'rk.pos':'順位', 'rk.sc':'スコア', 'rk.minus':'-1 の基準',
     'rt.pos':'順位', 'rt.title':'論文', 'rt.sc':'スコア', 'rt.a':'A',
@@ -144,16 +144,16 @@ const I18N = {
     'sub':(p, n, g) => `Source review PMID ${p} · ${n} criteria (draft as-is) · generated ${g}`,
     's.search':'Search', 's.screen':'Screening (ranked by A\'s score)', 's.extract':'Extraction', 's.extract.todo':'Extraction covers only 33746596 and 37168849',
     'x.rules.h':'Scoring rules (decided by the human on 2026-10-01; not changed while scoring)',
-    'x.rules':['Correct if the meaning is the same (spelling, unit notation and word order do not matter)','Correct if only more detailed than the answer; wrong if part of the answer is missing','If the answer is a category (e.g. region) and the extraction is the raw value, correct when that value fixes the category uniquely','"記載なし" (not reported) is wrong when the answer has a value (decided by rule)'],
-    'x.auto':'Exact matches after trimming and lower-casing are already scored correct by rule',
-    'x.acc':'Accuracy (share correct among scored; 95% CI by Wilson)', 'x.lvl':'Scope', 'x.items':'Items', 'x.rc':'Rule: correct', 'x.rw':'Not reported', 'x.hc':'Human: correct', 'x.hw':'Human: wrong', 'x.pend':'Left', 'x.accc':'Accuracy (95% CI)',
+    'x.rules':['Correct if the meaning is the same (spelling, unit notation and word order do not matter)','Correct if only more detailed than the answer; wrong if part of the answer is missing','If the answer is a category (e.g. region) and the extraction is the raw value, correct when that value fixes the category uniquely','"記載なし" (not reported) is correct when the answer also says it is not reported, wrong when the answer has a value'],
+    'x.auto':'Only exact matches after trimming and lower-casing are scored correct by rule. Everything else, "記載なし" included, is scored by the human',
+    'x.acc':'Accuracy (share correct among scored; 95% CI by Wilson)', 'x.lvl':'Scope', 'x.items':'Items', 'x.rc':'Rule: correct', 'x.hc':'Human: correct', 'x.hw':'Human: wrong', 'x.pend':'Left', 'x.accc':'Accuracy (95% CI)',
     'x.all':'Overall', 'x.orig':'Original (arXiv): Immunotherapy 0.78 (95% CI 0.75–0.81), all topics 0.72–0.83. By type: design 0.95, population 0.74 (the paper also includes result items; 1,334 data points, 3 annotators)',
     'x.save':'Save scores', 'x.redir':'Choose the folder again', 'x.only':'Only unscored',
     'x.dir':n => `Folder: ${n}`, 'x.nodir':'The first save asks for the folder (results/extraction/human/)',
     'x.notHuman':n => `The chosen folder is "${n}", not results/extraction/human/. Save anyway?`,
     'x.saved':(n, d) => `Saved ${n} human score(s) to ${d}/`, 'x.dl':'This browser cannot write to a folder, so the files were downloaded → put them in results/extraction/human/',
     'x.ans':'Answer', 'x.val':'Extracted value and quotes (with surrounding text)', 'x.sc':'Score', 'x.ok':'Correct', 'x.ng':'Wrong',
-    'x.autoOk':'Correct by rule', 'x.autoNg':'Not reported = wrong', 'x.nf':'⚠ not found in the full text', 'x.pair':p => `PMID ${p}`, 'x.done':'All items of this review are scored',
+    'x.autoOk':'Correct by rule', 'x.ref':p => `Reference: without ${p} (the answer looks wrong; the main value uses all items)`, 'x.nf':'⚠ not found in the full text', 'x.pair':p => `PMID ${p}`, 'x.done':'All items of this review are scored',
     'se.q':'Query (query-builder draft as-is)', 'se.n':'All hits', 'se.r':'Search recall', 'se.miss':'Included studies the search missed',
     'rk.title':'Positions of the included studies', 'rk.pos':'Position', 'rk.sc':'Score', 'rk.minus':'Criteria at -1',
     'rt.pos':'Pos.', 'rt.title':'Paper', 'rt.sc':'Score', 'rt.a':'A',
@@ -303,7 +303,7 @@ function xset(rid, key, val){
 }
 const pct = m => m.accuracy == null ? '—' : `${f3(m.accuracy)} <span class="sm">(${f3(m.ci_low)}–${f3(m.ci_high)})</span>`;
 function xrow(cls, label, m){
-  return `<tr class="${cls}"><td>${label}</td><td class="n">${m.total}</td><td class="n">${m.rule_correct}</td><td class="n">${m.rule_wrong}</td><td class="n">${m.human_correct}</td><td class="n">${m.human_wrong}</td><td class="n">${m.pending}</td><td class="n">${pct(m)}</td></tr>`;
+  return `<tr class="${cls}"><td>${label}</td><td class="n">${m.total}</td><td class="n">${m.rule_correct}</td><td class="n">${m.human_correct}</td><td class="n">${m.human_wrong}</td><td class="n">${m.pending}</td><td class="n">${pct(m)}</td></tr>`;
 }
 function xquotes(it){
   if (!it.ctx.length) return '';
@@ -312,7 +312,6 @@ function xquotes(it){
 }
 function xscore(it, h){
   if (it.auto === 'correct') return `<span class="xb ok">${t('x.autoOk')}</span>`;
-  if (it.auto === 'wrong') return `<span class="xb ng">${t('x.autoNg')}</span>`;
   const v = h[xkey(it)];
   return `<div class="seg" data-k="${esc(xkey(it))}"><button class="inc ${v === true ? 'on' : ''}" data-x="1">${t('x.ok')}</button><button class="exc ${v === false ? 'on' : ''}" data-x="0">${t('x.ng')}</button></div>`;
 }
@@ -324,11 +323,17 @@ function renderX(rv){
   h += `<div class="stats"><div class="stat hl"><div class="k">${t('x.all')} Accuracy</div><div class="v">${M.overall.accuracy == null ? '—' : f3(M.overall.accuracy)}<small>${M.overall.correct}/${M.overall.scored}</small></div></div>`
     + `<div class="stat"><div class="k">95% CI</div><div class="v">${M.overall.accuracy == null ? '—' : f3(M.overall.ci_low) + '–' + f3(M.overall.ci_high)}</div></div>`
     + `<div class="stat"><div class="k">${t('x.pend')}</div><div class="v">${M.overall.pending}<small>/ ${M.overall.total}</small></div></div></div>`;
-  h += `<div class="ph" style="margin-top:12px">${t('x.acc')}</div><div class="e3w"><table class="e3t"><thead><tr><th>${t('x.lvl')}</th><th class="n">${t('x.items')}</th><th class="n">${t('x.rc')}</th><th class="n">${t('x.rw')}</th><th class="n">${t('x.hc')}</th><th class="n">${t('x.hw')}</th><th class="n">${t('x.pend')}</th><th class="n">${t('x.accc')}</th></tr></thead><tbody>`;
+  h += `<div class="ph" style="margin-top:12px">${t('x.acc')}</div><div class="e3w"><table class="e3t"><thead><tr><th>${t('x.lvl')}</th><th class="n">${t('x.items')}</th><th class="n">${t('x.rc')}</th><th class="n">${t('x.hc')}</th><th class="n">${t('x.hw')}</th><th class="n">${t('x.pend')}</th><th class="n">${t('x.accc')}</th></tr></thead><tbody>`;
   h += xrow('lvl0', t('x.all'), M.overall);
   for (const rid of X.reviews){
     h += xrow('lvl1', 'Review ' + esc(rid), M.by_review[rid]);
     for (const [pk, m] of Object.entries(M.by_pair)) if (pk.startsWith(rid + '/')) h += xrow('lvl2', 'PMID ' + esc(pk.split('/')[1]), m);
+  }
+  const ex = X.reference_exclude || [];
+  if (ex.length){
+    const R = extractionMetrics(X.items.filter(it => !ex.includes(it.review + '/' + it.pmid)), H);
+    h += xrow('lvl0', esc(t('x.ref', ex.join(', '))), R.overall);
+    for (const rid of X.reviews) if (R.by_review[rid]) h += xrow('lvl1', 'Review ' + esc(rid), R.by_review[rid]);
   }
   h += `</tbody></table></div><p class="sm">${t('x.orig')}</p>`;
   h += `<div class="xbar"><button class="btn primary" data-xa="save">${t('x.save')}</button><button class="btn" data-xa="redir">${t('x.redir')}</button><label><input type="checkbox" data-xa="only" ${xOnly ? 'checked' : ''}> ${t('x.only')}</label><span class="sm">${xDirName ? esc(t('x.dir', xDirName)) : t('x.nodir')}</span></div>`;

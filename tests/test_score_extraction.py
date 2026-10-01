@@ -23,7 +23,7 @@ from score_extraction import (
 
 def test_auto_score():
     assert auto_score("Eastern", " eastern ") == "correct"
-    assert auto_score("57", "記載なし") == "wrong"
+    assert auto_score("57", "記載なし") is None  # 記載なし goes to the human too (2026-10-01)
     assert auto_score("Eastern", "China") is None
     assert auto_score("34/23", "34 / 23") is None  # only trim and case; the rest goes to the human
 
@@ -70,11 +70,12 @@ def save_human(root, records):
 
 def test_items_and_metrics(root):
     items = load_items(root, reviews=("1",), with_context=True)
-    assert [it["auto"] for it in items] == ["correct", "wrong", None]
+    assert [it["auto"] for it in items] == ["correct", None, None]
     assert items[0]["ctx"][0]["match"] == "eastern regions"
     m = metrics(items, load_human(root, items, reviews=("1",)))
-    assert m["overall"]["pending"] == 1 and m["overall"]["correct"] == 1 and m["overall"]["scored"] == 2
-    save_human(root, [{"pmid": "11", "item": "Dose", "correct": True}])
+    assert m["overall"]["pending"] == 2 and m["overall"]["correct"] == 1 and m["overall"]["scored"] == 1
+    save_human(root, [{"pmid": "11", "item": "Dose", "correct": True},
+                      {"pmid": "11", "item": "Sample size", "correct": False}])
     m = metrics(items, load_human(root, items, reviews=("1",)))
     assert m["overall"]["pending"] == 0 and m["overall"]["accuracy"] == pytest.approx(2 / 3)
     assert m["by_pair"]["1/11"]["human_correct"] == 1
@@ -82,7 +83,7 @@ def test_items_and_metrics(root):
 
 def test_human_cannot_score_rule_items(root):
     items = load_items(root, reviews=("1",))
-    save_human(root, [{"pmid": "11", "item": "Sample size", "correct": True}])
+    save_human(root, [{"pmid": "11", "item": "Country", "correct": False}])
     with pytest.raises(SystemExit):
         load_human(root, items, reviews=("1",))
 
@@ -100,7 +101,7 @@ NODE_RUN = ("const {extractionMetrics} = require(process.argv[1]); const a = JSO
 @pytest.mark.skipif(shutil.which("node") is None, reason="node が無い")
 def test_js_and_python_give_the_same_metrics():
     items = []
-    autos = ["correct", "wrong", None, None, None]
+    autos = ["correct", None, None, None, None]
     for r, rid in enumerate(["A", "B"]):
         for p in range(3):
             for i in range(7):
