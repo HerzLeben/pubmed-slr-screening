@@ -4,7 +4,11 @@
 > It is not an app with a UI: Claude Code runs the workflow and writes a static HTML report. It is for teaching and method validation only, not a substitute for real systematic-review work.
 > Results on 3 hematologic-cancer reviews from TrialReviewBench are in [`docs/eval/eval-3.md`](docs/eval/eval-3.md).
 
-**画面の見本（clone しなくても見られる）**：https://herzleben.github.io/pubmed-slr-screening/ — eval-3（原著との比較）のレポート。抄録の本文と逐語引用は伏せている
+**画面の見本（clone しなくても見られる）**：原著と同じ流れ（人の判断なし）のレポート。抄録の本文と逐語引用は伏せている
+
+- 概要（流れ・原著との比較・検索・組み入れ研究の順位）：https://herzleben.github.io/pubmed-slr-screening/demo/eval-3.html#/overview
+- 論文の一覧（全論文の判定とスコア）：https://herzleben.github.io/pubmed-slr-screening/demo/eval-3.html#/list
+- 抽出（採点の基準、Accuracy、項目ごとの値）：https://herzleben.github.io/pubmed-slr-screening/demo/eval-3.html#/extract
 
 ## 1. これは何か
 
