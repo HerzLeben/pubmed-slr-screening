@@ -8784,3 +8784,9 @@ file://<repo>/results/report.html
 2. 33495835 × 37168849：答えは直さず、そのまま採点する。eval-3.md の抽出の章に「答えの不備の疑い」として、この論文が in vitro で患者がいないこと、答えの年齢・性別・Study Design、Costimulatory Domain の答えが薬剤名であることを書く。この組を除いた Accuracy を参考値として並べる（主な値は 102項目のまま）。
 3. HARNESS の「やらなかったこと」に1行：全文のテキストに著者の所属を入れていないので、34034795 の Location が記載なしになった。直さない。
 </pasted_content id="439e">
+
+---
+
+## 2026-10-01T10:02:42+09:00
+
+採点を保存した（results/extraction/human/ の2ファイル、96件）。6.3 に進めて。保存されたファイルの値が画面と同じかを確かめてから、Accuracy・eval-3.md・レポート・HANDOFF を仕上げて snap/19-extraction-eval まで。

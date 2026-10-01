@@ -161,8 +161,14 @@ def build_extraction(root: Path) -> dict | None:
     if not (root / "results" / "extraction" / "out").exists():
         return None
     items = load_items(root, with_context=True)
+    status = load(root / "results" / "fulltext" / "status.json")["studies"]
+    breakdown = {}
+    for rid in REVIEWS:
+        rows = [json.loads(x) for x in (root / "bench" / "extraction" / f"{rid}.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+        st = {str(r["pmid"]): status.get(str(r["pmid"]), {}).get("status", "no_pmc") for r in rows}
+        breakdown[rid] = {k: [p for p, v in st.items() if v == k] for k in ("body", "pmc_no_body", "no_pmc")}
     return {"reviews": list(REVIEWS), "items": items, "human": load_human(root, items),
-            "reference_exclude": list(REFERENCE_EXCLUDE)}
+            "reference_exclude": list(REFERENCE_EXCLUDE), "breakdown": breakdown}
 
 
 def main_eval3(args) -> None:

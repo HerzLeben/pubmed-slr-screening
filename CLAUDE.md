@@ -36,7 +36,7 @@ requirements と design が食い違ったら requirements を優先する。ど
 - モデルはすべて Sonnet
 
 ## 記録の規則
-- 節目で commit し tag を付ける：`snap/02-benchmark`、`snap/03-criteria-draft`（人が直す前）、`snap/04-criteria-approved`、`snap/05-query-approved`、`snap/06-no-subagent`、`snap/07-agents-v1`、`snap/08-first-parallel`、`snap/09-hook`、`snap/10-eval-1`、`snap/11-eval-2`、`snap/12-eval-2-notes`、`snap/13-prisma-eval`、`snap/14-positioning`、`snap/15-extraction-items`、`snap/16-eval-3-screened`、`snap/17-eval-3`、`snap/18-extraction`
+- 節目で commit し tag を付ける：`snap/02-benchmark`、`snap/03-criteria-draft`（人が直す前）、`snap/04-criteria-approved`、`snap/05-query-approved`、`snap/06-no-subagent`、`snap/07-agents-v1`、`snap/08-first-parallel`、`snap/09-hook`、`snap/10-eval-1`、`snap/11-eval-2`、`snap/12-eval-2-notes`、`snap/13-prisma-eval`、`snap/14-positioning`、`snap/15-extraction-items`、`snap/16-eval-3-screened`、`snap/17-eval-3`、`snap/18-extraction`、`snap/19-extraction-eval`
 - 想定と違ったこと・詰まった点・人が決めたことは、その場で `docs/HARNESS.md` に日付つき1行
 - 設計を変えたら `docs/DECISIONS.md` に1〜3行
 - `docs/prompts/log.md`（hook が記録した指示文）は、フェーズごとの commit に含める
@@ -59,14 +59,16 @@ requirements と design が食い違ったら requirements を優先する。ど
 6. `scripts/adjudicate.py` が status を規則で決める → adjudicator（subagent）は needs_human の `summary` を書くだけ
 7. 人の判断：HTML レポートから `results/human/<rid>.json` を保存
 8. `scripts/prisma_record.py` → `results/prisma.json`、`scripts/build_report.py` → `results/report.html`、`scripts/eval_screening.py`（評価。`/eval` は人だけが起動）
+9. 抽出（⑦、`docs/schema.md` 10章）：`scripts/fulltext_to_text.py`（`results/fulltext/<pmid>.xml` → `.txt`）→ `scripts/make_extraction_jobs.py` → `results/extraction/jobs/<rid>/<pmid>.json` → extractor（subagent）→ `results/extraction/out/<rid>/<pmid>.json` → 人が eval-3 のレポートで採点 → `results/extraction/human/<rid>.json` → `scripts/score_extraction.py` → `results/extraction/score.json`。Accuracy の計算は `score_extraction.metrics()` と `scripts/extraction_metrics.js`（レポートに埋め込む）で同じにする
 - 判定の集計（`score`・`overall`）は `scripts/rules.py`、引用の照合は `scripts/quote_match.py` に1つだけ定義し、hook・adjudicate・report・eval が共有する。規則を変えるならここと `docs/schema.md` を一緒に直す
 - eval-3 は別の系：`--run eval-3` で `reviews/<rid>/eval-3/`（未承認の `criteria_draft.md` から `draft_criteria_to_json.py`）と `results/eval-3/` を使い、screener-a だけ・adjudication と人の判断なし（`docs/eval/eval-3.md`）
 
 ## hook（`.claude/settings.json`、`.claude/hooks/`）
 - `log_prompt.py`（UserPromptSubmit）：指示文を `docs/prompts/log.md` に追記。何も出力せず止めない
 - `check_screen_output.py`（PreToolUse Write と SubagentStop）：screener・adjudicator の出力の形と逐語引用を検査し、exit 2 で差し戻す
-- `limit_reads.py`（PreToolUse Read）：adjudicator が読めるのは自分の入力ファイルだけ
+- `limit_reads.py`（PreToolUse Read）：adjudicator が読めるのは自分の入力ファイルだけ（extractor は下の行）
 - `agent_gate.py`（SubagentStart/Stop）：同時起動を6に制限（`.claude/state/running/` の marker）
+- `check_extract_output.py`（PreToolUse Write と SubagentStop `extractor`）：extractor の出力の形・項目の順・逐語引用を検査し、exit 2 で差し戻す（SubagentStop は観察だけ）。`limit_reads.py` は extractor にも効き、自分の job とその全文の txt だけ読める
 - `check_prisma.py`（PostToolUse Write|Edit）：`results/prisma.json` の件数の足し算を検査
 
 ## 用語と表記

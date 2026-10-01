@@ -120,6 +120,7 @@ const I18N = {
     'x.saved':(n, d) => `人の採点 ${n} 件を ${d}/ に保存しました`, 'x.dl':'このブラウザではフォルダに直接書けないため、ダウンロードしました → results/extraction/human/ に置いてください',
     'x.ans':'答え', 'x.val':'抽出した値と引用（全文の前後つき）', 'x.sc':'採点', 'x.ok':'正解', 'x.ng':'不正解',
     'x.autoOk':'規則で正解', 'x.ref':p => `参考：${p} を除く（答えの不備の疑い。主な値は全項目）`, 'x.nf':'⚠ 全文に見つからない', 'x.pair':p => `PMID ${p}`, 'x.done':'このレビューは採点が済んでいる',
+    'x.bd':'取れなかったもの（答えの組のうち）', 'x.bd.ans':'答えの組', 'x.bd.body':'本文あり（抽出した）', 'x.bd.nobody':'PMC あり・本文なし', 'x.bd.nopmc':'PMC 無し', 'x.bd.nr':'記載なし（項目）', 'x.bd.nrw':'そのうち不正解', 'x.bd.foot':'本文が取れなかった組は抽出していない（分母 102 に入らない）。記載なしの理由別の内訳は docs/eval/eval-3.md',
     'se.q':'検索式（query-builder の案のまま）', 'se.n':'全ヒット', 'se.r':'検索 Recall', 'se.miss':'検索で拾えなかった組み入れ研究',
     'rk.title':'組み入れ研究の順位', 'rk.pos':'順位', 'rk.sc':'スコア', 'rk.minus':'-1 の基準',
     'rt.pos':'順位', 'rt.title':'論文', 'rt.sc':'スコア', 'rt.a':'A',
@@ -154,6 +155,7 @@ const I18N = {
     'x.saved':(n, d) => `Saved ${n} human score(s) to ${d}/`, 'x.dl':'This browser cannot write to a folder, so the files were downloaded → put them in results/extraction/human/',
     'x.ans':'Answer', 'x.val':'Extracted value and quotes (with surrounding text)', 'x.sc':'Score', 'x.ok':'Correct', 'x.ng':'Wrong',
     'x.autoOk':'Correct by rule', 'x.ref':p => `Reference: without ${p} (the answer looks wrong; the main value uses all items)`, 'x.nf':'⚠ not found in the full text', 'x.pair':p => `PMID ${p}`, 'x.done':'All items of this review are scored',
+    'x.bd':'What could not be extracted (of the answer studies)', 'x.bd.ans':'Answer studies', 'x.bd.body':'Body text (extracted)', 'x.bd.nobody':'In PMC, no body', 'x.bd.nopmc':'Not in PMC', 'x.bd.nr':'記載なし (items)', 'x.bd.nrw':'of which wrong', 'x.bd.foot':'Studies without a body text were not extracted (not in the 102). Reasons for 記載なし are in docs/eval/eval-3.md',
     'se.q':'Query (query-builder draft as-is)', 'se.n':'All hits', 'se.r':'Search recall', 'se.miss':'Included studies the search missed',
     'rk.title':'Positions of the included studies', 'rk.pos':'Position', 'rk.sc':'Score', 'rk.minus':'Criteria at -1',
     'rt.pos':'Pos.', 'rt.title':'Paper', 'rt.sc':'Score', 'rt.a':'A',
@@ -336,6 +338,15 @@ function renderX(rv){
     for (const rid of X.reviews) if (R.by_review[rid]) h += xrow('lvl1', 'Review ' + esc(rid), R.by_review[rid]);
   }
   h += `</tbody></table></div><p class="sm">${t('x.orig')}</p>`;
+  if (X.breakdown){
+    h += `<div class="ph" style="margin-top:12px">${t('x.bd')}</div><div class="e3w"><table class="e3t"><thead><tr><th>${t('x.lvl')}</th><th class="n">${t('x.bd.ans')}</th><th class="n">${t('x.bd.body')}</th><th class="n">${t('x.bd.nobody')}</th><th class="n">${t('x.bd.nopmc')}</th><th class="n">${t('x.bd.nr')}</th><th class="n">${t('x.bd.nrw')}</th></tr></thead><tbody>`;
+    for (const rid of X.reviews){
+      const b = X.breakdown[rid], nr = X.items.filter(it => it.review === rid && it.value.trim() === '記載なし');
+      const nrw = nr.filter(it => H[rid][xkey(it)] === false).length;
+      h += `<tr><td>Review ${esc(rid)}</td><td class="n">${b.body.length + b.pmc_no_body.length + b.no_pmc.length}</td><td class="n">${b.body.length}</td><td class="n">${b.pmc_no_body.length}</td><td class="n">${b.no_pmc.length}</td><td class="n">${nr.length}</td><td class="n">${nrw}</td></tr>`;
+    }
+    h += `</tbody></table></div><p class="sm">${t('x.bd.foot')}</p>`;
+  }
   h += `<div class="xbar"><button class="btn primary" data-xa="save">${t('x.save')}</button><button class="btn" data-xa="redir">${t('x.redir')}</button><label><input type="checkbox" data-xa="only" ${xOnly ? 'checked' : ''}> ${t('x.only')}</label><span class="sm">${xDirName ? esc(t('x.dir', xDirName)) : t('x.nodir')}</span></div>`;
   const its = X.items.filter(it => it.review === rv.review_pmid);
   const shownIts = its.filter(it => !xOnly || (it.auto === null && H[rv.review_pmid][xkey(it)] === undefined));
