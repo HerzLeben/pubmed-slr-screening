@@ -1180,3 +1180,171 @@ URL に #/list・#/extract を付けると、そのタブを直接開けます�
 /eval の skill は eval-2 の流れにしか対応しておらず、eval-3 では使えません。直すと機能の追加になります。
 直して下さい、
 pushして
+
+---
+
+## 2026-10-01T21:02:35+09:00
+
+もう公開してるの？
+
+---
+
+## 2026-10-01T21:02:48+09:00
+
+別にいいので
+
+---
+
+## 2026-10-01T21:02:52+09:00
+
+確認です
+
+---
+
+## 2026-10-01T21:04:49+09:00
+
+
+
+---
+
+## 2026-10-02T00:06:12+09:00
+
+<pasted_content id="cf68">
+撮影指示書を `25_撮影指示_結果の説明_Chrome_20261001.md` として Blog フォルダに置きました。
+
+**流れ**
+1. **先に、見本の画面の「A」を消す。** Claude Code に渡す指示文は 0章にそのまま貼れる形で入れてあります。push して Pages に反映されたら「Pages を撮り直して」と言ってください。静止画はこちらで撮り直します。
+2. **準備。** Chrome の新しいウィンドウを1つ開き、ブックマークバーを隠して、ほかのタブは置かないでください。今朝の採点画面の録画が使えなかったのは、タブ名などが写っていたためです。画面は左に Claude のパネル、右に Chrome を並べ、16:10 の枠だけを録画します。見本の画面は英語、Claude の答えは日本語にします。
+3. **収録。** 指示文を1つずつ貼り、指示文ごとに1クリップ撮ります（clip01〜05）。
+   - clip01：画面を開き、流れの図から何の結果かを説明させる
+   - clip02：原著との比較の表を読ませる
+   - clip03：Recall@20 が低かった 31190844 で、組み入れ研究の順位を一覧タブで確かめさせ、1本開いて基準ごとの判定を見せる
+   - clip04：抽出タブで Accuracy を読み、不正解の項目を1つ説明させる
+   - clip05：「言えること・言えないこと」を3行ずつ書かせる
+   
+   Part4 の run 7 と同じく、Claude が読み違えても途中で直さずに撮ってください。
+4. **撮り終えたら。** `/export` で会話を保存してから、「収録した」と知らせてください。場面の時刻表を作り、写り込みを確認し、静止画を切り出し、動画に組み込みます。
+
+Part0 の下書きは、今日決めたことに合わせて直しました（直す前の版は `.bak_systematic-review-subagents-0_20261001.md` に残しています）。
+- 本文の名前は `screener` にしました。サブエージェントの表では、リポジトリと見比べられるように「定義ファイルは `screener-a.md`」と添えています。
+- screener-b と adjudicator を紹介していた段落は消しました。
+- 「📷 並列で走っている画面」は、見本の流れの図のスクショに置き換えました。この画像は Astro 側の `public/img/blog/systematic-review-subagents-0/` にはまだ入っていないので、Drive の `figs-systematic-review-subagents-0/shot_pages_flow.png` をそこへコピーしてください。
+
+記事構成のメモ（Drive とこのプロジェクトの両方）には、撮影の方針と用語の決定を書き足しました。並列を Part2 で1行だけ触れる扱いは、私の案として書いてあります。
+</pasted_content id="cf68">
+
+この指示通りに可能ですか？
+
+---
+
+## 2026-10-02T00:15:48+09:00
+
+<pasted_content id="cbd3">
+撮影指示書を `25_撮影指示_結果の説明_Chrome_20261001.md` として Blog フォルダに置きました。
+
+**流れ**
+1. **先に、見本の画面の「A」を消す。** Claude Code に渡す指示文は 0章にそのまま貼れる形で入れてあります。push して Pages に反映されたら「Pages を撮り直して」と言ってください。静止画はこちらで撮り直します。
+2. **準備。** Chrome の新しいウィンドウを1つ開き、ブックマークバーを隠して、ほかのタブは置かないでください。今朝の採点画面の録画が使えなかったのは、タブ名などが写っていたためです。画面は左に Claude のパネル、右に Chrome を並べ、16:10 の枠だけを録画します。見本の画面は英語、Claude の答えは日本語にします。
+3. **収録。** 指示文を1つずつ貼り、指示文ごとに1クリップ撮ります（clip01〜05）。
+   - clip01：画面を開き、流れの図から何の結果かを説明させる
+   - clip02：原著との比較の表を読ませる
+   - clip03：Recall@20 が低かった 31190844 で、組み入れ研究の順位を一覧タブで確かめさせ、1本開いて基準ごとの判定を見せる
+   - clip04：抽出タブで Accuracy を読み、不正解の項目を1つ説明させる
+   - clip05：「言えること・言えないこと」を3行ずつ書かせる
+   
+   Part4 の run 7 と同じく、Claude が読み違えても途中で直さずに撮ってください。
+4. **撮り終えたら。** `/export` で会話を保存してから、「収録した」と知らせてください。場面の時刻表を作り、写り込みを確認し、静止画を切り出し、動画に組み込みます。
+
+Part0 の下書きは、今日決めたことに合わせて直しました（直す前の版は `.bak_systematic-review-subagents-0_20261001.md` に残しています）。
+- 本文の名前は `screener` にしました。サブエージェントの表では、リポジトリと見比べられるように「定義ファイルは `screener-a.md`」と添えています。
+- screener-b と adjudicator を紹介していた段落は消しました。
+- 「📷 並列で走っている画面」は、見本の流れの図のスクショに置き換えました。この画像は Astro 側の `public/img/blog/systematic-review-subagents-0/` にはまだ入っていないので、Drive の `figs-systematic-review-subagents-0/shot_pages_flow.png` をそこへコピーしてください。
+
+記事構成のメモ（Drive とこのプロジェクトの両方）には、撮影の方針と用語の決定を書き足しました。並列を Part2 で1行だけ触れる扱いは、私の案として書いてあります。
+</pasted_content id="cbd3">
+
+---
+
+## 2026-10-02T00:21:03+09:00
+
+<browser_instruction># Claude in Chrome browser automation
+
+You have access to browser automation tools (mcp__claude-in-chrome__*) for interacting with web pages in Chrome. Follow these guidelines for effective browser automation.
+
+## Loading deferred tools
+
+If the mcp__claude-in-chrome__* tools are deferred (must be loaded via ToolSearch before use), load every tool you expect to need in ONE ToolSearch call — the select query accepts a comma-separated list — never one call per tool. Start with the core set:
+
+ToolSearch with query "select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer,mcp__claude-in-chrome__read_page,mcp__claude-in-chrome__tabs_create_mcp,mcp__claude-in-chrome__tabs_close_mcp"
+
+Add task-specific tools to the same call when the task obviously needs them: read_console_messages / read_network_requests for debugging, form_input for forms, gif_creator for recordings, javascript_tool for page scripting.
+
+## GIF recording
+
+When performing multi-step browser interactions that the user may want to review or share, use mcp__claude-in-chrome__gif_creator to record them.
+
+You must ALWAYS:
+* Capture extra frames before and after taking actions to ensure smooth playback
+* Name the file meaningfully to help the user identify it later (e.g., "login_process.gif")
+
+## Console log debugging
+
+You can use mcp__claude-in-chrome__read_console_messages to read console output. Console output may be verbose. If you are looking for specific log entries, use the 'pattern' parameter with a regex-compatible pattern. This filters results efficiently and avoids overwhelming output. For example, use pattern: "[MyApp]" to filter for application-specific logs rather than reading all console output.
+
+## Alerts and dialogs
+
+IMPORTANT: Do not trigger JavaScript alerts, confirms, prompts, or browser modal dialogs through your actions. These browser dialogs block all further browser events and will prevent the extension from receiving any subsequent commands. Instead, when possible, use console.log for debugging and then use the mcp__claude-in-chrome__read_console_messages tool to read those log messages. If a page has dialog-triggering elements:
+1. Avoid clicking buttons or links that may trigger alerts (e.g., "Delete" buttons with confirmation dialogs)
+2. If you must interact with such elements, warn the user first that this may interrupt the session
+3. Use mcp__claude-in-chrome__javascript_tool to check for and dismiss any existing dialogs before proceeding
+
+If you accidentally trigger a dialog and lose responsiveness, inform the user they need to manually dismiss it in the browser.
+
+## Avoid rabbit holes and loops
+
+When using browser automation tools, stay focused on the specific task. If you encounter any of the following, stop and ask the user for guidance:
+- Unexpected complexity or tangential browser exploration
+- Browser tool calls failing or returning errors after 2-3 attempts
+- No response from the browser extension
+- Page elements not responding to clicks or input
+- Pages not loading or timing out
+- Unable to complete the browser task despite multiple approaches
+
+Explain what you attempted, what went wrong, and ask how the user would like to proceed. Do not keep retrying the same failing browser action or explore unrelated pages without checking in first.
+
+## Tab context and session startup
+
+IMPORTANT: At the start of each browser automation session, call mcp__claude-in-chrome__tabs_context_mcp first to get information about the user's current browser tabs. Use this context to understand what the user might want to work with before creating new tabs.
+
+Never reuse tab IDs from a previous/other session. Follow these guidelines:
+1. Only reuse an existing tab if the user explicitly asks to work with it
+2. Otherwise, create a new tab with mcp__claude-in-chrome__tabs_create_mcp
+3. If a tool returns an error indicating the tab doesn't exist or is invalid, call tabs_context_mcp to get fresh tab IDs
+4. When a tab is closed by the user or a navigation error occurs, call tabs_context_mcp to see what tabs are available</browser_instruction>
+<browser tabGroupId="586988428" tabId="722948884"></browser>
+
+
+<pasted_content id="cbd3">
+A の方法は使えませんでした。すみません。試したところ、こちらから VS Code を操作しようとすると、クリックはできても文字の入力と貼り付けができない設定になっていました。Claude Code に指示文を打ち込めないので、Claude Code を画面に出して説明させる収録は、こちらだけでは進められません。
+
+そこで、Wataru の作業を最小にしました。貼り付けは2回、録画の開始と停止が1回ずつです。
+
+**① 「A」を消す。** いま開いている Claude Code の会話に次を送り、終わったら push してください。
+```
+0章をやって
+```
+
+**② 収録。** ⌘⇧5 で VS Code と Chrome が入る範囲を囲んで録画を始めます。**新しい会話**に次の1つを貼り、Claude が答え終わったら録画を止めてください。5つの指示を1回にまとめたので、途中で何かを貼る必要はありません。クリップへの切り分けはこちらでします。
+
+```
+@browser Chrome で https://herzleben.github.io/pubmed-slr-screening/demo/eval-3.html を開き、右上で EN に切り替えてください。そのあと、次の順に画面を操作しながら日本語で説明してください。根拠は画面に書いてあることだけにしてください。各段の終わりに「— 次へ —」と書いてから進んでください。
+
+1. 概要タブの流れの図に沿って、この画面が何の結果なのかを説明する
+2. 概要タブの「原著との比較」の表で、3本のレビューの Recall@20・@50 を原著の値と比べる。比べるときの注意は、表の下の注記から拾う
+3. 31190844 の Recall@20 が低い理由を、論文の一覧タブで確かめる。組み入れ研究（Included）が何位にいるかを見て、上位に来ていない組み入れ研究を1本開き、基準ごとの判定を見せる
+4. Extraction タブで、全体の Accuracy と 95% CI を読む。不正解だった項目を1つ選び、答えと抽出した値がどう違うのかを説明する
+5. この画面から言えることと言えないことを、それぞれ3行で書く
+```
+
+「Claude in Chrome wants to…」という確認が出たら、サイトを許可する選択肢を押してください。終わったら、録画ファイルの置き場所だけ教えてください。
+</pasted_content id="cbd3">

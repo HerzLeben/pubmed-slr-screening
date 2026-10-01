@@ -152,3 +152,4 @@
 - 2026-10-01 整理（人の指示「コードとファイル、git、テストの徹底的な整理」）：`load()` が4か所、screener の判定の読み込みが3か所、人の判断・adjudication の読み込みが4か所、最終候補の数え方が3か所に重複していた。eval_screening.py は `rules.score` を書き直して使っていた（CLAUDE.md の「規則は1か所」に反する）。手元の results/ のコピーで、整理の前後の出力（レポート3種・評価・adjudication・PRISMA・抽出の採点・job）が同じになることを確かめた
 - 2026-10-01 整理で見つけたバグ：`build_bench.py` を引数なしで動かすと `bench/reviews.jsonl` が空になっていた（引数を必須にした）。`build_report.py` は verdict の `True` を 1 として通していた（hook は弾く。レポートも警告にそろえた）。`breakdown_final.py` は同点の基準の並びが set の順に依存し、実行ごとに変わりえた
 - 2026-10-01 整理：`docs/prompts/log.md` の 697件のうち人の指示は 111件だけで、残りの 586件（約 7,800行）は UserPromptSubmit で届く task-notification と subagent の報告だった。README の「人が出した指示の記録」と合わないので、hook で書かないようにし、既存のログからも外した（人の指示は1件も消していない）
+- 2026-10-02 見本の画面（人の決定）：eval-3 は screener が1体なので、画面に残っていた screener-a の名残「A」を2か所外した（比較の見出し「A のスコア順」→「スコア順」、基準の表の列見出し「A」→ アイコン＋「判定」/ "Verdict"）。直したのは `scripts/report_eval3_body.html` だけで、eval-2 の画面は変えていない

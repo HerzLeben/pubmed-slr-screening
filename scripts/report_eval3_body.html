@@ -206,7 +206,7 @@ const I18N = {
     'pipe.title':'流れ（原著と同じ。人は判断しない）', 'pipe.pico':'レビューの問い', 'pipe.qb':'PubMed の検索式', 'pipe.sa':'基準の案で 1/0/-1', 'pipe.rank':'スコアで順位', 'pipe.rankc':'Recall@20・@50', 'pipe.ex':'全文から値と引用', 'pipe.you':'人', 'pipe.youc':'抽出を採点',
     'hdr.scope':'教育と手法の検証用。PubMed だけを検索する。業務の一次スクリーニングの代わりには使わない',
     'note':'この画面は、PICO → query-builder の検索式 → /pico-to-criteria の基準の案のまま → screener（1体）→ スコア（判定値の合計）で順位、の流れの結果。人は判断していない（裁定も人の判断も無い）。',
-    'cmp.title':'原著との比較（Recall@20・@50、A のスコア順）',
+    'cmp.title':'原著との比較（Recall@20・@50、スコア順）',
     'cmp.foot':'原著の値は arXiv 2406.17755（HTML 版）の Immunotherapy。npj Digital Medicine 掲載版との照合はしていない。候補の母集団（原著 2,000件、こちら 484〜698件）、レビューの数（100本と3本）、モデル（GPT-4 など と Sonnet）が違う。',
     'c.rv':'レビュー', 'c.pop':'母集団', 'c.n':'候補', 'c.inc':'母集団内の組み入れ', 'c.orig':'原著（TrialMind、Immunotherapy）',
     'pop.all_hits':'全ヒット', 'pop.original':'原著と同じ作り方（全ヒット＋検索で拾えなかった組み入れ研究）',
@@ -243,7 +243,7 @@ const I18N = {
     'pipe.title':'Flow (as in the paper; no human judgment)', 'pipe.pico':'The review question', 'pipe.qb':'PubMed query', 'pipe.sa':'1/0/-1 on draft criteria', 'pipe.rank':'Rank by score', 'pipe.rankc':'Recall@20 / @50', 'pipe.ex':'Values + quotes from full text', 'pipe.you':'Human', 'pipe.youc':'Scores the extraction',
     'hdr.scope':'For teaching and method validation. Searches PubMed only. Not a replacement for real first-pass screening',
     'note':'This page shows the flow PICO → query-builder query → draft criteria from /pico-to-criteria as-is → screener (one) → rank by score (sum of verdicts). No adjudication and no human judgment.',
-    'cmp.title':'Comparison with the original paper (Recall@20 / @50, ranked by A\'s score)',
+    'cmp.title':'Comparison with the original paper (Recall@20 / @50, ranked by score)',
     'cmp.foot':'Original values: arXiv 2406.17755 (HTML), Immunotherapy. Not checked against the npj Digital Medicine version. Candidate pool (2,000 vs 484–698), number of reviews (100 vs 3) and models (GPT-4 etc. vs Sonnet) differ.',
     'c.rv':'Review', 'c.pop':'Population', 'c.n':'Candidates', 'c.inc':'Included in pool', 'c.orig':'Original (TrialMind, Immunotherapy)',
     'pop.all_hits':'All hits', 'pop.original':'As in the paper (all hits + included studies the search missed)',
@@ -327,7 +327,7 @@ function abstractHTML(r, focus){
   return `<div class="abstract${focus ? ' focus' : ''}">${ttl}${ab}</div>`;
 }
 function matrixHTML(rv, r, focus){
-  let h = `<div class="mxw"><table class="mx"><thead><tr><th colspan="2">${t('mx.crit')}</th><th class="c">${ROBO('a')} A</th></tr></thead><tbody>`;
+  let h = `<div class="mxw"><table class="mx"><thead><tr><th colspan="2">${t('mx.crit')}</th><th class="c">${ROBO('a')} ${t('rt.a')}</th></tr></thead><tbody>`;
   for (const [type, label] of [['inclusion', t('mx.inc')], ['exclusion', t('mx.exc')]]){
     const cs = rv.criteria.filter(c => c.type === type);
     if (!cs.length) continue;
