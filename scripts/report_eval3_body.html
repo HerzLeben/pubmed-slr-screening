@@ -185,10 +185,10 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const f3 = x => x == null ? '—' : x.toFixed(3);
 const I18N = {
   ja: {
-    'app.title':'PubMed SLR × Screening', 'hdr.stage':'eval-3：人の判断なし（原著と同じ流れ）',
+    'app.title':'PubMed SLR × Screening', 'hdr.stage':'人の判断なし（原著と同じ流れ）',
     'pipe.title':'流れ（原著と同じ。人は判断しない）', 'pipe.pico':'レビューの問い', 'pipe.qb':'PubMed の検索式', 'pipe.sa':'基準の案で 1/0/-1', 'pipe.rank':'スコアで順位', 'pipe.rankc':'Recall@20・@50', 'pipe.ex':'全文から値と引用', 'pipe.you':'人', 'pipe.youc':'抽出を採点',
     'hdr.scope':'教育と手法の検証用。PubMed だけを検索する。業務の一次スクリーニングの代わりには使わない',
-    'note':'eval-3 は、PICO → query-builder の検索式 → /pico-to-criteria の基準の案のまま → screener（1体）→ スコア（判定値の合計）で順位、の流れで、人は判断していない。裁定・人の判断は無い。原著との比較はこの eval-3 だけで行う。',
+    'note':'この画面は、PICO → query-builder の検索式 → /pico-to-criteria の基準の案のまま → screener（1体）→ スコア（判定値の合計）で順位、の流れの結果。人は判断していない（裁定も人の判断も無い）。',
     'cmp.title':'原著との比較（Recall@20・@50、A のスコア順）',
     'cmp.foot':'原著の値は arXiv 2406.17755（HTML 版）の Immunotherapy。npj Digital Medicine 掲載版との照合はしていない。候補の母集団（原著 2,000件、こちら 484〜698件）、レビューの数（100本と3本）、モデル（GPT-4 など と Sonnet）が違う。',
     'c.rv':'レビュー', 'c.pop':'母集団', 'c.n':'候補', 'c.inc':'母集団内の組み入れ', 'c.orig':'原著（TrialMind、Immunotherapy）',
@@ -209,7 +209,7 @@ const I18N = {
     'x.saved':(n, d) => `人の採点 ${n} 件を ${d}/ に保存しました`, 'x.dl':'このブラウザではフォルダに直接書けないため、ダウンロードしました → results/extraction/human/ に置いてください',
     'x.ans':'答え', 'x.val':'抽出した値と引用（全文の前後つき）', 'x.sc':'採点', 'x.ok':'正解', 'x.ng':'不正解',
     'x.autoOk':'規則で正解', 'x.ref':p => `参考：${p} を除く（答えの不備の疑い。主な値は全項目）`, 'x.nf':'⚠ 全文に見つからない', 'x.pair':p => `PMID ${p}`, 'x.done':'このレビューは採点が済んでいる',
-    'x.bd':'取れなかったもの（答えの組のうち）', 'x.bd.ans':'答えの組', 'x.bd.body':'本文あり（抽出した）', 'x.bd.nobody':'PMC あり・本文なし', 'x.bd.nopmc':'PMC 無し', 'x.bd.nr':'記載なし（項目）', 'x.bd.nrw':'そのうち不正解', 'x.bd.foot':'本文が取れなかった組は抽出していない（分母 102 に入らない）。記載なしの理由別の内訳は docs/eval/eval-3.md',
+    'x.bd':'取れなかったもの（答えの組のうち）', 'x.bd.ans':'答えの組', 'x.bd.body':'本文あり（抽出した）', 'x.bd.nobody':'PMC あり・本文なし', 'x.bd.nopmc':'PMC 無し', 'x.bd.nr':'記載なし（項目）', 'x.bd.nrw':'そのうち不正解', 'x.bd.foot':'本文が取れなかった組は抽出していない（分母 102 に入らない）。記載なしの理由別の内訳はリポジトリの評価の文書（docs/eval/）',
     'se.q':'検索式（query-builder の案のまま）', 'se.n':'全ヒット', 'se.r':'検索 Recall', 'se.miss':'検索で拾えなかった組み入れ研究',
     'rk.title':'組み入れ研究の順位', 'rk.pos':'順位', 'rk.sc':'スコア', 'rk.minus':'-1 の基準',
     'rt.pos':'順位', 'rt.title':'論文', 'rt.sc':'スコア', 'rt.a':'A',
@@ -222,10 +222,10 @@ const I18N = {
     'pub.note':'公開用の見本：抄録の本文と逐語引用（スクリーニングの引用、抽出の引用と前後の文）は伏せています。判定・スコア・抽出した値・答え・人の採点はそのままです。抄録は PMID のリンクから PubMed で読めます。この画面では採点を変えられません', 'ab.hidden':'抄録は伏せています（PMID のリンクから PubMed で読めます）', 'q.hidden':n => `引用は伏せています（${n} 字）`, 'x.qhidden':n => `全文からの引用 ${n} 件は伏せています`, 'x.hok':'人：正解', 'x.hng':'人：不正解', 'x.hnone':'未採点'
   },
   en: {
-    'app.title':'PubMed SLR × Screening', 'hdr.stage':'eval-3: no human judgment (same flow as the paper)',
+    'app.title':'PubMed SLR × Screening', 'hdr.stage':'No human judgment (same flow as the paper)',
     'pipe.title':'Flow (as in the paper; no human judgment)', 'pipe.pico':'The review question', 'pipe.qb':'PubMed query', 'pipe.sa':'1/0/-1 on draft criteria', 'pipe.rank':'Rank by score', 'pipe.rankc':'Recall@20 / @50', 'pipe.ex':'Values + quotes from full text', 'pipe.you':'Human', 'pipe.youc':'Scores the extraction',
     'hdr.scope':'For teaching and method validation. Searches PubMed only. Not a replacement for real first-pass screening',
-    'note':'eval-3 runs PICO → query-builder query → draft criteria from /pico-to-criteria as-is → screener (one) → rank by score (sum of verdicts). No adjudication and no human judgment. Only eval-3 is compared with the original paper.',
+    'note':'This page shows the flow PICO → query-builder query → draft criteria from /pico-to-criteria as-is → screener (one) → rank by score (sum of verdicts). No adjudication and no human judgment.',
     'cmp.title':'Comparison with the original paper (Recall@20 / @50, ranked by A\'s score)',
     'cmp.foot':'Original values: arXiv 2406.17755 (HTML), Immunotherapy. Not checked against the npj Digital Medicine version. Candidate pool (2,000 vs 484–698), number of reviews (100 vs 3) and models (GPT-4 etc. vs Sonnet) differ.',
     'c.rv':'Review', 'c.pop':'Population', 'c.n':'Candidates', 'c.inc':'Included in pool', 'c.orig':'Original (TrialMind, Immunotherapy)',
@@ -246,7 +246,7 @@ const I18N = {
     'x.saved':(n, d) => `Saved ${n} human score(s) to ${d}/`, 'x.dl':'This browser cannot write to a folder, so the files were downloaded → put them in results/extraction/human/',
     'x.ans':'Answer', 'x.val':'Extracted value and quotes (with surrounding text)', 'x.sc':'Score', 'x.ok':'Correct', 'x.ng':'Wrong',
     'x.autoOk':'Correct by rule', 'x.ref':p => `Reference: without ${p} (the answer looks wrong; the main value uses all items)`, 'x.nf':'⚠ not found in the full text', 'x.pair':p => `PMID ${p}`, 'x.done':'All items of this review are scored',
-    'x.bd':'What could not be extracted (of the answer studies)', 'x.bd.ans':'Answer studies', 'x.bd.body':'Body text (extracted)', 'x.bd.nobody':'In PMC, no body', 'x.bd.nopmc':'Not in PMC', 'x.bd.nr':'記載なし (items)', 'x.bd.nrw':'of which wrong', 'x.bd.foot':'Studies without a body text were not extracted (not in the 102). Reasons for 記載なし are in docs/eval/eval-3.md',
+    'x.bd':'What could not be extracted (of the answer studies)', 'x.bd.ans':'Answer studies', 'x.bd.body':'Body text (extracted)', 'x.bd.nobody':'In PMC, no body', 'x.bd.nopmc':'Not in PMC', 'x.bd.nr':'記載なし (items)', 'x.bd.nrw':'of which wrong', 'x.bd.foot':'Studies without a body text were not extracted (not in the 102). Reasons for 記載なし are in the evaluation notes in the repository (docs/eval/)',
     'se.q':'Query (query-builder draft as-is)', 'se.n':'All hits', 'se.r':'Search recall', 'se.miss':'Included studies the search missed',
     'rk.title':'Positions of the included studies', 'rk.pos':'Position', 'rk.sc':'Score', 'rk.minus':'Criteria at -1',
     'rt.pos':'Pos.', 'rt.title':'Paper', 'rt.sc':'Score', 'rt.a':'A',
