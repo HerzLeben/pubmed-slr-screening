@@ -59,6 +59,7 @@
   </a>
 </aside>
 <main><div class="wrap">
+  <p class="e3note" id="pubnote" hidden></p>
   <p class="e3note" data-t="note"></p>
   <section class="panel">
     <h3 class="ph" data-t="cmp.title"></h3>
@@ -92,6 +93,7 @@ __EXTRACTION_METRICS_JS__
 <script>
 (() => {
 const DATA = JSON.parse(document.getElementById('data').textContent);
+const PUB = !!DATA.public;  // public sample (build_report.py --public): abstracts and quotes hidden, read-only
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const f3 = x => x == null ? '—' : x.toFixed(3);
@@ -129,7 +131,8 @@ const I18N = {
     'c.I1':'満たす', 'c.I-1':'満たさない', 'c.E1':'該当せず', 'c.E-1':'該当', 'c.0':'不明', 'c.missing':'欠け', 'c.nf':'引用がタイトル・抄録に無い',
     'mx.crit':'基準', 'mx.inc':'包含基準', 'mx.exc':'除外基準（✓＝該当せず）',
     'q.title':'引用', 'q.hint':'基準の行を選ぶと、A の引用を表示します', 'q.noq':'引用なし', 'q.nf':'⚠ タイトル・抄録に見つからない', 'q.fromTitle':'（タイトルから）',
-    'ab.title':'TITLE', 'ab.none':'抄録なし（PubMed に抄録が登録されていない）', 'b.noab':'抄録なし'
+    'ab.title':'TITLE', 'ab.none':'抄録なし（PubMed に抄録が登録されていない）', 'b.noab':'抄録なし',
+    'pub.note':'公開用の見本：抄録の本文と逐語引用（スクリーニングの引用、抽出の引用と前後の文）は伏せています。判定・スコア・抽出した値・答え・人の採点はそのままです。抄録は PMID のリンクから PubMed で読めます。この画面では採点を変えられません', 'ab.hidden':'抄録は伏せています（PMID のリンクから PubMed で読めます）', 'q.hidden':n => `引用は伏せています（${n} 字）`, 'x.qhidden':n => `全文からの引用 ${n} 件は伏せています`, 'x.hok':'人：正解', 'x.hng':'人：不正解', 'x.hnone':'未採点'
   },
   en: {
     'app.title':'PubMed SLR × Screening', 'hdr.stage':'eval-3: no human judgment (same flow as the paper)',
@@ -164,7 +167,8 @@ const I18N = {
     'c.I1':'Met', 'c.I-1':'Not met', 'c.E1':'N/A', 'c.E-1':'Applies', 'c.0':'Unclear', 'c.missing':'Missing', 'c.nf':'Quote not in title or abstract',
     'mx.crit':'Criterion', 'mx.inc':'Inclusion', 'mx.exc':'Exclusion (✓ = does not apply)',
     'q.title':'Quotes', 'q.hint':'Select a criterion row to show A\'s quote', 'q.noq':'No quote', 'q.nf':'⚠ not found in title or abstract', 'q.fromTitle':'(from title)',
-    'ab.title':'TITLE', 'ab.none':'No abstract (none registered in PubMed)', 'b.noab':'No abstract'
+    'ab.title':'TITLE', 'ab.none':'No abstract (none registered in PubMed)', 'b.noab':'No abstract',
+    'pub.note':'Public sample: abstracts and verbatim quotes (screening quotes, extraction quotes and their context) are hidden. Verdicts, scores, extracted values, answers and the human scores are kept. Read the abstract on PubMed via the PMID link. Scores cannot be changed here', 'ab.hidden':'Abstract hidden (read it on PubMed via the PMID link)', 'q.hidden':n => `Quote hidden (${n} chars)`, 'x.qhidden':n => `${n} quote(s) from the full text hidden`, 'x.hok':'Human: correct', 'x.hng':'Human: wrong', 'x.hnone':'Not scored'
   }
 };
 const store = {
@@ -186,7 +190,7 @@ function chip(side, cid, type){
   if (!c) return `<span class="chip none">${t('c.missing')}</span>`;
   const p = type === 'exclusion' ? 'E' : 'I';
   const m = c.v === 1 ? ['✓', t('c.' + p + '1'), 'pos'] : c.v === -1 ? ['✗', t('c.' + p + '-1'), 'neg'] : c.v === 0 ? ['?', t('c.0'), 'unk'] : ['!', String(c.v), 'none'];
-  const miss = (c.v === 1 || c.v === -1) && !c.span ? `<span class="w" title="${esc(t('c.nf'))}">⚠</span>` : '';
+  const miss = (PUB ? c.nf : (c.v === 1 || c.v === -1) && !c.span) ? `<span class="w" title="${esc(t('c.nf'))}">⚠</span>` : '';
   return `<span class="chip ${m[2]}">${m[0]} ${esc(m[1])}${miss}</span>`;
 }
 function pill(side){
@@ -212,7 +216,7 @@ function abstractHTML(r, focus){
   const sp = {title: [], abstract: []};
   for (const [cid, c] of Object.entries(r.a.crit)) if (c.span) sp[c.src || 'abstract'].push({s:c.span[0], e:c.span[1], tag:'a:' + cid});
   const ttl = `<div class="atitle"><span class="sec">${t('ab.title')}</span> ${markText(r.title || '', sp.title, focus, false)}</div>`;
-  const ab = r.abstract ? markText(r.abstract, sp.abstract, focus, true) : `<span class="empty">${t('ab.none')}</span>`;
+  const ab = r.abstract ? markText(r.abstract, sp.abstract, focus, true) : `<span class="empty">${t(PUB && r.has_abstract ? 'ab.hidden' : 'ab.none')}</span>`;
   return `<div class="abstract${focus ? ' focus' : ''}">${ttl}${ab}</div>`;
 }
 function matrixHTML(rv, r, focus){
@@ -230,6 +234,7 @@ function quotesHTML(rv, r, focus){
   const cdef = rv.criteria.find(c => c.id === focus) || {text:''}, c = r.a.crit[focus];
   let body = chip(r.a, focus, cdef.type) + ' ';
   if (c && c.q) body += `“${esc(c.q)}”` + (c.span ? (c.src === 'title' ? ` <span class="note">${t('q.fromTitle')}</span>` : '') : ` <span class="miss">${t('q.nf')}</span>`);
+  else if (PUB && c && c.qlen) body += `<span class="note">${t('q.hidden', c.qlen)}</span>` + (c.nf ? ` <span class="miss">${t('q.nf')}</span>` : '');
   else body += `<span class="note">${t('q.noq')}</span>`;
   if (c && c.note) body += `<div class="note">${esc(c.note)}</div>`;
   return `<div class="qs"><div class="qh">${esc(focus)} · ${esc(cdef.text)}</div><div class="qr"><span class="tag a">${ROBO('a', 18)}</span><div>${body}</div></div></div>`;
@@ -243,7 +248,7 @@ function bodyHTML(rv, r){
   const focus = focusMap[key];
   return `<div class="body" data-pmid="${esc(r.pmid)}"><div>${abstractHTML(r, focus)}</div><div class="rside">${matrixHTML(rv, r, focus)}${quotesHTML(rv, r, focus)}</div></div>`;
 }
-const marks = r => (r.included ? `<span class="mk inc">${t('mk.inc')}</span>` : '') + (r.added ? `<span class="mk add">${t('mk.add')}</span>` : '') + (!r.abstract ? `<span class="badge">${t('b.noab')}</span>` : '');
+const marks = r => (r.included ? `<span class="mk inc">${t('mk.inc')}</span>` : '') + (r.added ? `<span class="mk add">${t('mk.add')}</span>` : '') + (!(PUB ? r.has_abstract : r.abstract) ? `<span class="badge">${t('b.noab')}</span>` : '');
 
 function renderCmp(){
   let h = `<table class="e3t"><thead><tr><th>${t('c.rv')}</th><th>${t('c.pop')}</th><th class="n">${t('c.n')}</th><th class="n">${t('c.inc')}</th><th class="n">Recall@20</th><th class="n">Recall@50</th></tr></thead><tbody>`;
@@ -288,7 +293,7 @@ function xhuman(){
   const out = {};
   for (const rid of (X ? X.reviews : [])){
     if (!xmem[rid]){
-      const m = Object.assign({}, X.human[rid] || {}, store.get('slr-extract-human-' + rid) || {});
+      const m = Object.assign({}, X.human[rid] || {}, PUB ? {} : store.get('slr-extract-human-' + rid) || {});
       for (const k of Object.keys(m)) if (m[k] !== true && m[k] !== false) delete m[k];
       xmem[rid] = m;
     }
@@ -308,6 +313,7 @@ function xrow(cls, label, m){
   return `<tr class="${cls}"><td>${label}</td><td class="n">${m.total}</td><td class="n">${m.rule_correct}</td><td class="n">${m.human_correct}</td><td class="n">${m.human_wrong}</td><td class="n">${m.pending}</td><td class="n">${pct(m)}</td></tr>`;
 }
 function xquotes(it){
+  if (PUB) return it.qcount ? `<div class="sm">${t('x.qhidden', it.qcount)}</div>` : '';
   if (!it.ctx.length) return '';
   return it.ctx.map(c => c.nf ? `<div class="xq nf">“${esc(c.q)}” ${t('x.nf')}</div>`
     : `<div class="xq">${esc(c.before)}<mark>${esc(c.match)}</mark>${esc(c.after)}</div>`).join('');
@@ -315,6 +321,7 @@ function xquotes(it){
 function xscore(it, h){
   if (it.auto === 'correct') return `<span class="xb ok">${t('x.autoOk')}</span>`;
   const v = h[xkey(it)];
+  if (PUB) return v === true ? `<span class="xb ok">${t('x.hok')}</span>` : v === false ? `<span class="xb ng">${t('x.hng')}</span>` : `<span class="sm">${t('x.hnone')}</span>`;
   return `<div class="seg" data-k="${esc(xkey(it))}"><button class="inc ${v === true ? 'on' : ''}" data-x="1">${t('x.ok')}</button><button class="exc ${v === false ? 'on' : ''}" data-x="0">${t('x.ng')}</button></div>`;
 }
 function renderX(rv){
@@ -347,7 +354,7 @@ function renderX(rv){
     }
     h += `</tbody></table></div><p class="sm">${t('x.bd.foot')}</p>`;
   }
-  h += `<div class="xbar"><button class="btn primary" data-xa="save">${t('x.save')}</button><button class="btn" data-xa="redir">${t('x.redir')}</button><label><input type="checkbox" data-xa="only" ${xOnly ? 'checked' : ''}> ${t('x.only')}</label><span class="sm">${xDirName ? esc(t('x.dir', xDirName)) : t('x.nodir')}</span></div>`;
+  if (!PUB) h += `<div class="xbar"><button class="btn primary" data-xa="save">${t('x.save')}</button><button class="btn" data-xa="redir">${t('x.redir')}</button><label><input type="checkbox" data-xa="only" ${xOnly ? 'checked' : ''}> ${t('x.only')}</label><span class="sm">${xDirName ? esc(t('x.dir', xDirName)) : t('x.nodir')}</span></div>`;
   const its = X.items.filter(it => it.review === rv.review_pmid);
   const shownIts = its.filter(it => !xOnly || (it.auto === null && H[rv.review_pmid][xkey(it)] === undefined));
   if (!shownIts.length) h += `<p class="sm">${t('x.done')}</p>`;
@@ -415,6 +422,7 @@ async function xsave(){
 function render(){
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  $('#pubnote').hidden = !PUB; $('#pubnote').textContent = t('pub.note');
   document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
   document.querySelectorAll('.lg [data-t="lg.a"]').forEach(el => { el.innerHTML = ROBO('a', 14) + ' ' + esc(t('lg.a')); });
   $('#reviews').innerHTML = DATA.reviews.map((r, i) => `<button data-i="${i}" aria-pressed="${i === cur}"><span class="rvt">${esc(rtitle(r))}</span><span class="rvm tnum">PMID ${esc(r.review_pmid)} · ${r.records.length}</span></button>`).join('');
@@ -439,12 +447,12 @@ $('#list').addEventListener('click', e => {
 $('#xt').addEventListener('click', e => {
   const rv = DATA.reviews[cur];
   const b = e.target.closest('[data-x]');
-  if (b){
+  if (b && !PUB){
     const k = b.closest('.seg').dataset.k, val = b.dataset.x === '1', curv = xhuman()[rv.review_pmid][k];
     const y = window.scrollY; xset(rv.review_pmid, k, curv === val ? null : val); render(); window.scrollTo(0, y); return;
   }
   const a = e.target.closest('[data-xa]');
-  if (!a) return;
+  if (!a || PUB) return;
   if (a.dataset.xa === 'save') xsave();
   if (a.dataset.xa === 'redir'){ IDB.put('dir', undefined).catch(() => {}); xDirName = null; render(); }
 });

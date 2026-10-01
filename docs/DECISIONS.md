@@ -203,3 +203,9 @@ job：results/extraction/jobs/<review>/<pmid>.json
 - 人が決定：commit の author・committer のアドレス（43 commit すべて会社のアドレス）も、同じ書き換えで mailmap により `254887246+HerzLeben@users.noreply.github.com` に差し替えた。これからの commit も同じ（`git config user.email`）
 - 書き換えは auto mode の安全チェックで止められたので、人がターミナルで打った。前に `~/dev/pubmed-slr-screening.backup-20261001` に `git clone --mirror` で残した
 - 2026-10-01 4章の確認と README の手順：取得の URL は Hugging Face の resolve/main（記録した revision は 6dfc322）。清潔な clone で bench/ が再現できることを確かめた
+
+## 2026-10-01 見本の画面の公開（人が決定、Wataru）
+
+- 「機能の追加は抽出で最後」（指示書20 0章）を、この1件だけ取り消す。理由：読者が clone して流れを回すのはハードルが高すぎる。画面は最初から見せておく必要がある
+- eval-2（`results/report.html`、人が入る流れ）と eval-3（`results/eval-3/report.html`、原著との比較）の2つを、抄録の本文とすべての逐語引用（スクリーニングの引用、抽出の引用と前後の文）を伏せて GitHub Pages で公開する。タイトル・雑誌・年・PMID（PubMed へのリンク）、基準ごとの判定、スコア、抽出した短い値と答え、人の判断と採点は残す
+- 作り方：`build_report.py --public` で、データを作ったあとに伏せる（判定・検査は伏せる前の抄録で行う）。出力は `docs/demo/`。見本の画面は読むだけ（人の判断・採点の操作と保存は出さない）

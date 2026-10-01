@@ -75,6 +75,7 @@ button{font:inherit;color:inherit}
 /* shell */
 .shell{display:flex;min-height:calc(100% - 60px)}
 .scope{margin:0;padding:6px 16px;font-size:12px;color:var(--ink-secondary);background:var(--surface-sunken);border-bottom:1px solid var(--border)}
+.scope.pubnote{color:var(--accent);font-weight:600}
 aside.side{width:264px;flex-shrink:0;background:var(--side);border-right:1px solid var(--side-line);padding:20px;display:flex;flex-direction:column;gap:20px}
 .sec{border:1px solid var(--border);background:var(--surface-raised);border-radius:8px}
 .sec h2{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--ink-secondary);margin:0;padding:8px 12px}
@@ -361,6 +362,7 @@ table.rt td.rdet .body{display:grid;border-top:0}
   </div>
 </header>
 <p class="scope" data-t="hdr.scope"></p>
+<p class="scope pubnote" id="pubnote" hidden></p>
 
 <div class="shell">
 <aside class="side">
@@ -564,6 +566,7 @@ table.rt td.rdet .body{display:grid;border-top:0}
 <script>
 (() => {
 const DATA = JSON.parse(document.getElementById('data').textContent);
+const PUB = !!DATA.public;  // public sample (build_report.py --public): abstracts and quotes hidden, read-only
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const I18N = {
@@ -604,6 +607,7 @@ const I18N = {
     'c.I1':'満たす', 'c.I-1':'満たさない', 'c.E1':'該当せず', 'c.E-1':'該当', 'c.0':'不明', 'c.missing':'欠け', 'c.nf':'引用がタイトル・抄録に無い',
     'mx.crit':'基準', 'mx.inc':'包含基準', 'mx.exc':'除外基準（✓＝該当せず）',
     'q.title':'引用', 'q.hint':'基準の行を選ぶと、A と B の引用を並べて表示します', 'q.nojudge':'判定なし', 'q.nocrit':'この基準の判定が無い', 'q.nf':'⚠ タイトル・抄録に見つからない', 'q.fromTitle':'（タイトルから）', 'ab.title':'TITLE', 'q.noq':'引用なし',
+    'pub.note':'公開用の見本：抄録の本文と逐語引用は伏せています（判定・スコア・人の判断はそのまま）。抄録は PMID のリンクから PubMed で読めます。この画面では判断を変えられません', 'ab.hidden':'抄録は伏せています（PMID のリンクから PubMed で読めます）', 'q.hidden':n => `引用は伏せています（${n} 字）`,
     'ab.none':'抄録なし（PubMed に抄録が登録されていない）',
     'h.title':'人の判断', 'h.inc':'組み入れ（全文確認へ）', 'h.exc':'除外', 'h.note':'理由を一言',
     'toast':(n, p) => `${n} 件を書き出しました → results/human/${p}.json に置いてください`,
@@ -657,6 +661,7 @@ const I18N = {
     'c.I1':'Met', 'c.I-1':'Not met', 'c.E1':'N/A', 'c.E-1':'Applies', 'c.0':'Unclear', 'c.missing':'Missing', 'c.nf':'Quote not in title or abstract',
     'mx.crit':'Criterion', 'mx.inc':'Inclusion', 'mx.exc':'Exclusion (✓ = does not apply)',
     'q.title':'Quotes', 'q.hint':'Select a criterion row to compare the quotes from A and B', 'q.nojudge':'No result', 'q.nocrit':'No verdict for this criterion', 'q.nf':'⚠ not found in title or abstract', 'q.fromTitle':'(from title)', 'ab.title':'TITLE', 'q.noq':'No quote',
+    'pub.note':'Public sample: abstracts and verbatim quotes are hidden (verdicts, scores and human decisions are kept). Read the abstract on PubMed via the PMID link. Decisions cannot be changed here', 'ab.hidden':'Abstract hidden (read it on PubMed via the PMID link)', 'q.hidden':n => `Quote hidden (${n} chars)`,
     'ab.none':'No abstract (none registered in PubMed)',
     'h.title':'Your decision', 'h.inc':'Include (to full text)', 'h.exc':'Exclude', 'h.note':'One-line reason',
     'toast':(n, p) => `Saved ${n} decision(s) → put it in results/human/${p}.json`,
@@ -686,7 +691,7 @@ const openSet = new Set(), focusMap = {}, mem = {};
 
 function decOf(rv, pmid){
   const k = rv.review_pmid;
-  if (!mem[k]) mem[k] = Object.assign({}, rv.human, store.get('slr-human-' + k) || {});
+  if (!mem[k]) mem[k] = Object.assign({}, rv.human, PUB ? {} : store.get('slr-human-' + k) || {});
   return mem[k][pmid] || null;
 }
 function setDecision(rv, pmid, patch){
@@ -724,7 +729,7 @@ function chip(side, cid, type){
   if (!c) return `<span class="chip none">${t('c.missing')}</span>`;
   const p = type === 'exclusion' ? 'E' : 'I';
   const m = c.v === 1 ? ['✓', t('c.' + p + '1'), 'pos'] : c.v === -1 ? ['✗', t('c.' + p + '-1'), 'neg'] : c.v === 0 ? ['?', t('c.0'), 'unk'] : ['!', String(c.v), 'none'];
-  const miss = (c.v === 1 || c.v === -1) && !c.span ? `<span class="w" title="${esc(t('c.nf'))}">⚠</span>` : '';
+  const miss = (PUB ? c.nf : (c.v === 1 || c.v === -1) && !c.span) ? `<span class="w" title="${esc(t('c.nf'))}">⚠</span>` : '';
   return `<span class="chip ${m[2]}">${m[0]} ${esc(m[1])}${miss}</span>`;
 }
 function pill(side, who){
@@ -758,7 +763,7 @@ function abstractHTML(r, focus){
     for (const [cid, c] of Object.entries(s.crit)) if (c.span) sp[c.src || 'abstract'].push({s:c.span[0], e:c.span[1], tag:who + ':' + cid});
   }
   const ttl = `<div class="atitle"><span class="sec">${t('ab.title')}</span> ${markText(r.title || '', sp.title, focus, false)}</div>`;
-  const ab = r.abstract ? markText(r.abstract, sp.abstract, focus, true) : `<span class="empty">${t('ab.none')}</span>`;
+  const ab = r.abstract ? markText(r.abstract, sp.abstract, focus, true) : `<span class="empty">${t(PUB && r.has_abstract ? 'ab.hidden' : 'ab.none')}</span>`;
   return `<div class="abstract${focus ? ' focus' : ''}">${ttl}${ab}</div>`;
 }
 
@@ -774,6 +779,7 @@ function quotesHTML(rv, r, focus){
     else {
       body = chip(s, focus, cdef.type) + ' ';
       if (c.q) body += `“${esc(c.q)}”` + (c.span ? (c.src === 'title' ? ` <span class="note">${t('q.fromTitle')}</span>` : '') : ` <span class="miss">${t('q.nf')}</span>`);
+      else if (PUB && c.qlen) body += `<span class="note">${t('q.hidden', c.qlen)}</span>` + (c.nf ? ` <span class="miss">${t('q.nf')}</span>` : '');
       else body += `<span class="note">${t('q.noq')}</span>`;
       if (c.note) body += `<div class="note">${esc(c.note)}</div>`;
     }
@@ -800,7 +806,7 @@ function humanHTML(rv, r){
   const d = decOf(rv, r.pmid) || {};
   return `<div class="human"><div class="hh"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="5" r="2.6"/><path d="M3 14c.6-2.8 2.6-4.3 5-4.3s4.4 1.5 5 4.3"/></svg>${t('h.title')}</div>
     <div class="seg"><button class="inc ${d.decision === 'include' ? 'on' : ''}" data-dec="include">${t('h.inc')}</button><button class="exc ${d.decision === 'exclude' ? 'on' : ''}" data-dec="exclude">${t('h.exc')}</button></div>
-    <input type="text" data-note placeholder="${esc(t('h.note'))}" value="${esc(d.note || '')}"></div>`;
+    <input type="text" data-note placeholder="${esc(t('h.note'))}" value="${esc(d.note || '')}"${PUB ? ' readonly' : ''}></div>`;
 }
 
 function statusBadges(rv, r){
@@ -819,7 +825,7 @@ function statusBadges(rv, r){
     if (r.reasons.includes('criterion_disagree')) b.push(`<span class="badge">${esc(t('r.criterion_disagree'))}: ${r.disagree.join('・')}</span>`);
   }
   if (r.mismatch) b.push(`<span class="badge warn">${t('b.mismatch', esc(r.rule_status))}</span>`);
-  if (!r.abstract) b.push(`<span class="badge">${t('b.noab')}</span>`);
+  if (!(PUB ? r.has_abstract : r.abstract)) b.push(`<span class="badge">${t('b.noab')}</span>`);
   return b.join('');
 }
 
@@ -842,7 +848,7 @@ function initFocus(rv, r){
   if (key in focusMap) return;
   let f = r.disagree[0] || null;
   if (!f) for (const who of ['a', 'b']){ const s = r[who]; if (!s) continue;
-    for (const [cid, c] of Object.entries(s.crit)) if ((c.v === 1 || c.v === -1) && !c.span){ f = cid; break; } if (f) break; }
+    for (const [cid, c] of Object.entries(s.crit)) if (PUB ? c.nf : (c.v === 1 || c.v === -1) && !c.span){ f = cid; break; } if (f) break; }
   focusMap[key] = f;
 }
 
@@ -896,7 +902,7 @@ function renderDecide(rv, c){
   $('#dpos').innerHTML = `<b>${dIdx + 1}</b> / ${hum.length} · ${c.pending ? t('st.pending', c.pending) : t('st.done')}`;
   $('#dots').innerHTML = hum.map((x, i) => { const dd = decOf(rv, x.pmid); const cls = dd && dd.decision === 'include' ? 'inc' : dd && dd.decision === 'exclude' ? 'exc' : ''; return `<button data-di="${i}" class="${cls} ${i === dIdx ? 'cur' : ''}" title="PMID ${esc(x.pmid)}">${i + 1}</button>`; }).join('');
   $('#prev').disabled = dIdx === 0; $('#next').disabled = dIdx === hum.length - 1;
-  const doneBox = !c.pending ? `<div class="done" style="margin-bottom:12px"><h3>${t('d.alldone')}</h3><p>${t('d.alldone2', rv.review_pmid)}</p><button class="btn primary" data-act="save">${t('side.save')}</button> <a class="btn" href="#/results">${t('cta.results')} →</a></div>` : '';
+  const doneBox = !c.pending && !PUB ? `<div class="done" style="margin-bottom:12px"><h3>${t('d.alldone')}</h3><p>${t('d.alldone2', rv.review_pmid)}</p><button class="btn primary" data-act="save">${t('side.save')}</button> <a class="btn" href="#/results">${t('cta.results')} →</a></div>` : '';
   $('#dcard').innerHTML = `${doneBox}<article class="card open dcard" data-pmid="${esc(r.pmid)}">
     <div class="head" style="cursor:default"><div class="rank">#${esc(r.rank)}</div>
       <div><div class="ttl">${esc(r.title)}</div><div class="meta tnum">${metaHTML(r)}</div><div class="badges">${statusBadges(rv, r)}</div></div>
@@ -906,7 +912,7 @@ function renderDecide(rv, c){
   <div class="decide" data-pmid="${esc(r.pmid)}">
     <span class="hh">${t('h.title')}</span>
     <div class="seg"><button class="inc ${d.decision === 'include' ? 'on' : ''}" data-dec="include">${t('h.inc')}<kbd>I</kbd></button><button class="exc ${d.decision === 'exclude' ? 'on' : ''}" data-dec="exclude">${t('h.exc')}<kbd>E</kbd></button></div>
-    <input type="text" data-note placeholder="${esc(t('h.note'))}" value="${esc(d.note || '')}">
+    <input type="text" data-note placeholder="${esc(t('h.note'))}" value="${esc(d.note || '')}"${PUB ? ' readonly' : ''}>
   </div>`;
 }
 
@@ -955,6 +961,8 @@ function render(){
   $('#progbar').style.width = c.hum.length ? (decided / c.hum.length * 100) + '%' : '100%';
   $('#progtxt').textContent = c.hum.length ? t('prog', decided, c.hum.length) : t('prog.none');
   $('#savetxt').textContent = t('side.save');
+  $('#save').hidden = PUB;
+  const pn = $('#pubnote'); if (pn){ pn.hidden = !PUB; pn.textContent = t('pub.note'); }
   $('#pipeNeed').textContent = t('pipe.need', c.hum.length);
   $('#rtitle').textContent = rtitle(rv);
   $('#rsub').textContent = t('sub', rv.review_pmid, rv.criteria.length, DATA.generated_at);
@@ -1023,22 +1031,22 @@ $('#next').addEventListener('click', () => { dIdx++; render(); });
 $('#dots').addEventListener('click', e => { const b = e.target.closest('[data-di]'); if (!b) return; dIdx = +b.dataset.di; render(); });
 document.querySelector('main').addEventListener('click', e => {
   if (e.target.closest('a')) return;
-  if (e.target.closest('[data-act="save"]')) { saveJSON(); return; }
+  if (e.target.closest('[data-act="save"]')) { if (!PUB) saveJSON(); return; }
   const rv = DATA.reviews[cur];
   const row = e.target.closest('tr.row');
   if (row){ const body = row.closest('[data-pmid]'); const key = rv.review_pmid + body.dataset.pmid; focusMap[key] = focusMap[key] === row.dataset.cid ? null : row.dataset.cid; render(); return; }
-  const dec = e.target.closest('[data-dec]'); if (dec){ decide(dec.dataset.dec); return; }
+  const dec = e.target.closest('[data-dec]'); if (dec){ if (!PUB) decide(dec.dataset.dec); return; }
   const rr = e.target.closest('tr.rr'); if (rr){ const key = rv.review_pmid + rr.dataset.pmid; openRows.has(key) ? openRows.delete(key) : openRows.add(key); render(); return; }
   const ex = e.target.closest('[data-ex]'); if (ex){ excFilter = excFilter === ex.dataset.ex ? null : ex.dataset.ex; render(); }
 });
 document.querySelector('main').addEventListener('change', e => {
-  if (!e.target.matches('[data-note]')) return;
+  if (PUB || !e.target.matches('[data-note]')) return;
   setDecision(DATA.reviews[cur], e.target.closest('[data-pmid]').dataset.pmid, {note: e.target.value});
 });
 document.addEventListener('keydown', e => {
   if (page !== 'decide' || e.target.matches('input, textarea')) return;
-  if (e.key === 'i' || e.key === 'I') decide('include');
-  else if (e.key === 'e' || e.key === 'E') decide('exclude');
+  if (!PUB && (e.key === 'i' || e.key === 'I')) decide('include');
+  else if (!PUB && (e.key === 'e' || e.key === 'E')) decide('exclude');
   else if (e.key === 'ArrowRight' && !$('#next').disabled){ dIdx++; render(); }
   else if (e.key === 'ArrowLeft' && !$('#prev').disabled){ dIdx--; render(); }
 });

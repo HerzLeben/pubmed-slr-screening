@@ -4,6 +4,8 @@
 > It is not an app with a UI: Claude Code runs the workflow and writes a static HTML report. It is for teaching and method validation only, not a substitute for real systematic-review work.
 > Results on 3 hematologic-cancer reviews from TrialReviewBench are in [`docs/eval/eval-3.md`](docs/eval/eval-3.md).
 
+**画面の見本（clone しなくても見られる）**：https://herzleben.github.io/pubmed-slr-screening/ — eval-3（原著との比較）と eval-2（人が入る流れ）のレポート。抄録の本文と逐語引用は伏せている
+
 ## 1. これは何か
 
 系統的文献レビュー（SLR）を支援する研究 **TrialMind**（Wang et al., npj Digital Medicine 2025、[arXiv:2406.17755](https://arxiv.org/abs/2406.17755)）のうち、**検索・スクリーニング・研究特性の抽出**の3つを、Claude Code の subagent・skill・hook・MCP で組み直したもの。
@@ -84,6 +86,7 @@ curl -L -o bench/raw/TrialReviewBench-data-extraction/37168849.csv https://huggi
 
 - eval-3 のレポート：`.venv/bin/python scripts/build_report.py --run eval-3` → `results/eval-3/report.html`
 - 評価の `/eval` は人が打つ（Claude Code が自分で起動しない）
+- 公開用の見本（抄録と引用を伏せ、読むだけ）：`.venv/bin/python scripts/build_report.py --public --out docs/demo/eval-2.html` と `.venv/bin/python scripts/build_report.py --run eval-3 --public --out docs/demo/eval-3.html`
 
 ## 6. データとライセンス
 
@@ -91,6 +94,7 @@ curl -L -o bench/raw/TrialReviewBench-data-extraction/37168849.csv https://huggi
 - `bench/` の整形済みファイルは TrialReviewBench（Apache-2.0）から作った（[`NOTICE`](NOTICE)）
 - 答えの CSV、抄録、全文はリポジトリに入れていない（スクリプトで取る）
 - `docs/samples/` には、判定の根拠として抄録から引いた短い逐語引用（基準ごとに1文程度）がある
+- `docs/demo/`（画面の見本）は、抄録の本文と逐語引用を伏せてある。抽出した値（短い文字列）は残している
 
 ## 7. リポジトリの読み方
 

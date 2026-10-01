@@ -18,6 +18,12 @@ results/eval-3/screen/a/<rid>/batch_*.json, and the metrics from eval_screening.
 The 抽出 section (the human scores the extraction there) uses score_extraction.load_items/load_human and
 inlines extraction_metrics.js; it saves results/extraction/human/<review>.json.
 The results/report.html of eval-1/eval-2 is not touched.
+
+Public sample (--public, decided 2026-10-01): the same report with the abstracts and every verbatim quote
+hidden (screening quotes, quotes inside the adjudicator's summary, extraction quotes and their context).
+Titles, verdicts, scores, extracted values, answers and the human's decisions stay. It is read-only.
+    python scripts/build_report.py --public --out docs/demo/eval-2.html
+    python scripts/build_report.py --run eval-3 --public --out docs/demo/eval-3.html
 """
 
 from __future__ import annotations
@@ -26,12 +32,54 @@ import argparse
 import base64
 import datetime as dt
 import json
+import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from quote_match import locate_quote
 from rules import VALID_VERDICTS, adjudicate, disagree_ids, overall, score
+
+QUOTED = re.compile(r"「([^」]{15,})」|“([^”]{15,})”|\"([^\"]{15,})\"|‘([^’]{15,})’"
+                    r"|(?<![A-Za-z])'([^']{15,}?)'(?![A-Za-z])")  # the last: single quotes, not apostrophes
+
+
+def hide_quoted(text):
+    """Quoted fragments (15+ chars) in model-written text -> 「引用・N字」."""
+    if not text:
+        return text
+    return QUOTED.sub(lambda m: f"「引用・{len(next(g for g in m.groups() if g))}字」", text)
+
+
+def hide_side(side: dict | None) -> None:
+    if not side:
+        return
+    for c in side["crit"].values():
+        c["nf"] = c["v"] in (1, -1) and c["span"] is None
+        c["qlen"] = len(c["q"]) if c.get("q") else 0
+        c["q"], c["span"], c["src"] = None, None, None
+        c["note"] = hide_quoted(c.get("note"))
+
+
+def make_public(payload: dict) -> dict:
+    """Hide the abstracts and every verbatim quote (see the module docstring). Checks ran before this."""
+    payload["public"] = True
+    for rv in payload["reviews"]:
+        rv["warnings"] = []
+        for r in rv["records"]:
+            r["has_abstract"] = bool(r.get("abstract"))
+            r["abstract"] = ""
+            for who in ("a", "b"):
+                hide_side(r.get(who))
+            for k in ("summary", "summary_en"):
+                if k in r:
+                    r[k] = hide_quoted(r[k])
+    ex = payload.get("extraction")
+    if ex:
+        for it in ex["items"]:
+            it["qcount"] = len(it.get("quotes") or [])
+            it["quotes"], it["ctx"] = [], []
+    return payload
 
 
 def load(path: Path):
@@ -188,6 +236,8 @@ def main_eval3(args) -> None:
                                       reviews, results))
     payload = {"generated_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "run": "eval-3",
                "reviews": rvs, "extraction": build_extraction(Path("."))}
+    if args.public:
+        make_public(payload)
     head = TEMPLATE[: TEMPLATE.index('<p class="scope"')] + '<p class="scope" data-t="hdr.scope"></p>\n'
     body = (Path(__file__).parent / "report_eval3_body.html").read_text(encoding="utf-8")
     body = body.replace("__EXTRACTION_METRICS_JS__", (Path(__file__).parent / "extraction_metrics.js").read_text(encoding="utf-8"))
@@ -211,6 +261,7 @@ def main() -> None:
     ap.add_argument("--out", default=None)
     ap.add_argument("--run", default=None, choices=["eval-3"], help="eval-3: A only, writes results/eval-3/report.html")
     ap.add_argument("--label", default="", help="text shown next to the title, e.g. DUMMY DATA")
+    ap.add_argument("--public", action="store_true", help="hide abstracts and quotes; read-only sample for docs/demo/")
     args = ap.parse_args()
     if args.run == "eval-3":
         main_eval3(args)
@@ -227,6 +278,8 @@ def main() -> None:
         "label": args.label,
         "reviews": [build_review(r, reviews, results) for r in rids],
     }
+    if args.public:
+        make_public(payload)
     data = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
     html = TEMPLATE.replace("__DATA__", data)
     for key, name in LOGOS.items():
