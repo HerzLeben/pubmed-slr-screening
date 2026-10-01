@@ -216,3 +216,4 @@ job：results/extraction/jobs/<review>/<pmid>.json
 - `results/` の読み込みを `scripts/common.py` に、最終候補・順位・基準の ID 順を `scripts/rules.py` にまとめた。hook の共通部分は `.claude/hooks/hooklib.py`。出力は変えていない（手元の results/ で前後を突き合わせた）
 - `docs/prompts/log.md` には人の指示だけを残す。Claude Code が送る task-notification と subagent の報告は `log_prompt.py` が書かず、既存のログからも `redact_log.py` で外した
 - 消したもの：`docs/HANDOFF-cowork.md`（Cowork への引き継ぎ。最新の tag と残りの作業が古く、中身は eval-3.md などの正本の要約だけ）、`fetch_pubmed.py` の旧形式 `candidates.jsonl` の読み込み（すべての results に candidates.json がある）。`make_no_subagent_set.py` は commit 済みの見本 `docs/samples/no-subagent-31190844.jsonl` の作り方なので残す
+- 2026-10-01 人の指示：`/eval` skill を eval-3（`--run eval-3`：screener-a だけ、基準の案のまま、人の判断なし、抽出の Accuracy）にも使えるようにした。前提の確認・実行するスクリプト・失敗の分け方を流れごとに書き分けた。`docs/eval/eval-3.md` は既にあるので、次の評価は別の名前にする
