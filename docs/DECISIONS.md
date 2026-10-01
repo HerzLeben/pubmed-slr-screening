@@ -209,3 +209,4 @@ job：results/extraction/jobs/<review>/<pmid>.json
 - 「機能の追加は抽出で最後」（指示書20 0章）を、この1件だけ取り消す。理由：読者が clone して流れを回すのはハードルが高すぎる。画面は最初から見せておく必要がある
 - eval-2（`results/report.html`、人が入る流れ）と eval-3（`results/eval-3/report.html`、原著との比較）の2つを、抄録の本文とすべての逐語引用（スクリーニングの引用、抽出の引用と前後の文）を伏せて GitHub Pages で公開する。タイトル・雑誌・年・PMID（PubMed へのリンク）、基準ごとの判定、スコア、抽出した短い値と答え、人の判断と採点は残す
 - 作り方：`build_report.py --public` で、データを作ったあとに伏せる（判定・検査は伏せる前の抄録で行う）。出力は `docs/demo/`。見本の画面は読むだけ（人の判断・採点の操作と保存は出さない）
+- 2026-10-01 人が決定（続き）：Pages の見本は eval-3 だけにする（`docs/demo/eval-2.html` は消し、`docs/index.html` は eval-3 へ移動するだけ）。eval-3 の画面の上に、eval-2 と同じロボットのアニメーションで eval-3 の流れ（PICO → query-builder → screener-a → スコアで順位 → extractor → 人が採点）を足す。見本では、ヘッダーの下の「教育と手法の検証用…」の1行を出さない（位置づけは README にある）

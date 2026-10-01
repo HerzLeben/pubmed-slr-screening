@@ -4,7 +4,7 @@
 > It is not an app with a UI: Claude Code runs the workflow and writes a static HTML report. It is for teaching and method validation only, not a substitute for real systematic-review work.
 > Results on 3 hematologic-cancer reviews from TrialReviewBench are in [`docs/eval/eval-3.md`](docs/eval/eval-3.md).
 
-**画面の見本（clone しなくても見られる）**：https://herzleben.github.io/pubmed-slr-screening/ — eval-3（原著との比較）と eval-2（人が入る流れ）のレポート。抄録の本文と逐語引用は伏せている
+**画面の見本（clone しなくても見られる）**：https://herzleben.github.io/pubmed-slr-screening/ — eval-3（原著との比較）のレポート。抄録の本文と逐語引用は伏せている
 
 ## 1. これは何か
 
@@ -86,7 +86,7 @@ curl -L -o bench/raw/TrialReviewBench-data-extraction/37168849.csv https://huggi
 
 - eval-3 のレポート：`.venv/bin/python scripts/build_report.py --run eval-3` → `results/eval-3/report.html`
 - 評価の `/eval` は人が打つ（Claude Code が自分で起動しない）
-- 公開用の見本（抄録と引用を伏せ、読むだけ）：`.venv/bin/python scripts/build_report.py --public --out docs/demo/eval-2.html` と `.venv/bin/python scripts/build_report.py --run eval-3 --public --out docs/demo/eval-3.html`
+- 公開用の見本（抄録と引用を伏せ、読むだけ）：`.venv/bin/python scripts/build_report.py --run eval-3 --public --out docs/demo/eval-3.html`
 
 ## 6. データとライセンス
 

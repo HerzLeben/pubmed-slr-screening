@@ -4,38 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PubMed SLR Screening</title>
-<style>
-:root{--bg:#f7f8f8;--surface:#fff;--ink:#14201f;--ink2:#4a5655;--muted:#6b7675;--border:#dde3e2;--accent:#0f8c84;--nav:#0b1f3a}
-@media (prefers-color-scheme: dark){:root{--bg:#0f1514;--surface:#172020;--ink:#e6eceb;--ink2:#b5c0bf;--muted:#8a9594;--border:#2a3534;--accent:#3cc2b8;--nav:#0b1f3a}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
-header{background:var(--nav);color:#fff;padding:18px 16px}
-header .in,main{max-width:860px;margin:0 auto}
-header b{font-size:18px}
-header small{display:block;color:rgba(255,255,255,.75);font-size:12.5px}
-main{padding:24px 16px 48px}
-p{margin:0 0 12px;color:var(--ink2)}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:20px 0}
-a.card{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
-a.card:hover{border-color:var(--accent)}
-a.card h2{margin:0 0 6px;font-size:16px;color:var(--accent)}
-a.card p{font-size:13.5px;margin:0}
-.note{font-size:12.5px;color:var(--muted);border-left:3px solid var(--accent);padding:6px 12px;background:var(--surface);border-radius:6px}
-footer{font-size:12.5px;color:var(--muted);margin-top:24px}
-footer a{color:var(--accent)}
-</style>
+<meta http-equiv="refresh" content="0; url=demo/eval-3.html">
+<link rel="canonical" href="demo/eval-3.html">
+<style>body{margin:0;padding:24px 16px;font:15px/1.7 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;background:#f7f8f8;color:#14201f}a{color:#0f8c84}@media (prefers-color-scheme: dark){body{background:#0f1514;color:#e6eceb}a{color:#3cc2b8}}</style>
 </head>
 <body>
-<header><div class="in"><b>PubMed SLR Screening</b><small>TrialMind（npj Digital Medicine 2025）の検索・スクリーニング・抽出を Claude Code で組み直したワークフロー</small></div></header>
-<main>
-  <p>系統的文献レビュー（SLR）の検索・タイトル抄録スクリーニング・研究特性の抽出を、Claude Code の subagent・skill・hook・MCP で回したときの結果の画面です。教育と手法の検証用で、業務の代わりではありません。</p>
-  <div class="cards">
-    <a class="card" href="demo/eval-3.html"><h2>eval-3：原著と比べる</h2><p>人の判断を挟まない、原著と同じ流れ。検索 Recall、Recall@20・@50、抽出の Accuracy と、論文ごとの判定・抽出した値。</p></a>
-    <a class="card" href="demo/eval-2.html"><h2>eval-2：人が入る流れ</h2><p>2体の screener が基準ごとに判定し、割れた論文だけを人が判断する流れ。概要・要人判断・結果の3つの画面。</p></a>
-  </div>
-  <p class="note">公開用の見本です。抄録の本文と逐語引用は伏せています（判定・スコア・抽出した値・人の判断はそのまま）。抄録は各論文の PMID のリンクから PubMed で読めます。画面は読むだけで、判断や採点は変えられません。</p>
-  <p class="note" lang="en">Public sample of the reports: abstracts and verbatim quotes are hidden; verdicts, scores, extracted values and human decisions are kept. Read each abstract on PubMed via its PMID link.</p>
-  <footer>コードと記録：<a href="https://github.com/HerzLeben/pubmed-slr-screening">github.com/HerzLeben/pubmed-slr-screening</a>（MIT。ベンチマーク TrialReviewBench は Apache-2.0）· <a href="https://herzleben.co.jp/">HerzLeben</a></footer>
-</main>
+<p><a href="demo/eval-3.html">eval-3 のレポートを開く</a>（自動で移動しない場合）</p>
 </body>
 </html>
