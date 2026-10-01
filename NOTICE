@@ -1,0 +1,27 @@
+PubMed SLR screening
+Copyright (c) 2026 HerzLeben Inc. The code is licensed under the MIT License (see LICENSE).
+
+This repository contains files derived from TrialReviewBench:
+
+  TrialReviewBench
+  https://huggingface.co/datasets/zifeng-ai/TrialReviewBench (revision 6dfc322)
+  Licensed under the Apache License, Version 2.0
+  https://www.apache.org/licenses/LICENSE-2.0
+  Wang et al., "Accelerating clinical evidence synthesis with large language models",
+  npj Digital Medicine (2025); arXiv:2406.17755
+
+Derived files and changes:
+
+  bench/reviews.jsonl
+    From TrialReviewBench-study-search-screening.jsonl, only the reviews with PMID 33746596,
+    31190844 and 37168849 (scripts/build_bench.py). PMID, PICO and Topic are kept as they are;
+    Involved_Citations becomes "included_pmids", a list of the cited PMIDs as strings.
+    Title and Abstract are not included.
+
+  bench/extraction/33746596.jsonl
+  bench/extraction/37168849.jsonl
+    From TrialReviewBench-data-extraction/<PMID>.csv (scripts/build_extraction.py).
+    One JSON Lines record per study: the PMID column becomes "pmid" (trimmed string);
+    the column names and values are kept unchanged.
+
+The raw TrialReviewBench files are not included; scripts download them into bench/raw/.
